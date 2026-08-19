@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BarChart3,
 } from "lucide-react";
+import Image from "next/image";
 
 export default function NotSure() {
   return (
@@ -17,7 +18,7 @@ export default function NotSure() {
           </h2>
 
           <p className="mt-2 text-sm text-slate-500 sm:text-base">
-            Just tell Foodiego what you're craving.
+            Just tell Foodiego what you&apos;re craving.
           </p>
         </div>
 
@@ -88,10 +89,11 @@ export default function NotSure() {
               <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
 
                 {/* Image */}
-                <div className="aspect-4/3 w-full overflow-hidden bg-slate-100">
-                  <img
+                <div className="relative aspect-4/3 w-full overflow-hidden bg-slate-100">
+                  <Image
                     src="/images/food/Spicy-chicken-bowl.jpg"
                     alt="Spicy Chicken Bowl"
+                    fill
                     className="h-full w-full object-cover object-center"
                   />
                 </div>
@@ -126,10 +128,11 @@ export default function NotSure() {
               <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
 
                 {/* Image */}
-                <div className="aspect-4/3 w-full overflow-hidden bg-slate-100">
-                  <img
+                <div className="relative aspect-4/3 w-full overflow-hidden bg-slate-100">
+                  <Image
                     src="/images/food/Dragon-noodles.jpg"
                     alt="Dragon Noodles"
+                    fill
                     className="h-full w-full object-cover object-center"
                   />
                 </div>
