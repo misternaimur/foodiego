@@ -7,7 +7,7 @@ import {
 
 export default function NotSure() {
   return (
-    <section className="w-full bg-white py-12 sm:py-16 lg:py-20">
+    <section className="w-full bg-slate-50 py-12 sm:py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* Heading */}
@@ -25,7 +25,7 @@ export default function NotSure() {
         <div className="grid items-center gap-6 lg:grid-cols-2">
 
           {/* AI Recommendation Box */}
-          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5 shadow-sm sm:p-7">
+          <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
 
             {/* User Message */}
             <div className="mb-5 flex justify-end">
@@ -41,7 +41,7 @@ export default function NotSure() {
                 <Sparkles size={17} />
               </div>
 
-              <div className="rounded-xl bg-white p-4 text-sm leading-6 text-slate-600 shadow-sm">
+              <div className="rounded-xl bg-slate-100 p-4 text-sm leading-6 text-slate-600 shadow-sm">
                 I found 6 great options matching your craving!
 
                 <br />
@@ -55,7 +55,7 @@ export default function NotSure() {
             </div>
 
             {/* Search */}
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 p-2">
 
               <Search
                 size={19}
@@ -78,84 +78,90 @@ export default function NotSure() {
             </div>
           </div>
 
+
           {/* Food Cards */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="flex justify-center">
 
-            {/* Spicy Chicken Bowl */}
-            <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
+            <div className="grid w-full max-w-[430px] grid-cols-1 gap-10 sm:grid-cols-2">
 
-              {/* Image */}
-              <div className="aspect-4/3 w-full overflow-hidden bg-slate-100">
-                <img
-                  src="/images/food/Spicy-chicken-bowl.jpg"
-                  alt="Spicy Chicken Bowl"
-                  className="h-full w-full object-cover object-center"
-                />
-              </div>
+              {/* Spicy Chicken Bowl */}
+              <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
 
-              {/* Content */}
-              <div className="p-4">
-
-                {/* Match */}
-                <div className="flex items-center gap-2 text-blue-500">
-                  <BarChart3
-                    size={18}
-                    strokeWidth={2}
+                {/* Image */}
+                <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                  <img
+                    src="/images/food/Spicy-chicken-bowl.jpg"
+                    alt="Spicy Chicken Bowl"
+                    className="h-full w-full object-cover object-center"
                   />
-
-                  <p className="text-xs font-semibold">
-                    95% MATCH
-                  </p>
                 </div>
 
-                <h3 className="mt-1 text-base font-semibold text-slate-800">
-                  Spicy Chicken Bowl
-                </h3>
+                {/* Content */}
+                <div className="p-3">
 
-                <p className="mt-1 text-sm text-slate-500">
-                  ৳450 • 20 min
-                </p>
-              </div>
-            </div>
+                  {/* Match */}
+                  <div className="flex items-center gap-1 text-blue-500">
+                    <BarChart3
+                      size={15}
+                      strokeWidth={2}
+                    />
 
-            {/* Dragon Noodles */}
-            <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
+                    <p className="text-[11px] font-semibold">
+                      95% MATCH
+                    </p>
+                  </div>
 
-              {/* Image */}
-              <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
-                <img
-                  src="/images/food/Dragon-noodles.jpg"
-                  alt="Dragon Noodles"
-                  className="h-full w-full object-cover object-center"
-                />
-              </div>
+                  <h3 className="mt-1 text-sm font-semibold text-slate-800">
+                    Spicy Chicken Bowl
+                  </h3>
 
-              {/* Content */}
-              <div className="p-4">
-
-                {/* Match */}
-                <div className="flex items-center gap-2 text-blue-500">
-                  <BarChart3
-                    size={18}
-                    strokeWidth={2}
-                  />
-
-                  <p className="text-xs font-semibold">
-                    92% MATCH
+                  <p className="mt-1 text-xs text-slate-500">
+                    ৳450 • 20 min
                   </p>
                 </div>
-
-                <h3 className="mt-1 text-base font-semibold text-slate-800">
-                  Dragon Noodles
-                </h3>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  ৳480 • 25 min
-                </p>
               </div>
-            </div>
 
+
+              {/* Dragon Noodles */}
+              <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
+
+                {/* Image */}
+                <div className="aspect-4/3 w-full overflow-hidden bg-slate-100">
+                  <img
+                    src="/images/food/Dragon-noodles.jpg"
+                    alt="Dragon Noodles"
+                    className="h-full w-full object-cover object-center"
+                  />
+                </div>
+
+                {/* Content */}
+                <div className="p-3">
+
+                  {/* Match */}
+                  <div className="flex items-center gap-1 text-blue-500">
+                    <BarChart3
+                      size={15}
+                      strokeWidth={2}
+                    />
+
+                    <p className="text-[11px] font-semibold">
+                      92% MATCH
+                    </p>
+                  </div>
+
+                  <h3 className="mt-1 text-sm font-semibold text-slate-800">
+                    Dragon Noodles
+                  </h3>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    ৳480 • 25 min
+                  </p>
+                </div>
+              </div>
+
+            </div>
           </div>
+
         </div>
       </div>
     </section>
