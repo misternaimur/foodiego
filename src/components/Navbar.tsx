@@ -49,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="w-full bg-[#faf9f6] border-b border-gray-200">
+    <header className="sticky top-0 z-50 w-full bg-[#faf9f6] border-b border-gray-200">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
 
         
