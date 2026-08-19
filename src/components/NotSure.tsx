@@ -82,13 +82,13 @@ export default function NotSure() {
           {/* Food Cards */}
           <div className="flex justify-center">
 
-            <div className="grid w-full max-w-[430px] grid-cols-1 gap-10 sm:grid-cols-2">
+            <div className="grid w-full max-w-107.5 grid-cols-1 gap-10 sm:grid-cols-2">
 
               {/* Spicy Chicken Bowl */}
               <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
 
                 {/* Image */}
-                <div className="aspect-[4/3] w-full overflow-hidden bg-slate-100">
+                <div className="aspect-4/3 w-full overflow-hidden bg-slate-100">
                   <img
                     src="/images/food/Spicy-chicken-bowl.jpg"
                     alt="Spicy Chicken Bowl"
