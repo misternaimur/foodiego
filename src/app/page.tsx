@@ -1,15 +1,11 @@
-import NotSure from "@/components/NotSure";
-import SmarterDelivery from "@/components/SmarterDelivery";
-import HungryCTA from "@/components/HungryCTA";
+import Hero from "@/components/Hero";
+import WhatAreYouCraving from "@/components/WhatAreYouCraving";
 
 export default function Home() {
   return (
-    <main>
-      <NotSure />
-
-      <SmarterDelivery />
-
-      <HungryCTA />
+    <main className="flex-1">
+      <Hero></Hero>
+      <WhatAreYouCraving></WhatAreYouCraving>
     </main>
   );
 }
