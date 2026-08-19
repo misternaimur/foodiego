@@ -1,7 +1,13 @@
+import Hero from "@/components/Hero";
+import SearchBar from "@/components/SearchBar";
+import FoodCategories from "@/components/FoodCategories";
+
 export default function Home() {
   return (
     <main className="flex-1">
-      <h1 className="text-2xl font-bold text-center">Hello world...!!!</h1>
+      <Hero />
+      <SearchBar />
+      <FoodCategories />
     </main>
   );
 }
