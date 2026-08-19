@@ -18,7 +18,7 @@ export default function Navbar() {
             <a href="/orders" className="text-sm font-medium hover:underline">
               Orders
             </a>
-            <a href="/cart" className="text-sm font-medium hover:underline">
+            <a href="/cart" className="text-sm font-medium hover:underline ">
               Cart
             </a>
           </div>
