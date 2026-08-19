@@ -4,7 +4,7 @@ import FoodCategories from "@/components/FoodCategories";
 
 export default function Home() {
   return (
-    <main className="flex-1">
+    <main className="flex-1" suppressHydrationWarning>
       <Hero />
       <SearchBar />
       <FoodCategories />
