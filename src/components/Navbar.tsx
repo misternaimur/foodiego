@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
+import { useApp } from '@/context/AppContext';
 
 export interface NavItem {
   label: string;
@@ -30,7 +31,7 @@ const defaultNavItems: NavItem[] = [
 
 export const Navbar: React.FC<NavbarProps> = ({
   navItems = defaultNavItems,
-  cartCount = 0,
+  cartCount,
   user = null,
   onSearch,
 }) => {
@@ -38,6 +39,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Connect to the AppContext to get cart state
+  const { cart } = useApp();
+
+  // Calculate total items in cart (sum of all item quantities)
+  const totalCartCount =
+    cartCount ?? cart.reduce((total, item) => total + item.quantity, 0);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,22 +59,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-50 w-full bg-[#faf9f6] border-b border-gray-200">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
-
         
-        
-        {/*-------------------------------------------- Left Section: Logo & Nav Links -----------------------------------------------------*/}
+        {/* Left Section: Logo & Nav Links */}
         <div className="flex items-center gap-8 lg:gap-10">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            {/* <div className="relative w-9 h-9 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <Image 
-                src="/" 
-                alt="Foodiego Logo" 
-                width={28} 
-                height={28} 
-                className="object-contain"
-                priority
-              />
-            </div> */}
             <span className="text-2xl font-bold tracking-tight text-[#c83214]">
               Foodiego
             </span>
@@ -95,10 +91,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </nav>
         </div>
 
-
-
-        {/*--------------------------------------------------------------- Center Section: Search Bar-------------------------------------------------------------- */}
-
+        {/* Center Section: Search Bar */}
         <form 
           onSubmit={handleSearchSubmit} 
           className="hidden md:flex flex-1 max-w-md mx-2 lg:mx-4"
@@ -119,9 +112,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </form>
 
-
-
-        {/*------------------------------------------------------------------------------- Right Section: Actions -------------------------------------------------------*/}
+        {/* Right Section: Actions */}
         <div className="flex items-center gap-5 sm:gap-6 shrink-0">
           <Link 
             href="/cart" 
@@ -131,9 +122,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
             </svg>
-            {cartCount > 0 && (
+            
+            {/* Dynamic Badge for Total Cart Quantity */}
+            {totalCartCount > 0 && (
               <span className="absolute -top-1 -right-1.5 bg-[#c83214] text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
-                {cartCount}
+                {totalCartCount}
               </span>
             )}
           </Link>
@@ -212,3 +205,5 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+
+export default Navbar;
