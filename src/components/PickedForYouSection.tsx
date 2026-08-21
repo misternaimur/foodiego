@@ -3,13 +3,16 @@
     import React, { useEffect, useState } from 'react';
     import Link from 'next/link';
     import { FoodCard, FoodItem } from './FoodCard';
+    import { useApp } from '@/context/AppContext';
 
     export const PickedForYouSection: React.FC = () => {
     const [foods, setFoods] = useState<FoodItem[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Connect to the global App Context
+    const { addToCart, toggleFavorite, favorites } = useApp();
+
     useEffect(() => {
-        // Fetch from the local JSON file
         fetch('/data/foods.json')
         .then((res) => res.json())
         .then((data) => {
@@ -21,18 +24,6 @@
             setLoading(false);
         });
     }, []);
-
-    const handleAddToCart = (food: FoodItem) => {
-        console.log('Added to cart:', food);
-    };
-
-    const handleToggleFavorite = (id: string) => {
-        setFoods((prev) =>
-        prev.map((item) =>
-            item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
-        )
-        );
-    };
 
     return (
         <section className="w-full bg-[#faf9f6] py-12 px-4 sm:px-6 lg:px-12">
@@ -70,9 +61,13 @@
                 {foods.map((food) => (
                 <FoodCard
                     key={food.id}
-                    food={food}
-                    onAddToCart={handleAddToCart}
-                    onToggleFavorite={handleToggleFavorite}
+                    food={{
+                    ...food,
+                    // Dynamically check if this item is in the global favorites array
+                    isFavorite: favorites.includes(food.id),
+                    }}
+                    onAddToCart={() => addToCart(food)}
+                    onToggleFavorite={() => toggleFavorite(food.id)}
                 />
                 ))}
             </div>
