@@ -23,6 +23,9 @@ export default function Navbar() {
             <Link href="/menu" className="text-sm font-medium text-gray-900 hover:text-pink-600">
               Menu
             </Link>
+            <Link href="/restaurant" className="text-sm font-medium text-gray-900 hover:text-pink-600">
+              Restaurant
+            </Link>
             <Link href="/orders" className="text-sm font-medium text-gray-900 hover:text-pink-600">
               Orders
             </Link>
@@ -57,6 +60,9 @@ export default function Navbar() {
             </Link>
             <Link href="/menu" className="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50">
               Menu
+            </Link>
+            <Link href="/restaurant" className="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50">
+              Restaurant
             </Link>
             <Link href="/orders" className="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50">
               Orders
