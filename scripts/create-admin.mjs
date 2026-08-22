@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import { cert, initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import readline from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 
@@ -8,17 +9,36 @@ import { stdin, stdout } from "node:process";
 //   node --env-file=.env scripts/create-admin.mjs
 
 const MONGODB_URL = process.env.MongoDB_URL;
+const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
+const FIREBASE_CLIENT_EMAIL = process.env.FIREBASE_CLIENT_EMAIL;
+const FIREBASE_PRIVATE_KEY = process.env.FIREBASE_PRIVATE_KEY;
 
 if (!MONGODB_URL) {
   console.error("Missing MongoDB_URL environment variable.");
   process.exit(1);
 }
 
+if (!FIREBASE_PROJECT_ID || !FIREBASE_CLIENT_EMAIL || !FIREBASE_PRIVATE_KEY) {
+  console.error(
+    "Missing FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, or FIREBASE_PRIVATE_KEY environment variable."
+  );
+  process.exit(1);
+}
+
+const firebaseApp = initializeApp({
+  credential: cert({
+    projectId: FIREBASE_PROJECT_ID,
+    clientEmail: FIREBASE_CLIENT_EMAIL,
+    privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  }),
+});
+const adminAuth = getAuth(firebaseApp);
+
 const UserSchema = new mongoose.Schema(
   {
+    uid: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true, lowercase: true, unique: true },
-    password: { type: String, required: true },
     role: { type: String, enum: ["customer", "restaurant", "rider", "admin"], required: true },
   },
   { timestamps: true }
@@ -40,7 +60,7 @@ async function main() {
     process.exit(1);
   }
 
-  await mongoose.connect(MONGODB_URL, { dbName: "foodiego" });
+  await mongoose.connect(MONGODB_URL, { dbName: "FoodBackend" });
 
   const existing = await User.findOne({ email });
   if (existing) {
@@ -49,8 +69,13 @@ async function main() {
     process.exit(1);
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  await User.create({ name, email, password: hashedPassword, role: "admin" });
+  const firebaseUser = await adminAuth.createUser({
+    email,
+    password,
+    displayName: name,
+  });
+
+  await User.create({ uid: firebaseUser.uid, name, email, role: "admin" });
 
   console.log(`Admin account created for ${email}.`);
   await mongoose.disconnect();

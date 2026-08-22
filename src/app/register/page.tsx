@@ -14,8 +14,36 @@ import {
   UtensilsCrossed,
   Bike,
 } from "lucide-react";
-import { register } from "@/app/actions/auth";
-import { ROLES } from "@/lib/definitions";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase/client";
+import { establishSession } from "@/app/actions/auth";
+import { mapAuthErrorMessage } from "@/lib/firebase/errors";
+import { ROLES, RegisterFormSchema, type FormState } from "@/lib/definitions";
+
+async function registerAction(_state: FormState, formData: FormData): Promise<FormState> {
+  const validatedFields = RegisterFormSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    role: formData.get("role"),
+  });
+
+  if (!validatedFields.success) {
+    return { errors: validatedFields.error.flatten().fieldErrors };
+  }
+
+  const { name, email, password, role } = validatedFields.data;
+
+  let idToken: string;
+  try {
+    const credential = await createUserWithEmailAndPassword(auth, email, password);
+    idToken = await credential.user.getIdToken();
+  } catch (error) {
+    return { message: mapAuthErrorMessage(error) };
+  }
+
+  return establishSession(idToken, { name, role });
+}
 
 const ROLE_OPTIONS: {
   value: (typeof ROLES)[number];
@@ -60,7 +88,7 @@ const itemVariants: Variants = {
 };
 
 export default function RegisterPage() {
-  const [state, action, pending] = useActionState(register, undefined);
+  const [state, action, pending] = useActionState(registerAction, undefined);
   const [role, setRole] = useState<(typeof ROLES)[number]>("customer");
   const [showPassword, setShowPassword] = useState(false);
 

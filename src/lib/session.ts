@@ -1,57 +1,34 @@
 import "server-only";
 
-import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import { cookies } from "next/headers";
-import type { Role } from "@/lib/definitions";
+import { adminAuth } from "@/lib/firebase/admin";
+import type { DecodedIdToken } from "firebase-admin/auth";
 
-const secretKey = process.env.SESSION_SECRET;
-
-if (!secretKey) {
-  throw new Error("Missing SESSION_SECRET environment variable");
-}
-
-const encodedKey = new TextEncoder().encode(secretKey);
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
-export interface SessionPayload extends JWTPayload {
-  userId: string;
-  role: Role;
-  name: string;
-}
-
-export async function encrypt(payload: SessionPayload) {
-  return new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("7d")
-    .sign(encodedKey);
-}
-
-export async function decrypt(session?: string): Promise<SessionPayload | null> {
-  if (!session) return null;
-
-  try {
-    const { payload } = await jwtVerify<SessionPayload>(session, encodedKey, {
-      algorithms: ["HS256"],
-    });
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
-export async function createSession(userId: string, role: Role, name: string) {
-  const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
-  const session = await encrypt({ userId, role, name });
+export async function createSession(idToken: string) {
+  const sessionCookie = await adminAuth.createSessionCookie(idToken, {
+    expiresIn: SESSION_DURATION_MS,
+  });
   const cookieStore = await cookies();
 
-  cookieStore.set("session", session, {
+  cookieStore.set("session", sessionCookie, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    expires: expiresAt,
+    expires: new Date(Date.now() + SESSION_DURATION_MS),
     sameSite: "lax",
     path: "/",
   });
+}
+
+export async function verifySessionCookie(session?: string): Promise<DecodedIdToken | null> {
+  if (!session) return null;
+
+  try {
+    return await adminAuth.verifySessionCookie(session, true);
+  } catch {
+    return null;
+  }
 }
 
 export async function deleteSession() {

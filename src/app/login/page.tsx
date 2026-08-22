@@ -4,7 +4,26 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, LoaderCircle } from "lucide-react";
-import { login } from "@/app/actions/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase/client";
+import { establishSession } from "@/app/actions/auth";
+import { mapAuthErrorMessage } from "@/lib/firebase/errors";
+import type { FormState } from "@/lib/definitions";
+
+async function loginAction(_state: FormState, formData: FormData): Promise<FormState> {
+  const email = String(formData.get("email") ?? "");
+  const password = String(formData.get("password") ?? "");
+
+  let idToken: string;
+  try {
+    const credential = await signInWithEmailAndPassword(auth, email, password);
+    idToken = await credential.user.getIdToken();
+  } catch (error) {
+    return { message: mapAuthErrorMessage(error) };
+  }
+
+  return establishSession(idToken);
+}
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -23,7 +42,7 @@ const itemVariants: Variants = {
 };
 
 export default function LoginPage() {
-  const [state, action, pending] = useActionState(login, undefined);
+  const [state, action, pending] = useActionState(loginAction, undefined);
   const [showPassword, setShowPassword] = useState(false);
 
   return (

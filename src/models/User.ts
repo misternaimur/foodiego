@@ -5,9 +5,9 @@ const ALL_ROLES: Role[] = [...ROLES, "admin"];
 
 export interface UserDocument {
   _id: mongoose.Types.ObjectId;
+  uid: string;
   name: string;
   email: string;
-  password: string;
   role: Role;
   createdAt: Date;
   updatedAt: Date;
@@ -15,9 +15,9 @@ export interface UserDocument {
 
 const UserSchema = new Schema<UserDocument>(
   {
+    uid: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true, lowercase: true, unique: true },
-    password: { type: String, required: true },
     role: { type: String, enum: ALL_ROLES, required: true },
   },
   { timestamps: true }

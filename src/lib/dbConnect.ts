@@ -23,11 +23,17 @@ export async function dbConnect() {
 
   if (!cache.promise) {
     cache.promise = mongoose.connect(MONGODB_URL as string, {
-      dbName: "foodiego",
+      dbName: "FoodBackend",
     });
   }
 
-  cache.conn = await cache.promise;
+  try {
+    cache.conn = await cache.promise;
+  } catch (err) {
+    cache.promise = null;
+    throw err;
+  }
+
   return cache.conn;
 }
 

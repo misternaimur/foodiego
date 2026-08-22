@@ -24,6 +24,14 @@ export const LoginFormSchema = z.object({
   password: z.string().min(1, { error: "Password is required." }),
 });
 
+export const ProfileSchema = z.object({
+  name: z
+    .string()
+    .min(2, { error: "Name must be at least 2 characters long." })
+    .trim(),
+  role: z.enum(ROLES, { error: "Please select a valid account type." }),
+});
+
 export type FormState =
   | {
       errors?: {
