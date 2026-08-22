@@ -1,9 +1,14 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Next.js 16 Node.js Server External Packages
-  serverExternalPackages: ['firebase-admin', 'jose', 'jwks-rsa'],
-
+  // Turbopack-কে নির্দেশ দেওয়া হচ্ছে যেন firebase-admin এবং সম্পর্কিত প্যাকেজগুলো ইন্টারনালি না মুড়ে Node.js রানটাইম থেকে সরাসরি লোড করে
+  serverExternalPackages: [
+    'firebase-admin',
+    'jose',
+    'jwks-rsa',
+    'google-gax',
+    'gaxios',
+  ],
   images: {
     remotePatterns: [
       {
