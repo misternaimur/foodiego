@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
-const MONGODB_URL = process.env.MongoDB_URL;
+const MONGODB_URL = process.env.MONGODB_URL;
 
 if (!MONGODB_URL) {
-  throw new Error("Missing MongoDB_URL environment variable");
+  throw new Error("Missing MONGODB_URL environment variable");
 }
 
 interface MongooseCache {
