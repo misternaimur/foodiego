@@ -1,5 +1,5 @@
 import { verifySession } from "@/lib/dal";
-import { logout } from "@/app/actions/auth";
+import { SignOutButton } from "@/components/SignOutButton";
 
 export default async function AccountPage() {
   const session = await verifySession();
@@ -13,14 +13,7 @@ export default async function AccountPage() {
           <span className="font-medium capitalize text-gray-800">{session.role}</span>.
         </p>
 
-        <form action={logout}>
-          <button
-            type="submit"
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Sign out
-          </button>
-        </form>
+        <SignOutButton />
       </div>
     </main>
   );
