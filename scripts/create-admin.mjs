@@ -8,13 +8,13 @@ import { stdin, stdout } from "node:process";
 // exposed as a choice on the public registration form. Run with:
 //   node --env-file=.env scripts/create-admin.mjs
 
-const MONGODB_URL = process.env.MongoDB_URL;
+const MONGODB_URL = process.env.MONGODB_URL;
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
 const FIREBASE_CLIENT_EMAIL = process.env.FIREBASE_CLIENT_EMAIL;
 const FIREBASE_PRIVATE_KEY = process.env.FIREBASE_PRIVATE_KEY;
 
 if (!MONGODB_URL) {
-  console.error("Missing MongoDB_URL environment variable.");
+  console.error("Missing MONGODB_URL environment variable.");
   process.exit(1);
 }
 
