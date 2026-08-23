@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Bell,
   Bike,
   CheckCircle2,
   ChevronRight,
@@ -36,47 +35,49 @@ export default function RiderDashboard() {
             mobileMenu ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex h-full flex-col">
+          <div className="relative flex h-full flex-col">
 
-            {/* Logo */}
-            <div className="border-b border-slate-100 px-6 py-6">
-              <h1 className="text-2xl font-bold text-[#f97316]">
-                Foodiego
-              </h1>
+            {/* Mobile Close Button */}
+            <button
+              onClick={() => setMobileMenu(false)}
+              className="absolute right-4 top-5 z-10 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5 text-slate-600" />
+            </button>
 
-              {/* Mobile close button */}
-              <button
-                onClick={() => setMobileMenu(false)}
-                className="absolute right-4 top-5 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
-              >
-                <X className="h-5 w-5 text-slate-600" />
-              </button>
-            </div>
-
-            {/* Rider Profile */}
-            <div className="px-5 py-5">
+            {/* ================= RIDER PROFILE ================= */}
+            <div className="border-b border-slate-100 px-5 py-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-orange-100">
+
+                {/* Avatar */}
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-100">
                   <User className="h-6 w-6 text-orange-500" />
                 </div>
 
+                {/* Profile Info */}
                 <div>
                   <p className="font-semibold text-slate-800">
                     Afrin
                   </p>
 
-                  <div className="flex items-center gap-1 text-xs text-slate-500">
+                  <p className="text-xs font-medium text-orange-500">
+                    Rider
+                  </p>
+
+                  <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
                     <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
                     <span>4.9 Rating</span>
                   </div>
                 </div>
+
               </div>
             </div>
 
             {/* ================= NAVIGATION ================= */}
-            <nav className="flex-1 px-4">
+            <nav className="flex-1 px-4 py-5">
 
-              {/* Dashboard */}
+              {/* Home - ACTIVE */}
               <a
                 href="/dashboard/rider"
                 onClick={() => setMobileMenu(false)}
@@ -126,7 +127,7 @@ export default function RiderDashboard() {
                 Shift History
               </a>
 
-              {/* Settings - moved here */}
+              {/* Settings */}
               <a
                 href="/dashboard/rider/settings"
                 onClick={() => setMobileMenu(false)}
@@ -136,18 +137,20 @@ export default function RiderDashboard() {
                 Settings
               </a>
 
-              {/* Logout - moved here */}
+              {/* Logout */}
               <button
+                type="button"
                 className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500"
               >
                 <LogOut className="h-4 w-4" />
                 Logout
               </button>
+
             </nav>
           </div>
         </aside>
 
-        {/* Mobile Overlay */}
+        {/* ================= MOBILE OVERLAY ================= */}
         {mobileMenu && (
           <div
             className="fixed inset-0 z-40 bg-black/30 lg:hidden"
@@ -158,46 +161,16 @@ export default function RiderDashboard() {
         {/* ================= MAIN ================= */}
         <main className="min-w-0 flex-1">
 
-          {/* ================= HEADER ================= */}
-          <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 md:px-8 lg:px-10">
-
-            {/* Mobile Menu */}
+          {/* Mobile Menu Button */}
+          <div className="px-5 pt-5 lg:hidden">
             <button
               onClick={() => setMobileMenu(true)}
-              className="rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+              className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm hover:bg-slate-50"
+              aria-label="Open menu"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5 text-slate-700" />
             </button>
-
-            {/* Heading */}
-            <div className="hidden lg:block">
-              <h2 className="text-2xl font-bold text-slate-900">
-                Good morning, Afrin!
-              </h2>
-
-              <p className="mt-1 text-sm text-slate-500">
-                Here&apos;s your delivery overview for today.
-              </p>
-            </div>
-
-            {/* Header Right */}
-            <div className="ml-auto flex items-center gap-3">
-
-              <button className="relative rounded-full p-2 hover:bg-slate-100">
-                <Bell className="h-5 w-5 text-slate-600" />
-
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-[#f97316]" />
-              </button>
-
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100">
-                <User className="h-5 w-5 text-orange-500" />
-              </div>
-
-              <span className="hidden text-sm font-medium text-slate-700 sm:block">
-                Afrin
-              </span>
-            </div>
-          </header>
+          </div>
 
           {/* Mobile Heading */}
           <div className="px-5 pt-5 lg:hidden">
@@ -245,10 +218,12 @@ export default function RiderDashboard() {
 
                 {/* Toggle */}
                 <button
+                  type="button"
                   onClick={() => setIsOnline(!isOnline)}
                   className={`relative h-7 w-12 rounded-full transition ${
                     isOnline ? "bg-green-500" : "bg-slate-300"
                   }`}
+                  aria-label="Toggle online status"
                 >
                   <span
                     className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${
@@ -256,6 +231,7 @@ export default function RiderDashboard() {
                     }`}
                   />
                 </button>
+
               </div>
             </section>
 
@@ -349,13 +325,20 @@ export default function RiderDashboard() {
 
                 </div>
 
+                {/* Buttons */}
                 <div className="mt-6 flex flex-wrap gap-3">
 
-                  <button className="rounded-lg bg-[#f97316] px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600">
+                  <button
+                    type="button"
+                    className="rounded-lg bg-[#f97316] px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                  >
                     View Delivery
                   </button>
 
-                  <button className="flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
                     <Phone className="h-4 w-4" />
                     Contact
                   </button>
@@ -389,7 +372,10 @@ export default function RiderDashboard() {
                   Expect increased order volume.
                 </p>
 
-                <button className="mt-3 flex items-center gap-1 text-sm font-semibold text-[#f97316]">
+                <button
+                  type="button"
+                  className="mt-3 flex items-center gap-1 text-sm font-semibold text-[#f97316]"
+                >
                   View Heatmap
                   <ChevronRight className="h-4 w-4" />
                 </button>
