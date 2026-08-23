@@ -407,9 +407,7 @@ export default function RiderShiftHistoryPage() {
 
             </section>
 
-            {/* =================================================
-                SHIFT HISTORY TABLE
-            ================================================= */}
+            {/* SHIFT HISTORY TABLE */}
 
             <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
