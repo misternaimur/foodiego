@@ -32,6 +32,9 @@ export default function Navbar() {
             <Link href="/cart" className="text-sm font-medium text-gray-900 hover:text-pink-600">
               Cart
             </Link>
+            <Link href="/rider" className="text-sm font-medium text-gray-900 hover:text-pink-600">
+              Rider
+            </Link>
           </div>
 
           <button
@@ -67,9 +70,12 @@ export default function Navbar() {
             <Link href="/orders" className="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50">
               Orders
             </Link>
-            <Link href="/cart" className="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50">
-              Cart
-            </Link>
+             <Link href="/cart" className="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50">
+               Cart
+             </Link>
+             <Link href="/rider" className="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50">
+               Rider
+             </Link>
           </div>
         </div>
       )}
