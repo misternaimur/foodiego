@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 
 type SidebarProps = {
-  view: 'deliveries' | 'dashboard';
+  view: 'deliveries' | 'dashboard' | 'map';
   activePage: string;
   onNavigate: (page: string) => void;
   onToggleAvailability: () => void;
