@@ -24,12 +24,14 @@ const pickup = { lat: 23.811, lng: 90.413, label: 'P' };
 const dropoff = { lat: 23.8095, lng: 90.411, label: 'D' };
 const rider = { lat: 23.8103, lng: 90.4125, label: 'You' };
 
-export default function RealMap() {
+type Props = { className?: string };
+
+export default function RealMap({ className }: Props) {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+    <div className={className ?? 'h-64 lg:h-96'}>
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 h-full flex flex-col">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="font-semibold text-gray-900">Live Rider Map</h2>
@@ -40,7 +42,7 @@ export default function RealMap() {
             <button className="p-2 border border-slate-200 rounded-lg text-xs">☰</button>
           </div>
         </div>
-        <div className="w-full h-[500px] rounded-xl overflow-hidden border border-slate-200">
+        <div className="flex-1 rounded-xl overflow-hidden border border-slate-200 min-h-0">
           <MapContainer center={[rider.lat, rider.lng]} zoom={15} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -75,25 +77,6 @@ export default function RealMap() {
           <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#FF5C28]"></span>Hotspot</span>
           <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#B33C00]"></span>Pickup</span>
           <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-600"></span>You</span>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-        <h3 className="font-semibold text-gray-900 mb-3">Zones</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {zones.map((zone) => (
-            <button
-              key={zone.name}
-              onClick={() => setSelectedZone(zone.name)}
-              className={`p-4 rounded-xl border-2 text-left transition-colors ${
-                selectedZone === zone.name ? 'border-[#FF5C28] bg-orange-50' : 'border-slate-100 hover:border-orange-200'
-              }`}
-            >
-              <p className="font-medium text-gray-900">{zone.name}</p>
-              <p className="text-xs text-gray-500">{zone.demand}</p>
-              <span className="text-sm font-medium text-[#FF5C28]">{zone.surge}</span>
-            </button>
-          ))}
         </div>
       </div>
     </div>

@@ -5,12 +5,19 @@ import dynamic from 'next/dynamic';
 
 const RealMap = dynamic(() => import('./RealMap'), { ssr: false });
 
+type Zone = {
+  name: string;
+  demand: string;
+  surge: string;
+  color: string;
+};
+
 type Props = { onNavigate?: (page: string) => void };
 
 export default function MapView({ onNavigate }: Props) {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
 
-  const zones = [
+  const zones: Zone[] = [
     { name: 'Downtown', demand: 'High', surge: '+$3.00', color: 'bg-red-100 text-red-700' },
     { name: 'Uptown', demand: 'Very Busy', surge: '+$3.00', color: 'bg-red-100 text-red-700' },
     { name: 'University Campus', demand: 'Busy', surge: '+$1.50', color: 'bg-yellow-100 text-yellow-700' },
@@ -19,19 +26,7 @@ export default function MapView({ onNavigate }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="font-semibold text-gray-900">Live Rider Map</h2>
-            <p className="text-xs text-gray-500">View active deliveries and demand hotspots</p>
-          </div>
-          <div className="flex gap-2">
-            <button className="p-2 border border-slate-200 rounded-lg text-xs">📍</button>
-            <button className="p-2 border border-slate-200 rounded-lg text-xs">☰</button>
-          </div>
-        </div>
-        <RealMap />
-      </div>
+      <RealMap className="h-64 lg:h-96" />
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
         <h3 className="font-semibold text-gray-900 mb-3">Zones</h3>

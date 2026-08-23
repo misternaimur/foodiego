@@ -34,10 +34,10 @@ export default function DashboardView({ onNavigate }: Props) {
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Content */}
-        <div className="xl:col-span-8 space-y-6">
-          <RealMap />
+        <div className="lg:col-span-8 space-y-6">
+          <RealMap className="h-64 lg:h-96" />
 
           {/* Earnings Trend */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
@@ -70,7 +70,7 @@ export default function DashboardView({ onNavigate }: Props) {
         </div>
 
         {/* Right Panel */}
-        <div className="xl:col-span-4 space-y-6">
+        <div className="lg:col-span-4 space-y-6">
           {/* Active Order Card */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="bg-[#B33C00] text-white px-4 py-3 flex items-center justify-between">

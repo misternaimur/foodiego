@@ -8,6 +8,7 @@ type SidebarProps = {
   onNavigate: (page: string) => void;
   onToggleAvailability: () => void;
   isOnline: boolean;
+  onClose?: () => void;
 };
 
 const navItems = [
@@ -18,7 +19,7 @@ const navItems = [
   { name: 'Shift History', key: 'shift', icon: HistoryIcon },
 ];
 
-export default function RiderSidebar({ view, activePage, onNavigate, onToggleAvailability, isOnline }: SidebarProps) {
+export default function RiderSidebar({ view, activePage, onNavigate, onToggleAvailability, isOnline, onClose }: SidebarProps) {
   const navItemClasses = (key: string) =>
     `w-full text-left px-4 py-2.5 rounded-lg flex items-center gap-3 text-sm transition-colors ${
       activePage === key ? 'bg-orange-50 text-[#FF5C28] font-medium border-r-2 border-[#FF5C28]' : 'text-gray-600 hover:bg-gray-50'
@@ -27,7 +28,16 @@ export default function RiderSidebar({ view, activePage, onNavigate, onToggleAva
   return (
     <aside className="w-[250px] bg-white border-r border-slate-100 flex flex-col">
       <div className="p-5">
-        <h1 className="text-xl font-bold text-[#FF5C28]">Foodiego</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold text-[#FF5C28]">Foodiego</h1>
+          {onClose && (
+            <button className="lg:hidden p-2 -mr-2 text-gray-700 hover:bg-gray-100 rounded-lg" onClick={onClose}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="px-4 mb-6">
