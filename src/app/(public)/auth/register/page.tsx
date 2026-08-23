@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
@@ -131,7 +130,7 @@ export default function RegisterPage() {
                     {selected && (
                       <motion.span
                         layoutId="role-active-bg"
-                        className="absolute inset-0 rounded-xl bg-[#c83214]/[0.06]"
+                        className="absolute inset-0 rounded-xl bg-[#c83214]/6"
                         transition={{ type: "spring", stiffness: 500, damping: 32 }}
                       />
                     )}
@@ -283,7 +282,7 @@ export default function RegisterPage() {
 
         <motion.p variants={itemVariants} className="mt-6 text-center text-sm text-gray-500">
           Already have an account?{" "}
-          <Link href="/login" className="font-medium text-[#c83214] hover:underline">
+          <Link href="/auth/login" className="font-medium text-[#c83214] hover:underline">
             Sign in
           </Link>
         </motion.p>
