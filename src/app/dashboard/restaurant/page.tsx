@@ -11,7 +11,7 @@ export default async function RestaurantDashboardPage() {
   return (
     <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-16">
       <h1 className="text-2xl font-bold text-gray-900">Restaurant dashboard</h1>
-      <p className="mt-2 text-sm text-gray-500">Welcome, {session.name}.</p>
+      <p className="mt-2 text-sm text-gray-500">Welcome to our Food delivery platform, {session.name}.</p>
     </main>
   );
 }
