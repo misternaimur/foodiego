@@ -89,12 +89,11 @@ export default function NotSure() {
               <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
 
                 {/* Image */}
-                <div className="aspect-4/3 w-full overflow-hidden bg-slate-100">
+                <div className="relative aspect-4/3 w-full overflow-hidden bg-slate-100">
                   <Image
                     src="/images/food/Spicy-chicken-bowl.jpg"
                     alt="Spicy Chicken Bowl"
-                    width={430}
-                    height={323}
+                    fill
                     className="h-full w-full object-cover object-center"
                   />
                 </div>
@@ -129,12 +128,11 @@ export default function NotSure() {
               <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
 
                 {/* Image */}
-                <div className="aspect-4/3 w-full overflow-hidden bg-slate-100">
+                <div className="relative aspect-4/3 w-full overflow-hidden bg-slate-100">
                   <Image
                     src="/images/food/Dragon-noodles.jpg"
                     alt="Dragon Noodles"
-                    width={430}
-                    height={323}
+                    fill
                     className="h-full w-full object-cover object-center"
                   />
                 </div>

@@ -132,8 +132,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </Link>
 
           {user ? (
-            <Link 
-              href="/profile" 
+            <Link
+              href="/account"
               className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-black"
             >
               <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">

@@ -3,15 +3,33 @@
     import React, { createContext, useContext, useState, useEffect } from 'react';
     import { FoodItem } from '@/components/FoodCard';
 
+    export interface SelectedOption {
+    name: string;
+    price: number;
+    }
+
     export interface CartItem extends FoodItem {
+    cartItemId: string; // Unique ID per custom configuration
+    selectedSize?: SelectedOption;
+    selectedAddons?: SelectedOption[];
+    specialInstructions?: string;
     quantity: number;
+    totalUnitPrice: number;
     }
 
     interface AppContextType {
     cart: CartItem[];
-    favorites: string[]; // Stores Food Item IDs
-    addToCart: (food: FoodItem) => void;
-    removeFromCart: (id: string) => void;
+    favorites: string[];
+    addToCart: (
+        food: FoodItem,
+        customization?: {
+        selectedSize?: SelectedOption;
+        selectedAddons?: SelectedOption[];
+        specialInstructions?: string;
+        quantity?: number;
+        }
+    ) => void;
+    removeFromCart: (cartItemId: string) => void;
     toggleFavorite: (id: string) => void;
     }
 
@@ -21,7 +39,6 @@
     const [cart, setCart] = useState<CartItem[]>([]);
     const [favorites, setFavorites] = useState<string[]>([]);
 
-    // Load saved state from LocalStorage on initial load
     useEffect(() => {
         const savedCart = localStorage.getItem('foodiego_cart');
         const savedFavorites = localStorage.getItem('foodiego_favorites');
@@ -30,43 +47,68 @@
         if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
     }, []);
 
-    // Save Cart updates to LocalStorage
     useEffect(() => {
         localStorage.setItem('foodiego_cart', JSON.stringify(cart));
     }, [cart]);
 
-    // Save Favorites updates to LocalStorage
     useEffect(() => {
         localStorage.setItem('foodiego_favorites', JSON.stringify(favorites));
     }, [favorites]);
 
-    const addToCart = (food: FoodItem) => {
+    const addToCart = (food: FoodItem, customization) => {
+        const selectedSize = customization?.selectedSize;
+        const selectedAddons = customization?.selectedAddons || [];
+        const specialInstructions = customization?.specialInstructions || '';
+        const qty = customization?.quantity || 1;
+
+        // Calculate unit price including options
+        const addonsPrice = selectedAddons.reduce((sum, item) => sum + item.price, 0);
+        const sizePrice = selectedSize ? selectedSize.price : 0;
+        const totalUnitPrice = food.price + sizePrice + addonsPrice;
+
+        // Unique ID based on choices
+        const addonKeys = selectedAddons.map((a) => a.name).sort().join('-');
+        const cartItemId = `${food.id}_${selectedSize?.name || 'def'}_${addonKeys}_${specialInstructions}`;
+
         setCart((prev) => {
-        const existing = prev.find((item) => item.id === food.id);
+        const existing = prev.find((item) => item.cartItemId === cartItemId);
         if (existing) {
             return prev.map((item) =>
-            item.id === food.id ? { ...item, quantity: item.quantity + 1 } : item
+            item.cartItemId === cartItemId
+                ? { ...item, quantity: item.quantity + qty }
+                : item
             );
         }
-        return [...prev, { ...food, quantity: 1 }];
+        return [
+            ...prev,
+            {
+            ...food,
+            cartItemId,
+            selectedSize,
+            selectedAddons,
+            specialInstructions,
+            quantity: qty,
+            totalUnitPrice,
+            },
+        ];
         });
     };
 
-    const removeFromCart = (id: string) => {
+    const removeFromCart = (cartItemId: string) => {
         setCart((prev) => {
-            const existing = prev.find((item) => item.id === id);
+        const existing = prev.find((item) => item.cartItemId === cartItemId);
 
-            // If quantity is more than 1, decrease quantity by 1
-            if (existing && existing.quantity > 1) {
+        if (existing && existing.quantity > 1) {
             return prev.map((item) =>
-                item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+            item.cartItemId === cartItemId
+                ? { ...item, quantity: item.quantity - 1 }
+                : item
             );
-            }
+        }
 
-            // If quantity is 1, remove the item completely from cart
-            return prev.filter((item) => item.id !== id);
+        return prev.filter((item) => item.cartItemId !== cartItemId);
         });
-        };
+    };
 
     const toggleFavorite = (id: string) => {
         setFavorites((prev) =>

@@ -7,11 +7,13 @@ import WhatAreYouCraving from "@/components/WhatAreYouCraving";
 export default function Home() {
   return (
     <main className="flex-1">
-      <Hero></Hero>
-      <WhatAreYouCraving></WhatAreYouCraving>
-      <PickedForYouSection></PickedForYouSection>
-      <HungryCTA></HungryCTA>
-      <NotSure></NotSure>
+      <Hero />
+      <NotSure />
+      <HungryCTA />
+      <WhatAreYouCraving />
+      <PickedForYouSection />
+      <HungryCTA />
+      <NotSure />
     </main>
   );
 }

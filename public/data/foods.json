@@ -12,7 +12,16 @@
     "dietary": "Vegetarian",
     "matchPercentage": 94,
     "imageUrl": "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80",
-    "isFavorite": false
+    "sizes": [
+      { "name": "Medium (10\")", "price": 0 },
+      { "name": "Large (14\")", "price": 4.00 },
+      { "name": "Family (18\")", "price": 8.00 }
+    ],
+    "addons": [
+      { "name": "Extra Mozzarella", "price": 2.50 },
+      { "name": "Fresh Basil", "price": 1.00 },
+      { "name": "Truffle Oil", "price": 3.00 }
+    ]
   },
   {
     "id": "food-2",
@@ -27,7 +36,15 @@
     "dietary": "Vegetarian",
     "matchPercentage": null,
     "imageUrl": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80",
-    "isFavorite": false
+    "sizes": [
+      { "name": "Standard Bowl", "price": 0 },
+      { "name": "Protein Loaded Bowl", "price": 3.50 }
+    ],
+    "addons": [
+      { "name": "Grilled Chicken", "price": 4.00 },
+      { "name": "Extra Feta Cheese", "price": 1.50 },
+      { "name": "Avocado", "price": 2.00 }
+    ]
   },
   {
     "id": "food-3",
@@ -42,7 +59,15 @@
     "dietary": "Non-Veg",
     "matchPercentage": 88,
     "imageUrl": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
-    "isFavorite": false
+    "sizes": [
+      { "name": "Double Patty", "price": 0 },
+      { "name": "Triple Patty", "price": 4.50 }
+    ],
+    "addons": [
+      { "name": "Extra Bacon", "price": 2.50 },
+      { "name": "Caramelized Onions", "price": 1.00 },
+      { "name": "Truffle Dip Side", "price": 2.00 }
+    ]
   },
   {
     "id": "food-4",
@@ -57,6 +82,14 @@
     "dietary": "Non-Veg",
     "matchPercentage": null,
     "imageUrl": "https://images.unsplash.com/photo-1555126634-323283e090fa?auto=format&fit=crop&w=800&q=80",
-    "isFavorite": false
+    "sizes": [
+      { "name": "Regular Portion", "price": 0 },
+      { "name": "Large Portion", "price": 3.00 }
+    ],
+    "addons": [
+      { "name": "Extra Tiger Prawns", "price": 5.00 },
+      { "name": "Fried Egg on Top", "price": 1.50 },
+      { "name": "Extra Crushed Peanuts", "price": 0.50 }
+    ]
   }
 ]
