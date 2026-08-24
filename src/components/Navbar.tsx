@@ -23,7 +23,7 @@ export interface NavbarProps {
 
 const defaultNavItems: NavItem[] = [
   { label: 'Home', href: '/' },
-  { label: 'Restaurants', href: '/restaurants' },
+  { label: 'Discover Foods', href: '/foods' },
   { label: 'Offers', href: '/offers' },
   { label: 'Orders', href: '/Orders' },
   { label: 'Favorites', href: '/favorites' },
