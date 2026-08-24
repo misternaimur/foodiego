@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown, Store } from 'lucide-react';
 
 export interface NavItem {
   label: string;
@@ -18,6 +18,7 @@ export interface NavbarProps {
     name?: string;
     email?: string;
     avatarUrl?: string;
+    role?: string;
   } | null;
   onSearch?: (query: string) => void;
   onLogout?: () => void;
@@ -41,19 +42,47 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isRestaurantOpen, setIsRestaurantOpen] = useState(false);
+  const [mockUserActive] = useState(
+    () =>
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('mockUser') === 'true'
+  );
 
-  // Close dropdown when clicking outside
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const restaurantRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
+      if (restaurantRef.current && !restaurantRef.current.contains(event.target as Node)) {
+        setIsRestaurantOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  if (pathname && pathname.startsWith('/dashboard')) {
+    return null;
+  }
+
+  const effectiveUser = user || (mockUserActive ? { name: 'Chef Sofia', role: 'restaurant', email: 'chef.sofia@foodiego.com' } : null);
+
+  const defaultAvatar = effectiveUser?.role === 'restaurant'
+    ? 'https://images.unsplash.com/photo-1595273670150-bd0c3c392e46?auto=format&fit=crop&q=80&w=120'
+    : effectiveUser?.role === 'rider'
+    ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120'
+    : 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=120';
+  const avatarUrl = effectiveUser?.avatarUrl || defaultAvatar;
+  const dashboardLink = effectiveUser?.role === 'restaurant' 
+    ? '/dashboard/restaurant' 
+    : effectiveUser?.role === 'rider' 
+    ? '/dashboard/rider' 
+    : '/dashboard';
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +125,58 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </Link>
               );
             })}
+
+            {/* Restaurant / Merchant Dropdown */}
+            <div className="relative" ref={restaurantRef}>
+              <button
+                onClick={() => setIsRestaurantOpen(!isRestaurantOpen)}
+                className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                  isRestaurantOpen ? 'text-[#c83214]' : 'text-[#4b5563] hover:text-[#111827]'
+                }`}
+              >
+                <Store size={16} />
+                <span>Restaurant</span>
+                <ChevronDown
+                  size={14}
+                  className={`text-gray-500 transition-transform duration-200 ${
+                    isRestaurantOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {isRestaurantOpen && (
+                <div className="absolute left-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-50">
+                  <div className="px-4 pb-3 mb-2 border-b border-gray-100">
+                    <p className="text-sm font-bold text-gray-900">Foodiego Merchant</p>
+                    <p className="text-xs text-gray-500">Premium Dashboard</p>
+                  </div>
+                  <Link
+                    href="/restaurant"
+                    onClick={() => setIsRestaurantOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Sparkles size={16} className="text-gray-500" />
+                    <span>Food AI Studio</span>
+                  </Link>
+                  <Link
+                    href="/preview/merchant-profile"
+                    onClick={() => setIsRestaurantOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <User size={16} className="text-gray-500" />
+                    <span>Merchant Profile</span>
+                  </Link>
+                  <Link
+                    href="/dashboard/restaurant"
+                    onClick={() => setIsRestaurantOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <LayoutDashboard size={16} className="text-gray-500" />
+                    <span>Merchant Dashboard</span>
+                  </Link>
+                </div>
+              )}
+            </div>
 
             {/* AI Assistant Special Styled Button */}
             <Link
@@ -150,7 +231,37 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </Link>
 
-          {user ? (
+          {!effectiveUser && (
+            <Link 
+              href="/auth/login" 
+              className="text-sm font-medium text-gray-800 hover:text-[#c83214] transition-colors"
+            >
+              Sign in
+            </Link>
+          )}
+          
+          <Link
+            href="/discover"
+            className="hidden xl:inline-flex items-center justify-center text-sm font-semibold text-white bg-black hover:bg-gray-800 px-5 py-2.5 rounded-full transition-colors shadow-sm"
+          >
+            Order Now
+          </Link>
+
+          {effectiveUser && (
+            <Link
+              href="/account"
+              className={`hidden sm:inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                pathname === '/account'
+                  ? 'text-[#c83214]'
+                  : 'text-gray-700 hover:text-[#c83214]'
+              }`}
+            >
+              <User size={16} />
+              <span>Profile</span>
+            </Link>
+          )}
+
+          {effectiveUser && (
             /* Logged In: Profile with Dropdown */
             <div className="relative" ref={dropdownRef}>
               <button
@@ -158,15 +269,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="flex items-center gap-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200/80 px-3 py-1.5 rounded-full transition-colors focus:outline-none"
               >
                 <div className="w-7 h-7 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center relative">
-                  {user.avatarUrl ? (
-                    <Image src={user.avatarUrl} alt="User Avatar" fill className="object-cover" />
+                  {avatarUrl ? (
+                    <Image src={avatarUrl} alt="User Avatar" fill className="object-cover" />
                   ) : (
                     <span className="text-xs font-bold text-gray-700">
-                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      {effectiveUser.name ? effectiveUser.name.charAt(0).toUpperCase() : 'U'}
                     </span>
                   )}
                 </div>
-                <span className="hidden sm:inline-block max-w-22.5 truncate">{user.name || 'Account'}</span>
+                <span className="hidden sm:inline-block max-w-22.5 truncate">{effectiveUser.name || 'Account'}</span>
                 <ChevronDown size={14} className={`text-gray-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
@@ -174,13 +285,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                   <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{user.name || 'User'}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email || 'user@example.com'}</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{effectiveUser.name || 'User'}</p>
+                    <p className="text-xs text-gray-500 truncate">{effectiveUser.email || 'user@example.com'}</p>
                   </div>
 
                   <div className="py-1">
                     <Link
-                      href="/profile"
+                      href="/account"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
@@ -198,7 +309,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </Link>
 
                     <Link
-                      href="/dashboard"
+                      href={dashboardLink}
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
@@ -230,23 +341,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 </div>
               )}
-            </div>
-          ) : (
-            /* Not Logged In: Show Order Now CTA & Sign in */
-            <div className="flex items-center gap-3">
-              <Link 
-                href="/auth" 
-                className="text-sm font-medium text-gray-800 hover:text-[#c83214] transition-colors"
-              >
-                Sign in
-              </Link>
-              
-              <Link
-                href="/discover"
-                className="hidden xl:inline-flex items-center justify-center text-sm font-semibold text-white bg-black hover:bg-gray-800 px-5 py-2.5 rounded-full transition-colors shadow-sm"
-              >
-                Order Now
-              </Link>
             </div>
           )}
 
@@ -290,7 +384,38 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               {item.label}
             </Link>
-          ))}
+          )          )}
+
+          {/* Mobile Restaurant / Merchant Section */}
+          <div className="pt-2 border-t border-gray-200">
+            <p className="px-0 py-1.5 text-xs font-bold text-gray-400 uppercase tracking-wide">
+              Foodiego Merchant · Premium Dashboard
+            </p>
+            <Link
+              href="/restaurant"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-2 py-2 text-sm text-gray-700 font-medium"
+            >
+              <Sparkles size={16} className="text-gray-500" />
+              <span>Food AI Studio</span>
+            </Link>
+            <Link
+              href="/preview/merchant-profile"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-2 py-2 text-sm text-gray-700 font-medium"
+            >
+              <User size={16} className="text-gray-500" />
+              <span>Merchant Profile</span>
+            </Link>
+            <Link
+              href="/dashboard/restaurant"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-2 py-2 text-sm text-gray-700 font-medium"
+            >
+              <LayoutDashboard size={16} className="text-gray-500" />
+              <span>Merchant Dashboard</span>
+            </Link>
+          </div>
 
           {/* Mobile AI Assistant Link */}
           <Link
@@ -302,7 +427,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>AI Assistant</span>
           </Link>
 
-          {!user ? (
+          {!effectiveUser ? (
             <>
               <Link
                 href="/discover"
@@ -314,7 +439,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <div className="pt-2 flex gap-3 border-t border-gray-200">
                 <Link
-                  href="/auth"
+                  href="/auth/login"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex-1 text-center py-2 text-sm font-medium text-white bg-[#c83214] rounded-lg"
                 >
@@ -324,9 +449,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             </>
           ) : (
             <div className="pt-3 border-t border-gray-200 space-y-1">
-              <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Profile</Link>
+              <Link
+                href="/discover"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block text-center w-full py-2.5 mb-2 text-sm font-semibold text-white bg-black rounded-xl shadow-sm"
+              >
+                Order Now
+              </Link>
+              <Link href="/account" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Profile</Link>
               <Link href="/my-card" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">My Card</Link>
-              <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Dashboard</Link>
+              <Link href={dashboardLink} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Dashboard</Link>
               <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Setting</Link>
               <button 
                 onClick={() => { setIsMobileMenuOpen(false); if(onLogout) onLogout(); }} 

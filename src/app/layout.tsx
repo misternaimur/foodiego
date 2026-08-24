@@ -29,7 +29,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Navbar user={session ? { name: session.name } : null}></Navbar>
+        <Navbar user={session ? { name: session.name, role: session.role } : null}></Navbar>
         {children}
         <Footer></Footer>
       </body>
