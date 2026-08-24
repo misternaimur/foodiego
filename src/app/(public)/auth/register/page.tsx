@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import {
   User,
@@ -15,11 +16,12 @@ import {
 } from "lucide-react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
-import { establishSession } from "@/app/actions/auth";
+import { establishSession } from "@/app/(public)/actions/auth";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
 import { ROLES, RegisterFormSchema, type FormState } from "@/lib/definitions";
 
 async function registerAction(_state: FormState, formData: FormData): Promise<FormState> {
+  const redirectTo = String(formData.get("redirect") ?? "");
   const validatedFields = RegisterFormSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
@@ -41,7 +43,7 @@ async function registerAction(_state: FormState, formData: FormData): Promise<Fo
     return { message: mapAuthErrorMessage(error) };
   }
 
-  return establishSession(idToken, { name, role });
+  return establishSession(idToken, { name, role }, redirectTo);
 }
 
 const ROLE_OPTIONS: {
@@ -90,6 +92,8 @@ export default function RegisterPage() {
   const [state, action, pending] = useActionState(registerAction, undefined);
   const [role, setRole] = useState<(typeof ROLES)[number]>("customer");
   const [showPassword, setShowPassword] = useState(false);
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") ?? "";
 
   const activeRole = ROLE_OPTIONS.find((option) => option.value === role)!;
 
@@ -107,6 +111,7 @@ export default function RegisterPage() {
         </motion.div>
 
         <form action={action} className="space-y-5">
+          <input type="hidden" name="redirect" value={redirectTo} />
           {/* Role selection — top of form */}
           <motion.div variants={itemVariants}>
             <span className="mb-2 block text-sm font-medium text-gray-700">I want to join as</span>

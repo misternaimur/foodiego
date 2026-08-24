@@ -2,17 +2,19 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
-import { establishSession } from "@/app/actions/auth";
+import { establishSession } from "@/app/(public)/actions/auth";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
 import type { FormState } from "@/lib/definitions";
 
 async function loginAction(_state: FormState, formData: FormData): Promise<FormState> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+  const redirectTo = String(formData.get("redirect") ?? "");
 
   let idToken: string;
   try {
@@ -22,7 +24,7 @@ async function loginAction(_state: FormState, formData: FormData): Promise<FormS
     return { message: mapAuthErrorMessage(error) };
   }
 
-  return establishSession(idToken);
+  return establishSession(idToken, undefined, redirectTo);
 }
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -44,6 +46,8 @@ const itemVariants: Variants = {
 export default function LoginPage() {
   const [state, action, pending] = useActionState(loginAction, undefined);
   const [showPassword, setShowPassword] = useState(false);
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") ?? "";
 
   return (
     <main className="flex-1 bg-white flex items-center justify-center px-4 py-12 sm:py-16">
@@ -59,6 +63,7 @@ export default function LoginPage() {
         </motion.div>
 
         <form action={action} className="space-y-4">
+          <input type="hidden" name="redirect" value={redirectTo} />
           <motion.div variants={itemVariants}>
             <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
               Email

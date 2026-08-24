@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { useApp } from '@/context/AppContext'; // আপনার প্রজেক্টের AppContext থেকে কার্ট ডাটা নেয়ার জন্য
 
 export interface NavItem {
   label: string;
@@ -13,7 +14,6 @@ export interface NavItem {
 
 export interface NavbarProps {
   navItems?: NavItem[];
-  cartCount?: number;
   user?: {
     name?: string;
     email?: string;
@@ -31,8 +31,7 @@ const defaultNavItems: NavItem[] = [
 
 export const Navbar: React.FC<NavbarProps> = ({
   navItems = defaultNavItems,
-  cartCount = 0,
-  user = null,
+  user: propUser = null,
   onSearch,
   onLogout,
 }) => {
@@ -41,10 +40,25 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
-  // Close dropdown when clicking outside
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { cart, user: contextUser, logoutUser } = useApp();
+  const user = propUser ?? contextUser;
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleLogout = async () => {
+    if (onLogout) {
+      onLogout();
+      return;
+    }
+    await logoutUser();
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -136,14 +150,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Right Section: Actions & Conditional Profile / Order Now */}
         <div className="flex items-center gap-4 sm:gap-5 shrink-0">
           <Link 
-            href="/cart" 
+            href="/client/cart" 
             className="relative p-1.5 text-gray-700 hover:text-black transition-colors"
             aria-label="Cart"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
             </svg>
-            {cartCount > 0 && (
+            {isMounted && cartCount > 0 && (
               <span className="absolute -top-1 -right-1.5 bg-[#c83214] text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
                 {cartCount}
               </span>
@@ -172,7 +186,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
                   <div className="px-4 py-2 border-b border-gray-100">
                     <p className="text-sm font-semibold text-gray-900 truncate">{user.name || 'User'}</p>
                     <p className="text-xs text-gray-500 truncate">{user.email || 'user@example.com'}</p>
@@ -180,7 +194,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                   <div className="py-1">
                     <Link
-                      href="/profile"
+                      href="/account"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
@@ -189,16 +203,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </Link>
 
                     <Link
-                      href="/my-card"
+                      href="/client/cart"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <ShoppingBag size={16} className="text-gray-500" />
-                      <span>My Card</span>
+                      <span>My Cart</span>
                     </Link>
 
                     <Link
-                      href="/dashboard"
+                      href="/client/dashboard"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
@@ -207,20 +221,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </Link>
 
                     <Link
-                      href="/settings"
+                      href="/account"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Settings size={16} className="text-gray-500" />
-                      <span>Setting</span>
+                      <span>Settings</span>
                     </Link>
                   </div>
 
                   <div className="pt-1 border-t border-gray-100">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         setIsDropdownOpen(false);
-                        if (onLogout) onLogout();
+                        await handleLogout();
                       }}
                       className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
                     >
@@ -235,14 +249,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             /* Not Logged In: Show Order Now CTA & Sign in */
             <div className="flex items-center gap-3">
               <Link 
-                href="/auth" 
+                href="/auth/login" 
                 className="text-sm font-medium text-gray-800 hover:text-[#c83214] transition-colors"
               >
                 Sign in
               </Link>
               
               <Link
-                href="/discover"
+                href="/auth/register"
                 className="hidden xl:inline-flex items-center justify-center text-sm font-semibold text-white bg-black hover:bg-gray-800 px-5 py-2.5 rounded-full transition-colors shadow-sm"
               >
                 Order Now
@@ -305,7 +319,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {!user ? (
             <>
               <Link
-                href="/discover"
+                href="/auth/register"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="block text-center w-full py-2.5 mt-2 text-sm font-semibold text-white bg-black rounded-xl shadow-sm"
               >
@@ -314,22 +328,22 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               <div className="pt-2 flex gap-3 border-t border-gray-200">
                 <Link
-                  href="/auth"
+                  href="/auth/login"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex-1 text-center py-2 text-sm font-medium text-white bg-[#c83214] rounded-lg"
                 >
-                  Sign in / Sign up
+                  Sign in 
                 </Link>
               </div>
             </>
           ) : (
             <div className="pt-3 border-t border-gray-200 space-y-1">
               <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Profile</Link>
-              <Link href="/my-card" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">My Card</Link>
+              <Link href="/client/cart" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">My Card</Link>
               <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Dashboard</Link>
               <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Setting</Link>
               <button 
-                onClick={() => { setIsMobileMenuOpen(false); if(onLogout) onLogout(); }} 
+                onClick={async () => { setIsMobileMenuOpen(false); await handleLogout(); }} 
                 className="block w-full text-left py-2 text-sm text-red-600 font-medium"
               >
                 Logout
@@ -341,3 +355,5 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+
+export default Navbar;
