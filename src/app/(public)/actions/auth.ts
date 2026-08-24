@@ -20,9 +20,21 @@ function roleHome(role: Role) {
   }
 }
 
+function getSafeRedirectPath(value?: string, fallback?: string) {
+  if (!value) return fallback ?? "/";
+
+  const candidate = value.trim();
+  if (!candidate.startsWith("/") || candidate.startsWith("//")) {
+    return fallback ?? "/";
+  }
+
+  return candidate;
+}
+
 export async function establishSession(
   idToken: string,
-  profile?: { name: string; role: Role }
+  profile?: { name: string; role: Role },
+  redirectTo?: string
 ): Promise<FormState> {
   let decoded;
   try {
@@ -66,10 +78,12 @@ export async function establishSession(
   }
 
   await createSession(idToken);
-  redirect(roleHome(user.role));
+
+  const destination = getSafeRedirectPath(redirectTo, roleHome(user.role));
+  redirect(destination);
 }
 
 export async function logout() {
   await deleteSession();
-  redirect("/login");
+  redirect("/auth/login");
 }
