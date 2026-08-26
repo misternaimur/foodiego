@@ -167,13 +167,13 @@ export default function RiderEarningsPage() {
           />
         )}
 
-        {/* ================= MAIN ================= */}
+        {/* MAIN */}
 
         <main className="min-w-0 flex-1">
 
           
 
-          {/* ================= PAGE CONTENT ================= */}
+          {/* PAGE CONTENT */}
 
           <div className="space-y-7 p-5 md:p-8 lg:p-10">
 
