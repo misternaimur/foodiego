@@ -1,0 +1,62 @@
+[
+  {
+    "id": "food-1",
+    "name": "Margherita Classico",
+    "description": "San Marzano tomatoes, fresh mozzarella, basil, extra virgin olive oil.",
+    "price": 18.00,
+    "rating": 4.8,
+    "deliveryTime": "15-25 min",
+    "deliveryFee": "Free delivery with Pro",
+    "restaurantName": "Luigi's Oven",
+    "cuisine": "Italian",
+    "dietary": "Vegetarian",
+    "matchPercentage": 94,
+    "imageUrl": "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80",
+    "isFavorite": false
+  },
+  {
+    "id": "food-2",
+    "name": "Mediterranean Bowl",
+    "description": "Crisp greens, feta cheese, kalamata olives, cherry tomatoes, cucumbers, and lemon dressing.",
+    "price": 16.00,
+    "rating": 4.9,
+    "deliveryTime": "10-20 min",
+    "deliveryFee": "$2.99 delivery",
+    "restaurantName": "Green Leaf",
+    "cuisine": "Healthy",
+    "dietary": "Vegetarian",
+    "matchPercentage": null,
+    "imageUrl": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80",
+    "isFavorite": false
+  },
+  {
+    "id": "food-3",
+    "name": "Truffle Smash Burger",
+    "description": "Double smashed beef patties, truffle aioli, aged cheddar, caramelized onions on brioche.",
+    "price": 22.00,
+    "rating": 4.7,
+    "deliveryTime": "20-30 min",
+    "deliveryFee": "Free delivery with Pro",
+    "restaurantName": "Burger Bros",
+    "cuisine": "American",
+    "dietary": "Non-Veg",
+    "matchPercentage": 88,
+    "imageUrl": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
+    "isFavorite": false
+  },
+  {
+    "id": "food-4",
+    "name": "Authentic Pad Thai",
+    "description": "Stir-fried rice noodles with tiger prawns, tofu, bean sprouts, crushed peanuts, and lime.",
+    "price": 19.00,
+    "rating": 4.6,
+    "deliveryTime": "25-35 min",
+    "deliveryFee": "$1.49 delivery",
+    "restaurantName": "Bangkok Street",
+    "cuisine": "Thai",
+    "dietary": "Non-Veg",
+    "matchPercentage": null,
+    "imageUrl": "https://images.unsplash.com/photo-1555126634-323283e090fa?auto=format&fit=crop&w=800&q=80",
+    "isFavorite": false
+  }
+]
