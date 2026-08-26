@@ -2,7 +2,7 @@
 
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
-import { logout } from "@/app/actions/auth";
+import { logout } from "@/app/(public)/actions/auth";
 
 export function SignOutButton() {
   async function handleSignOut() {
