@@ -1,7 +1,16 @@
+import Hero from "@/components/Hero";
+import HungryCTA from "@/components/HungryCTA";
+import PickedForYouSection from "@/components/PickedForYouSection";
+import WhatAreYouCraving from "@/components/WhatAreYouCraving";
+
 export default function Home() {
   return (
     <main className="flex-1">
-      <h1 className="text-2xl font-bold text-center">Hello world...!!!</h1>
+      <Hero></Hero>
+      <WhatAreYouCraving></WhatAreYouCraving>
+      <PickedForYouSection></PickedForYouSection>
+      <HungryCTA></HungryCTA>
     </main>
   );
 }
+
