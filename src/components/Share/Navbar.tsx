@@ -5,8 +5,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown } from 'lucide-react';
-import { useApp } from '@/context/AppContext'; // Get cart data from the app context.
-import Logo from '@/components/Share/logo';
+
+import { useApp } from '@/context/AppContext';
+
 export interface NavItem {
   label: string;
   href: string;
@@ -25,7 +26,7 @@ export interface NavbarProps {
 
 const defaultNavItems: NavItem[] = [
   { label: 'Home', href: '/' },
-  { label: 'Food Discover', href: '/discover' },
+  { label: 'Discover Foods', href: '/foods' },
   { label: 'Offers', href: '/offers' },
 ];
 
@@ -79,12 +80,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#faf9f6] border-b border-gray-200">
+    <header className="sticky top-0 z-50 w-full bg-[#FAF7EE] border-b border-[#E8E2D5]/70 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
         
         {/* Left Section: Logo & Nav Links */}
         <div className="flex items-center gap-6 lg:gap-8">
-          <Logo className="shrink-0" />
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <span className="text-2xl font-black tracking-tight text-[#15462D]">
+              Foodiego
+            </span>
+          </Link>
 
           <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
             {navItems.map((item) => {
@@ -93,30 +98,30 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative py-6 text-sm font-medium transition-colors ${
+                  className={`relative py-6 text-sm font-semibold transition-colors ${
                     isActive
-                      ? 'text-[#c83214]'
-                      : 'text-[#4b5563] hover:text-[#111827]'
+                      ? 'text-[#15462D]'
+                      : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   {item.label}
                   {isActive && (
-                    <span className="absolute bottom-4 left-0 w-full h-0.5 bg-[#c83214] rounded-full" />
+                    <span className="absolute bottom-4 left-0 w-full h-0.5 bg-[#15462D] rounded-full" />
                   )}
                 </Link>
               );
             })}
 
-            {/* AI Assistant Special Styled Button */}
+            {/* AI Assistant Button */}
             <Link
               href="/ai-assistant"
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
                 pathname === '/ai-assistant'
-                  ? 'bg-linear-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                  : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200/60'
+                  ? 'bg-[#15462D] text-white shadow-sm'
+                  : 'bg-emerald-100/60 text-[#15462D] hover:bg-emerald-100 border border-emerald-200/50'
               }`}
             >
-              <Sparkles size={15} className="text-purple-600 animate-pulse" />
+              <Sparkles size={14} className="text-amber-500 animate-pulse" />
               <span>AI Assistant</span>
             </Link>
           </nav>
@@ -128,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className="hidden md:flex flex-1 max-w-sm mx-2 lg:mx-4"
         >
           <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -138,7 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search food or restaurants..."
-              className="w-full bg-[#ebebeb] text-sm text-gray-800 placeholder-gray-500 rounded-full pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#c83214]/30 focus:bg-white transition-all"
+              className="w-full bg-[#EFEBE0] text-sm text-gray-800 placeholder-gray-500 rounded-full pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#15462D]/20 focus:bg-white transition-all border border-transparent focus:border-[#15462D]/30"
             />
           </div>
         </form>
@@ -147,31 +152,31 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-4 sm:gap-5 shrink-0">
           <Link 
             href="/client/cart" 
-            className="relative p-1.5 text-gray-700 hover:text-black transition-colors"
+            className="relative p-2 text-gray-700 hover:text-[#15462D] transition-colors bg-white/60 hover:bg-white rounded-full border border-gray-200/50 shadow-xs"
             aria-label="Cart"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
             </svg>
             {isMounted && cartCount > 0 && (
-              <span className="absolute -top-1 -right-1.5 bg-[#c83214] text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 bg-[#F6A429] text-gray-900 text-[10px] font-extrabold h-4 w-4 rounded-full flex items-center justify-center">
                 {cartCount}
               </span>
             )}
           </Link>
 
           {user ? (
-            /* Logged In: Profile with Dropdown */
+            /* Logged In Dropdown */
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200/80 px-3 py-1.5 rounded-full transition-colors focus:outline-none"
+                className="flex items-center gap-2 text-sm font-semibold text-[#15462D] bg-white border border-[#E8E2D5] hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors focus:outline-none shadow-xs"
               >
-                <div className="w-7 h-7 rounded-full bg-gray-300 overflow-hidden flex items-center justify-center relative">
+                <div className="w-7 h-7 rounded-full bg-emerald-100 overflow-hidden flex items-center justify-center relative border border-emerald-200">
                   {user.avatarUrl ? (
                     <Image src={user.avatarUrl} alt="User Avatar" fill className="object-cover" />
                   ) : (
-                    <span className="text-xs font-bold text-gray-700">
+                    <span className="text-xs font-bold text-[#15462D]">
                       {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </span>
                   )}
@@ -192,36 +197,36 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <Link
                       href="/account"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
                     >
-                      <User size={16} className="text-gray-500" />
+                      <User size={16} className="text-[#15462D]" />
                       <span>Profile</span>
                     </Link>
 
                     <Link
                       href="/client/cart"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
                     >
-                      <ShoppingBag size={16} className="text-gray-500" />
+                      <ShoppingBag size={16} className="text-[#15462D]" />
                       <span>My Cart</span>
                     </Link>
 
                     <Link
                       href="/client/dashboard"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
                     >
-                      <LayoutDashboard size={16} className="text-gray-500" />
+                      <LayoutDashboard size={16} className="text-[#15462D]" />
                       <span>Dashboard</span>
                     </Link>
 
                     <Link
                       href="/account"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
                     >
-                      <Settings size={16} className="text-gray-500" />
+                      <Settings size={16} className="text-[#15462D]" />
                       <span>Settings</span>
                     </Link>
                   </div>
@@ -232,7 +237,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setIsDropdownOpen(false);
                         await handleLogout();
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left font-medium"
                     >
                       <LogOut size={16} className="text-red-500" />
                       <span>Logout</span>
@@ -242,18 +247,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
           ) : (
-            /* Not Logged In: Show Order Now CTA & Sign in */
+            /* Not Logged In Actions */
             <div className="flex items-center gap-3">
               <Link 
                 href="/auth/login" 
-                className="text-sm font-medium text-gray-800 hover:text-[#c83214] transition-colors"
+                className="text-sm font-bold text-gray-700 hover:text-[#15462D] transition-colors px-2 py-1"
               >
                 Sign in
               </Link>
               
               <Link
                 href="/auth/register"
-                className="hidden xl:inline-flex items-center justify-center text-sm font-semibold text-white bg-black hover:bg-gray-800 px-5 py-2.5 rounded-full transition-colors shadow-sm"
+                className="hidden xl:inline-flex items-center justify-center text-xs font-extrabold tracking-wider text-gray-900 bg-[#F6A429] hover:bg-[#e0931f] uppercase px-5 py-2.5 rounded-full transition-colors shadow-xs"
               >
                 Order Now
               </Link>
@@ -262,10 +267,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-1.5 text-gray-700 hover:text-black"
+            className="lg:hidden p-2 text-gray-700 hover:text-[#15462D] bg-white/60 rounded-full border border-gray-200/50"
             aria-label="Toggle menu"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {isMobileMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -278,14 +283,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden bg-[#f8f8f8] border-t border-gray-200 px-4 pt-3 pb-6 space-y-3">
+        <div className="lg:hidden bg-[#FAF7EE] border-t border-[#E8E2D5] px-4 pt-3 pb-6 space-y-3">
           <form onSubmit={handleSearchSubmit} className="md:hidden pb-2">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search food or restaurants..."
-              className="w-full bg-[#ebebeb] text-sm text-gray-800 placeholder-gray-500 rounded-full pl-4 pr-4 py-2 focus:outline-none"
+              className="w-full bg-[#EFEBE0] text-sm text-gray-800 placeholder-gray-500 rounded-full pl-4 pr-4 py-2 focus:outline-none border border-transparent focus:border-[#15462D]/30"
             />
           </form>
 
@@ -294,21 +299,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               key={item.href}
               href={item.href}
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`block text-base font-medium py-1.5 ${
-                pathname === item.href ? 'text-[#c83214] font-semibold' : 'text-gray-700'
+              className={`block text-base font-semibold py-1.5 ${
+                pathname === item.href ? 'text-[#15462D]' : 'text-gray-700'
               }`}
             >
               {item.label}
             </Link>
           ))}
 
-          {/* Mobile AI Assistant Link */}
           <Link
             href="/ai-assistant"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-2 text-base font-medium py-1.5 text-purple-700"
+            className="flex items-center gap-2 text-base font-semibold py-1.5 text-[#15462D]"
           >
-            <Sparkles size={17} />
+            <Sparkles size={17} className="text-amber-500" />
             <span>AI Assistant</span>
           </Link>
 
@@ -317,27 +321,27 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Link
                 href="/auth/register"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="block text-center w-full py-2.5 mt-2 text-sm font-semibold text-white bg-black rounded-xl shadow-sm"
+                className="block text-center w-full py-2.5 mt-2 text-xs font-bold uppercase tracking-wider text-gray-900 bg-[#F6A429] rounded-full shadow-xs"
               >
                 Order Now
               </Link>
 
-              <div className="pt-2 flex gap-3 border-t border-gray-200">
+              <div className="pt-2 flex gap-3 border-[#E8E2D5]">
                 <Link
                   href="/auth/login"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex-1 text-center py-2 text-sm font-medium text-white bg-[#c83214] rounded-lg"
+                  className="flex-1 text-center py-2 text-sm font-semibold text-white bg-[#15462D] rounded-full"
                 >
                   Sign in 
                 </Link>
               </div>
             </>
           ) : (
-            <div className="pt-3 border-t border-gray-200 space-y-1">
+            <div className="pt-3 border-t border-[#E8E2D5] space-y-1">
               <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Profile</Link>
-              <Link href="/client/cart" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">My Card</Link>
+              <Link href="/client/cart" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">My Cart</Link>
               <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Dashboard</Link>
-              <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Setting</Link>
+              <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Settings</Link>
               <button 
                 onClick={async () => { setIsMobileMenuOpen(false); await handleLogout(); }} 
                 className="block w-full text-left py-2 text-sm text-red-600 font-medium"
