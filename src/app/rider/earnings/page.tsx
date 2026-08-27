@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Bell,
   Bike,
   ChevronRight,
   DollarSign,
@@ -40,11 +39,12 @@ export default function RiderEarningsPage() {
 
             {/* Rider Profile */}
 
-            <div className="border-b border-slate-100 px-5 py-6">
+            <div className="relative border-b border-slate-100 px-5 py-6">
               <div className="flex items-center gap-3">
 
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-100">
-                  <User className="h-6 w-6 text-orange-500" />
+                {/* Avatar */}
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100">
+                  <User className="h-6 w-6 text-green-500" />
                 </div>
 
                 <div>
@@ -52,23 +52,26 @@ export default function RiderEarningsPage() {
                     Afrin
                   </p>
 
-                  <p className="text-xs font-medium text-orange-500">
+                  {/* Rider */}
+                  <p className="text-xs font-medium text-green-500">
                     Rider
                   </p>
 
+                  {/* Rating - YELLOW */}
                   <div className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
-                    <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     <span>4.9 Rating</span>
                   </div>
                 </div>
 
               </div>
 
-              {/* Mobile close */}
+              {/* Mobile Close */}
 
               <button
                 onClick={() => setMobileMenu(false)}
                 className="absolute right-4 top-5 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+                aria-label="Close menu"
               >
                 <X className="h-5 w-5 text-slate-600" />
               </button>
@@ -82,9 +85,9 @@ export default function RiderEarningsPage() {
               {/* Dashboard */}
 
               <a
-                href="/dashboard/rider"
+                href="/rider"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
               >
                 <Home className="h-4 w-4" />
                 Dashboard
@@ -93,9 +96,9 @@ export default function RiderEarningsPage() {
               {/* Orders */}
 
               <a
-                href="/dashboard/rider/orders"
+                href="/rider/orders"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
               >
                 <Package className="h-4 w-4" />
                 Orders
@@ -104,9 +107,9 @@ export default function RiderEarningsPage() {
               {/* Deliveries */}
 
               <a
-                href="/dashboard/rider/deliveries"
+                href="/rider/deliveries"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
               >
                 <Bike className="h-4 w-4" />
                 Deliveries
@@ -115,9 +118,9 @@ export default function RiderEarningsPage() {
               {/* Earnings ACTIVE */}
 
               <a
-                href="/dashboard/rider/earnings"
+                href="/rider/earnings"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg bg-[#f97316] px-4 py-3 text-sm font-medium text-white shadow-sm"
+                className="mb-1 flex items-center gap-3 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm"
               >
                 <DollarSign className="h-4 w-4" />
                 Earnings
@@ -126,9 +129,9 @@ export default function RiderEarningsPage() {
               {/* Shift History */}
 
               <a
-                href="/dashboard/rider/shift-history"
+                href="/rider/shift-history"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
               >
                 <History className="h-4 w-4" />
                 Shift History
@@ -137,9 +140,9 @@ export default function RiderEarningsPage() {
               {/* Settings */}
 
               <a
-                href="/dashboard/rider/settings"
+                href="/rider/settings"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
               >
                 <Settings className="h-4 w-4" />
                 Settings
@@ -148,6 +151,7 @@ export default function RiderEarningsPage() {
               {/* Logout */}
 
               <button
+                type="button"
                 className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500"
               >
                 <LogOut className="h-4 w-4" />
@@ -158,7 +162,7 @@ export default function RiderEarningsPage() {
           </div>
         </aside>
 
-        {/* Mobile Overlay */}
+        {/* ================= MOBILE OVERLAY ================= */}
 
         {mobileMenu && (
           <div
@@ -167,25 +171,35 @@ export default function RiderEarningsPage() {
           />
         )}
 
-        {/* MAIN */}
+        {/* ================= MAIN ================= */}
 
         <main className="min-w-0 flex-1">
 
-          
+          {/* Mobile Menu Button */}
 
-          {/* PAGE CONTENT */}
+          <div className="border-b border-slate-200 bg-white px-5 py-3 lg:hidden">
+            <button
+              onClick={() => setMobileMenu(true)}
+              className="rounded-lg p-2 hover:bg-slate-100"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5 text-slate-700" />
+            </button>
+          </div>
+
+          {/* ================= PAGE CONTENT ================= */}
 
           <div className="space-y-7 p-5 md:p-8 lg:p-10">
 
-            {/* PAGE HEADER */}
+            {/* ================= PAGE HEADER ================= */}
 
             <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 
               <div>
 
-                {/* 4XL + BOLD */}
+                {/* GREEN */}
 
-                <p className="mb-2 text-4xl font-bold tracking-tight text-[#f97316]">
+                <p className="mb-2 text-4xl font-bold tracking-tight text-green-500">
                   Rider Dashboard
                 </p>
 
@@ -258,7 +272,6 @@ export default function RiderEarningsPage() {
                 <div className="flex items-center justify-between">
 
                   <div>
-
                     <h2 className="text-lg font-bold text-slate-900">
                       Earnings Overview
                     </h2>
@@ -266,10 +279,12 @@ export default function RiderEarningsPage() {
                     <p className="mt-1 text-sm text-slate-500">
                       Your earnings performance this week
                     </p>
-
                   </div>
 
-                  <button className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+                  >
                     <CalendarDays className="h-4 w-4" />
                     This Week
                   </button>
@@ -283,17 +298,11 @@ export default function RiderEarningsPage() {
                   <div className="flex h-52 items-end justify-between gap-3 border-b border-slate-100 px-2">
 
                     <Bar height="35%" label="Mon" value="$82" />
-
                     <Bar height="55%" label="Tue" value="$125" />
-
                     <Bar height="45%" label="Wed" value="$98" />
-
                     <Bar height="70%" label="Thu" value="$154" />
-
                     <Bar height="60%" label="Fri" value="$132" />
-
                     <Bar height="85%" label="Sat" value="$178" />
-
                     <Bar height="65%" label="Sun" value="$142" />
 
                   </div>
@@ -309,7 +318,6 @@ export default function RiderEarningsPage() {
                 <div className="mb-5 flex items-center justify-between">
 
                   <div>
-
                     <h2 className="font-bold text-slate-900">
                       Payout Summary
                     </h2>
@@ -317,14 +325,17 @@ export default function RiderEarningsPage() {
                     <p className="mt-1 text-sm text-slate-500">
                       Your latest payout
                     </p>
-
                   </div>
 
-                  <Wallet className="h-5 w-5 text-orange-500" />
+                  {/* GREEN */}
+
+                  <Wallet className="h-5 w-5 text-green-500" />
 
                 </div>
 
-                <div className="rounded-xl bg-orange-50 p-5">
+                {/* Available Balance */}
+
+                <div className="rounded-xl bg-green-50 p-5">
 
                   <p className="text-sm text-slate-500">
                     Available Balance
@@ -334,7 +345,10 @@ export default function RiderEarningsPage() {
                     $284.75
                   </p>
 
-                  <button className="mt-4 flex items-center gap-1 text-sm font-semibold text-orange-600">
+                  <button
+                    type="button"
+                    className="mt-4 flex items-center gap-1 text-sm font-semibold text-green-600 transition hover:text-green-700"
+                  >
                     View payout details
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -344,7 +358,6 @@ export default function RiderEarningsPage() {
                 <div className="mt-5 space-y-4">
 
                   <div className="flex items-center justify-between">
-
                     <span className="text-sm text-slate-500">
                       Last payout
                     </span>
@@ -352,11 +365,9 @@ export default function RiderEarningsPage() {
                     <span className="text-sm font-semibold text-slate-800">
                       $412.50
                     </span>
-
                   </div>
 
                   <div className="flex items-center justify-between">
-
                     <span className="text-sm text-slate-500">
                       Payout date
                     </span>
@@ -364,7 +375,6 @@ export default function RiderEarningsPage() {
                     <span className="text-sm font-semibold text-slate-800">
                       Aug 20, 2026
                     </span>
-
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -403,7 +413,10 @@ export default function RiderEarningsPage() {
 
                 </div>
 
-                <button className="flex items-center gap-1 text-sm font-semibold text-orange-500 hover:text-orange-600">
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-sm font-semibold text-green-500 transition hover:text-green-600"
+                >
                   View all
                   <ArrowUpRight className="h-4 w-4" />
                 </button>
@@ -473,7 +486,9 @@ function EarningStat({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
 
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+      {/* GREEN ICON */}
+
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
         {icon}
       </div>
 
@@ -513,8 +528,10 @@ function Bar({
         {value}
       </span>
 
+      {/* GREEN BAR */}
+
       <div
-        className="w-full max-w-[42px] rounded-t-lg bg-orange-400 transition hover:bg-orange-500"
+        className="w-full max-w-[42px] rounded-t-lg bg-green-400 transition hover:bg-green-500"
         style={{ height }}
       />
 
@@ -548,8 +565,10 @@ function EarningRow({
 
       <div className="flex items-center gap-4">
 
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50">
-          <Package className="h-5 w-5 text-orange-500" />
+        {/* GREEN ICON */}
+
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-50">
+          <Package className="h-5 w-5 text-green-500" />
         </div>
 
         <div>
@@ -579,6 +598,8 @@ function EarningRow({
           </p>
 
         </div>
+
+        {/* EARNINGS GREEN */}
 
         <div className="text-right">
 

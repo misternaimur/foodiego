@@ -113,23 +113,31 @@ export default function RiderDeliveriesPage() {
     <div className="min-h-screen bg-[#f8fafc] text-slate-900">
       <div className="flex min-h-screen">
 
-        {/* =====================================================
-            SIDEBAR
-        ===================================================== */}
+        {/* ================= SIDEBAR ================= */}
 
         <aside
           className={`fixed left-0 top-0 z-50 h-screen w-64 border-r border-slate-200 bg-white transition-transform duration-300 lg:sticky lg:top-0 lg:z-30 lg:block lg:h-screen lg:translate-x-0 ${
             mobileMenu ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex h-full flex-col">
+          <div className="relative flex h-full flex-col">
 
-            {/* Profile */}
+            {/* Mobile Close */}
+            <button
+              onClick={() => setMobileMenu(false)}
+              className="absolute right-4 top-5 z-10 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5 text-slate-600" />
+            </button>
+
+            {/* ================= PROFILE ================= */}
+
             <div className="border-b border-slate-100 px-5 py-6">
               <div className="flex items-center gap-3">
 
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-100">
-                  <User className="h-6 w-6 text-orange-500" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100">
+                  <User className="h-6 w-6 text-green-500" />
                 </div>
 
                 <div>
@@ -138,36 +146,30 @@ export default function RiderDeliveriesPage() {
                   </p>
 
                   <div className="mt-0.5 flex items-center gap-1">
-                    <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-600">
+                    <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-600">
                       Rider
                     </span>
                   </div>
 
+                  {/* Rating stays yellow */}
                   <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                    <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     <span>4.9 Rating</span>
                   </div>
                 </div>
 
               </div>
-
-              {/* Mobile close */}
-              <button
-                onClick={() => setMobileMenu(false)}
-                className="absolute right-4 top-5 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
-              >
-                <X className="h-5 w-5 text-slate-600" />
-              </button>
             </div>
 
-            {/* Navigation */}
+            {/* ================= NAVIGATION ================= */}
+
             <nav className="flex-1 px-4 py-5">
 
               {/* Dashboard */}
               <a
-                href="/dashboard/rider"
+                href="/rider"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
               >
                 <Home className="h-4 w-4" />
                 Dashboard
@@ -175,19 +177,19 @@ export default function RiderDeliveriesPage() {
 
               {/* Orders */}
               <a
-                href="/dashboard/rider/orders"
+                href="/rider/orders"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
               >
                 <Package className="h-4 w-4" />
                 Orders
               </a>
 
-              {/* Deliveries - ACTIVE */}
+              {/* Deliveries ACTIVE */}
               <a
-                href="/dashboard/rider/deliveries"
+                href="/rider/deliveries"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg bg-[#f97316] px-4 py-3 text-sm font-medium text-white shadow-sm"
+                className="mb-1 flex items-center gap-3 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm"
               >
                 <Bike className="h-4 w-4" />
                 Deliveries
@@ -195,9 +197,9 @@ export default function RiderDeliveriesPage() {
 
               {/* Earnings */}
               <a
-                href="/dashboard/rider/earnings"
+                href="/rider/earnings"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
               >
                 <DollarSign className="h-4 w-4" />
                 Earnings
@@ -205,9 +207,9 @@ export default function RiderDeliveriesPage() {
 
               {/* Shift History */}
               <a
-                href="/dashboard/rider/shift-history"
+                href="/rider/shift-history"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
               >
                 <History className="h-4 w-4" />
                 Shift History
@@ -215,16 +217,19 @@ export default function RiderDeliveriesPage() {
 
               {/* Settings */}
               <a
-                href="/dashboard/rider/settings"
+                href="/rider/settings"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
               >
                 <Settings className="h-4 w-4" />
                 Settings
               </a>
 
               {/* Logout */}
-              <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500">
+              <button
+                type="button"
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500"
+              >
                 <LogOut className="h-4 w-4" />
                 Logout
               </button>
@@ -233,7 +238,8 @@ export default function RiderDeliveriesPage() {
           </div>
         </aside>
 
-        {/* Mobile Overlay */}
+        {/* ================= MOBILE OVERLAY ================= */}
+
         {mobileMenu && (
           <div
             className="fixed inset-0 z-40 bg-black/30 lg:hidden"
@@ -241,9 +247,7 @@ export default function RiderDeliveriesPage() {
           />
         )}
 
-        {/* =====================================================
-            MAIN
-        ===================================================== */}
+        {/* ================= MAIN ================= */}
 
         <main className="min-w-0 flex-1">
 
@@ -252,22 +256,22 @@ export default function RiderDeliveriesPage() {
             <button
               onClick={() => setMobileMenu(true)}
               className="rounded-lg p-2 hover:bg-slate-100"
+              aria-label="Open menu"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5 text-slate-700" />
             </button>
           </div>
 
-          {/* =====================================================
-              CONTENT
-          ===================================================== */}
+          {/* ================= CONTENT ================= */}
 
           <div className="space-y-7 p-5 md:p-8 lg:p-10">
 
-            {/* Page Header */}
+            {/* ================= PAGE HEADER ================= */}
+
             <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 
               <div>
-                <p className="mb-2 text-4xl font-bold text-orange-500">
+                <p className="mb-2 text-4xl font-bold text-green-500">
                   Rider Dashboard
                 </p>
 
@@ -291,9 +295,7 @@ export default function RiderDeliveriesPage() {
 
             </section>
 
-            {/* =====================================================
-                STATS
-            ===================================================== */}
+            {/* ================= STATS ================= */}
 
             <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
@@ -328,19 +330,17 @@ export default function RiderDeliveriesPage() {
 
             </section>
 
-            {/* =====================================================
-                ACTIVE DELIVERY
-            ===================================================== */}
+            {/* ================= ACTIVE DELIVERY ================= */}
 
-            <section className="rounded-2xl border border-orange-200 bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
 
               <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
 
-                    <p className="text-sm font-semibold text-orange-600">
+                    <p className="text-sm font-semibold text-green-600">
                       Active Delivery
                     </p>
                   </div>
@@ -366,9 +366,11 @@ export default function RiderDeliveriesPage() {
 
               </div>
 
-              {/* Route */}
+              {/* ================= ROUTE ================= */}
+
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 
+                {/* Pickup */}
                 <div className="rounded-xl bg-slate-50 p-5">
 
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -376,8 +378,9 @@ export default function RiderDeliveriesPage() {
                   </p>
 
                   <div className="mt-3 flex items-start gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-100">
-                      <MapPin className="h-4 w-4 text-orange-500" />
+
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100">
+                      <MapPin className="h-4 w-4 text-green-600" />
                     </div>
 
                     <div>
@@ -389,10 +392,11 @@ export default function RiderDeliveriesPage() {
                         Downtown Burger Joint
                       </p>
                     </div>
-                  </div>
 
+                  </div>
                 </div>
 
+                {/* Delivery */}
                 <div className="rounded-xl bg-slate-50 p-5">
 
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -400,6 +404,7 @@ export default function RiderDeliveriesPage() {
                   </p>
 
                   <div className="mt-3 flex items-start gap-3">
+
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100">
                       <MapPin className="h-4 w-4 text-green-600" />
                     </div>
@@ -413,13 +418,14 @@ export default function RiderDeliveriesPage() {
                         89 Lake Street
                       </p>
                     </div>
-                  </div>
 
+                  </div>
                 </div>
 
               </div>
 
-              {/* Delivery info */}
+              {/* ================= DELIVERY INFO ================= */}
+
               <div className="mt-5 flex flex-wrap gap-3">
 
                 <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-4 py-2.5">
@@ -436,52 +442,65 @@ export default function RiderDeliveriesPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 rounded-lg bg-orange-50 px-4 py-2.5">
-                  <Bike className="h-4 w-4 text-orange-500" />
-                  <span className="text-sm font-medium text-orange-600">
+                <div className="flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2.5">
+                  <Bike className="h-4 w-4 text-green-500" />
+
+                  <span className="text-sm font-medium text-green-600">
                     On the way
                   </span>
                 </div>
 
               </div>
 
-              {/* Progress */}
+              {/* ================= PROGRESS ================= */}
+
               <div className="mt-6">
 
                 <div className="mb-3 flex items-center justify-between">
+
                   <p className="text-sm font-semibold text-slate-700">
                     Delivery Progress
                   </p>
 
-                  <p className="text-xs font-medium text-orange-500">
+                  <p className="text-xs font-medium text-green-500">
                     75%
                   </p>
+
                 </div>
 
                 <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full w-3/4 rounded-full bg-orange-500" />
+                  <div className="h-full w-3/4 rounded-full bg-green-500" />
                 </div>
 
                 <div className="mt-3 flex justify-between text-xs text-slate-400">
                   <span>Accepted</span>
                   <span>Picked Up</span>
-                  <span className="font-semibold text-orange-500">
+
+                  <span className="font-semibold text-green-500">
                     On the Way
                   </span>
+
                   <span>Delivered</span>
                 </div>
 
               </div>
 
-              {/* Actions */}
+              {/* ================= ACTIONS ================= */}
+
               <div className="mt-6 flex flex-wrap gap-3">
 
-                <button className="flex items-center gap-2 rounded-lg bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-lg bg-green-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
+                >
                   View Delivery
                   <ArrowUpRight className="h-4 w-4" />
                 </button>
 
-                <button className="flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
                   <Phone className="h-4 w-4" />
                   Contact Customer
                 </button>
@@ -490,9 +509,7 @@ export default function RiderDeliveriesPage() {
 
             </section>
 
-            {/* =====================================================
-                DELIVERY HISTORY
-            ===================================================== */}
+            {/* ================= DELIVERY HISTORY ================= */}
 
             <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
@@ -513,6 +530,7 @@ export default function RiderDeliveriesPage() {
 
                   {/* Search */}
                   <div className="relative w-full sm:w-64">
+
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
                     <input
@@ -520,8 +538,9 @@ export default function RiderDeliveriesPage() {
                       onChange={(e) => setSearch(e.target.value)}
                       type="text"
                       placeholder="Search deliveries..."
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-orange-300 focus:bg-white focus:ring-2 focus:ring-orange-100"
+                      className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-green-300 focus:bg-white focus:ring-2 focus:ring-green-100"
                     />
+
                   </div>
 
                 </div>
@@ -530,6 +549,7 @@ export default function RiderDeliveriesPage() {
 
               {/* List */}
               {filteredDeliveries.length === 0 ? (
+
                 <div className="px-6 py-16 text-center">
 
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
@@ -545,7 +565,9 @@ export default function RiderDeliveriesPage() {
                   </p>
 
                 </div>
+
               ) : (
+
                 <div className="divide-y divide-slate-100">
 
                   {filteredDeliveries.map((delivery) => (
@@ -556,6 +578,7 @@ export default function RiderDeliveriesPage() {
                   ))}
 
                 </div>
+
               )}
 
             </section>
@@ -588,11 +611,11 @@ function DeliveryStat({
     <div
       className={`rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
         highlight
-          ? "border-orange-200 ring-1 ring-orange-100"
+          ? "border-green-200 ring-1 ring-green-100"
           : "border-slate-200"
       }`}
     >
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
         {icon}
       </div>
 
@@ -632,18 +655,14 @@ function DeliveryRow({
         {/* Delivery Info */}
         <div className="flex min-w-0 flex-1 items-start gap-4">
 
-          <div
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-              isCompleted
-                ? "bg-green-50"
-                : "bg-orange-50"
-            }`}
-          >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-50">
+
             {isCompleted ? (
               <CheckCircle2 className="h-5 w-5 text-green-500" />
             ) : (
-              <Bike className="h-5 w-5 text-orange-500" />
+              <Bike className="h-5 w-5 text-green-500" />
             )}
+
           </div>
 
           <div className="min-w-0">
@@ -694,21 +713,25 @@ function DeliveryRow({
           <div className="mt-2 space-y-1.5">
 
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-orange-500" />
+
+              <span className="h-2 w-2 rounded-full bg-green-500" />
 
               <p className="truncate text-xs text-slate-600">
                 {delivery.pickup}
               </p>
+
             </div>
 
             <div className="ml-[3px] h-3 border-l border-dashed border-slate-300" />
 
             <div className="flex items-center gap-2">
+
               <span className="h-2 w-2 rounded-full bg-green-500" />
 
               <p className="truncate text-xs text-slate-600">
                 {delivery.delivery}
               </p>
+
             </div>
 
           </div>
@@ -718,6 +741,7 @@ function DeliveryRow({
         <div className="flex items-center justify-between gap-5 xl:block xl:min-w-[100px]">
 
           <div>
+
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
               Payout
             </p>
@@ -725,6 +749,7 @@ function DeliveryRow({
             <p className="mt-1 text-xl font-bold text-slate-900">
               {delivery.payout}
             </p>
+
           </div>
 
           <p className="text-xs text-slate-400 xl:mt-2">
@@ -737,21 +762,30 @@ function DeliveryRow({
         <div className="flex items-center gap-2 xl:min-w-[150px] xl:justify-end">
 
           {isProgress && (
-            <button className="flex items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600">
+            <button
+              type="button"
+              className="flex items-center justify-center gap-2 rounded-lg bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600"
+            >
               View Delivery
               <ArrowUpRight className="h-4 w-4" />
             </button>
           )}
 
           {isAccepted && (
-            <button className="flex items-center justify-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-4 py-2.5 text-sm font-semibold text-orange-600 transition hover:bg-orange-100">
+            <button
+              type="button"
+              className="flex items-center justify-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5 text-sm font-semibold text-green-600 transition hover:bg-green-100"
+            >
               Start Delivery
               <ArrowUpRight className="h-4 w-4" />
             </button>
           )}
 
           {isCompleted && (
-            <button className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
+            <button
+              type="button"
+              className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+            >
               View Details
               <ArrowUpRight className="h-4 w-4" />
             </button>
@@ -775,7 +809,7 @@ function DeliveryStatusBadge({
 }) {
   const styles = {
     "In Progress":
-      "bg-orange-50 text-orange-700 border-orange-200",
+      "bg-green-50 text-green-700 border-green-200",
 
     Accepted:
       "bg-blue-50 text-blue-700 border-blue-200",
