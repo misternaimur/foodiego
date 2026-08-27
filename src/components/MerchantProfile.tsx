@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   User,
   Mail,
@@ -49,10 +50,11 @@ export default function MerchantProfile({
   role = 'restaurant',
 }: MerchantProfileProps) {
   const [activeTab, setActiveTab] = useState<'profile' | 'create'>('profile');
+  const pathname = usePathname();
 
   return (
     <div className="min-h-screen bg-[#faf9f6] font-sans">
-      <main className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <main className="w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         {/* ---------- Merchant Header Card ---------- */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
           <div className="h-28 bg-gradient-to-r from-[#b93815] to-[#9a2c0f]" />
@@ -111,7 +113,7 @@ export default function MerchantProfile({
         </div>
 
         {/* ---------- Restaurant / Merchant Section ---------- */}
-        <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 sm:p-8">
+        <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 sm:p-8 mt-6">
           <div className="flex items-center gap-4">
             <div className="h-14 w-14 rounded-2xl bg-[#fff1ec] text-[#b93815] flex items-center justify-center shrink-0">
               <Store size={26} />
@@ -125,21 +127,27 @@ export default function MerchantProfile({
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Link
               href="/account"
-              className="inline-flex items-center justify-center gap-2 bg-[#b93815] hover:bg-[#9a2c0f] text-white font-semibold py-2.5 px-4 rounded-xl transition-all"
+              className={`inline-flex items-center justify-center gap-2 bg-[#b93815] hover:bg-[#9a2c0f] text-white font-semibold py-2.5 px-4 rounded-xl transition-all ${
+                pathname === '/account' ? 'ring-2 ring-[#b93815] ring-offset-2' : ''
+              }`}
             >
               <User size={16} />
               View Profile
             </Link>
             <Link
               href="/dashboard/restaurant"
-              className="inline-flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2.5 px-4 rounded-xl transition-all"
+              className={`inline-flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2.5 px-4 rounded-xl transition-all ${
+                pathname === '/dashboard/restaurant' ? 'ring-2 ring-[#b93815] ring-offset-2' : ''
+              }`}
             >
               <LayoutDashboard size={16} />
               Merchant Dashboard
             </Link>
             <button
               onClick={() => setActiveTab('create')}
-              className="inline-flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2.5 px-4 rounded-xl transition-all"
+              className={`inline-flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2.5 px-4 rounded-xl transition-all ${
+                activeTab === 'create' ? 'ring-2 ring-[#b93815] ring-offset-2' : ''
+              }`}
             >
               <Sparkles size={16} />
               Create Menu Item

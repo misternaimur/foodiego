@@ -533,11 +533,252 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
     </div>
   );
 
-  const renderOrders = () =>
-    renderPlaceholder(
-      'Orders',
-      'Track and manage incoming customer orders in real-time.'
+  const renderOrders = () => {
+    const statuses: LiveOrder['status'][] = ['Preparing', 'Ready', 'Delivered'];
+    const statusIcons: Record<LiveOrder['status'], React.ComponentType<{ size?: number; className?: string }>> = {
+      Preparing: Loader2,
+      Ready: Check,
+      Delivered: Bike,
+    };
+    const statusColors: Record<LiveOrder['status'], { bg: string; text: string; border: string; glow: string }> = {
+      Preparing: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', glow: 'shadow-amber-200' },
+      Ready: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', glow: 'shadow-emerald-200' },
+      Delivered: { bg: 'bg-gray-50', text: 'text-gray-500', border: 'border-gray-200', glow: 'shadow-gray-200' },
+    };
+
+    const pipeline = statuses.map((status) => ({
+      status,
+      items: orders.filter((o) => o.status === status),
+    }));
+
+    return (
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+              Orders
+            </h1>
+            <p className="mt-1 text-base text-gray-500">
+              Track and manage incoming customer orders in real-time.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {statuses.map((status) => {
+              const count = orders.filter((o) => o.status === status).length;
+              const Icon = statusIcons[status];
+              const colors = statusColors[status];
+              return (
+                <div
+                  key={status}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl border ${colors.bg} ${colors.text} ${colors.border} shadow-sm`}
+                >
+                  <Icon size={18} className={status === 'Preparing' ? 'animate-spin' : ''} />
+                  <span className="text-sm font-bold">{count}</span>
+                  <span className="text-xs font-medium opacity-80">{status}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 3D Pipeline */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {pipeline.map((stage, stageIndex) => {
+            const Icon = statusIcons[stage.status];
+            const colors = statusColors[stage.status];
+            return (
+              <div
+                key={stage.status}
+                className="relative group"
+                style={{ perspective: '1200px' }}
+              >
+                <div
+                  className={`relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2 hover:scale-[1.02] ${colors.glow}`}
+                  style={{ transformStyle: 'preserve-3d' }}
+                >
+                  {/* Animated top glow */}
+                  <div className={`absolute -top-px left-8 right-8 h-1 rounded-full bg-gradient-to-r ${stage.status === 'Preparing' ? 'from-amber-300 to-orange-300' : stage.status === 'Ready' ? 'from-emerald-300 to-teal-300' : 'from-gray-300 to-gray-400'} opacity-60 group-hover:opacity-100 transition-opacity`} />
+
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="flex items-center gap-3">
+                        <div className={`h-12 w-12 rounded-2xl ${colors.bg} ${colors.text} flex items-center justify-center border ${colors.border} shadow-inner`}>
+                          <Icon size={24} />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-bold text-gray-900">{stage.status}</h3>
+                          <p className="text-xs text-gray-500">{stage.items.length} order{stage.items.length !== 1 ? 's' : ''}</p>
+                        </div>
+                      </div>
+                      <div className={`h-3 w-3 rounded-full ${stage.status === 'Preparing' ? 'bg-amber-400 animate-pulse' : stage.status === 'Ready' ? 'bg-emerald-400 animate-pulse' : 'bg-gray-300'} shadow-lg`} />
+                    </div>
+
+                    <div className="space-y-3">
+                      {stage.items.length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-xs text-gray-400 font-medium">No orders in this stage</p>
+                        </div>
+                      ) : (
+                        stage.items.map((order, orderIndex) => (
+                          <div
+                            key={order.id}
+                            className="relative bg-gray-50 rounded-2xl border border-gray-100 p-4 hover:border-gray-200 hover:shadow-md transition-all duration-300 group/card"
+                            style={{
+                              animation: `fadeSlideIn 0.5s ease-out ${orderIndex * 0.08}s both`,
+                              transform: 'translateZ(0)',
+                            }}
+                          >
+                            {/* 3D shine effect on hover */}
+                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                            <div className="flex items-start justify-between gap-3 mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-extrabold text-gray-900 tracking-tight">#{order.id.replace('#', '')}</span>
+                                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-200" />
+                              </div>
+                              <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${colors.bg} ${colors.text} ${colors.border} uppercase tracking-wider`}>
+                                {order.status}
+                              </span>
+                            </div>
+
+                            <p className="text-xs font-semibold text-gray-700 mb-1 truncate">{order.customer}</p>
+                            <p className="text-[11px] text-gray-400 mb-3 line-clamp-1 leading-relaxed">{order.items}</p>
+
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-extrabold text-gray-900">${order.total.toFixed(2)}</span>
+                              <div className="flex items-center gap-1.5">
+                                {order.status === 'Preparing' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => updateOrderStatus(order.id, 'Ready')}
+                                    className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                                  >
+                                    Mark Ready
+                                  </button>
+                                )}
+                                {order.status === 'Ready' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => updateOrderStatus(order.id, 'Delivered')}
+                                    className="text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                                  >
+                                    Delivered
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  className="text-gray-400 hover:text-gray-700 bg-white hover:bg-gray-100 p-2 rounded-xl transition-all hover:scale-110 active:scale-95 border border-gray-200 shadow-sm hover:shadow-md"
+                                >
+                                  <Receipt size={14} />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="mt-3 flex items-center justify-between">
+                              <span className="text-[10px] text-gray-400 font-medium">{order.time}</span>
+                              <div className="flex items-center gap-1">
+                                <div className="h-1.5 w-1.5 rounded-full bg-gray-300" />
+                                <div className="h-1.5 w-1.5 rounded-full bg-gray-300" />
+                                <div className="h-1.5 w-1.5 rounded-full bg-gray-300" />
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bottom reflection */}
+                  <div className="absolute bottom-0 left-8 right-8 h-8 bg-gradient-to-t from-gray-100/50 to-transparent rounded-b-3xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 3D Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[
+            { label: "Today's Orders", value: orders.length, icon: ShoppingBag, color: 'from-blue-400 to-blue-600', bg: 'bg-blue-50', text: 'text-blue-600' },
+            { label: 'Total Revenue', value: `$${orders.reduce((sum, o) => sum + o.total, 0).toFixed(2)}`, icon: DollarSign, color: 'from-emerald-400 to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+            { label: 'Avg Order Value', value: `$${(orders.reduce((sum, o) => sum + o.total, 0) / Math.max(orders.length, 1)).toFixed(2)}`, icon: TrendingUp, color: 'from-amber-400 to-amber-600', bg: 'bg-amber-50', text: 'text-amber-600' },
+            { label: 'Completion Rate', value: `${Math.round((orders.filter((o) => o.status === 'Delivered').length / Math.max(orders.length, 1)) * 100)}%`, icon: Star, color: 'from-purple-400 to-purple-600', bg: 'bg-purple-50', text: 'text-purple-600' },
+          ].map((stat, index) => (
+            <div
+              key={stat.label}
+              className="relative group"
+              style={{ perspective: '1000px' }}
+            >
+              <div
+                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu hover:rotate-y-6 hover:-translate-y-1"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {/* 3D gradient border effect */}
+                <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                <div className={`absolute -top-px left-6 right-6 h-1 rounded-full bg-gradient-to-r ${stat.color} opacity-60 group-hover:opacity-100 transition-opacity`} />
+
+                <div className="p-5 relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`h-12 w-12 rounded-2xl ${stat.bg} ${stat.text} flex items-center justify-center border border-gray-100 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                      <stat.icon size={22} />
+                    </div>
+                    <div className={`h-2 w-2 rounded-full bg-gradient-to-r ${stat.color} animate-pulse shadow-lg`} />
+                  </div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className="text-2xl font-extrabold text-gray-900 tracking-tight group-hover:tracking-normal transition-all">{stat.value}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Recent Activity Timeline */}
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#b93815] to-[#9a2c0f] text-white flex items-center justify-center shadow-lg shadow-orange-200">
+              <ShoppingBag size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Recent Activity</h2>
+              <p className="text-xs text-gray-500">Latest order updates and status changes</p>
+            </div>
+          </div>
+          <div className="space-y-4">
+            {orders.slice(0, 6).map((order, index) => {
+              const colors = statusColors[order.status];
+              return (
+                <div
+                  key={order.id}
+                  className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 group/item"
+                  style={{
+                    animation: `fadeSlideIn 0.4s ease-out ${index * 0.06}s both`,
+                  }}
+                >
+                  <div className={`h-10 w-10 rounded-xl ${colors.bg} ${colors.text} flex items-center justify-center border ${colors.border} shrink-0 group-hover/item:scale-110 group-hover/item:rotate-6 transition-all duration-300`}>
+                    <ShoppingBag size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-sm font-bold text-gray-900">#{order.id.replace('#', '')}</p>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${colors.bg} ${colors.text} ${colors.border}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 truncate">{order.customer} · {order.items}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-extrabold text-gray-900">${order.total.toFixed(2)}</p>
+                    <p className="text-[10px] text-gray-400 font-medium">{order.time}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     );
+  };
 
   const renderMenuManagement = () => {
     return (
