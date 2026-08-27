@@ -12,10 +12,10 @@ import {
   Package,
   Settings,
   Star,
+  TrendingUp,
   User,
   X,
   CalendarDays,
-  TrendingUp,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -102,7 +102,7 @@ export default function RiderShiftHistoryPage() {
       <div className="flex min-h-screen">
 
         {/* =====================================================
-            SIDEBAR
+            SIDEBAR - SAME AS RIDER DASHBOARD
         ===================================================== */}
 
         <aside
@@ -110,60 +110,54 @@ export default function RiderShiftHistoryPage() {
             mobileMenu ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex h-full flex-col">
+          <div className="relative flex h-full flex-col">
 
-            {/* Rider Profile */}
+            {/* Mobile Close */}
+            <button
+              onClick={() => setMobileMenu(false)}
+              className="absolute right-4 top-5 z-10 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5 text-slate-600" />
+            </button>
 
-            <div className="relative border-b border-slate-100 px-5 py-6">
+            {/* ================= RIDER PROFILE ================= */}
 
+            <div className="border-b border-slate-100 px-5 py-6">
               <div className="flex items-center gap-3">
 
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-100">
-                  <User className="h-6 w-6 text-orange-500" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100">
+                  <User className="h-6 w-6 text-green-500" />
                 </div>
 
                 <div>
-
                   <p className="font-semibold text-slate-800">
                     Afrin
                   </p>
 
-                  <p className="text-xs font-medium text-orange-500">
+                  <p className="text-xs font-medium text-green-500">
                     Rider
                   </p>
 
-                  <div className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
-                    <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
+                  <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     <span>4.9 Rating</span>
                   </div>
-
                 </div>
 
               </div>
-
-              {/* Mobile Close */}
-
-              <button
-                onClick={() => setMobileMenu(false)}
-                className="absolute right-4 top-5 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
-              >
-                <X className="h-5 w-5 text-slate-600" />
-              </button>
-
             </div>
 
-            {/* =================================================
-                NAVIGATION
-            ================================================= */}
+            {/* ================= NAVIGATION ================= */}
 
             <nav className="flex-1 px-4 py-5">
 
               {/* Dashboard */}
 
               <a
-                href="/dashboard/rider"
+                href="/rider"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <Home className="h-4 w-4" />
                 Dashboard
@@ -172,9 +166,9 @@ export default function RiderShiftHistoryPage() {
               {/* Orders */}
 
               <a
-                href="/dashboard/rider/orders"
+                href="/rider/orders"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <Package className="h-4 w-4" />
                 Orders
@@ -183,9 +177,9 @@ export default function RiderShiftHistoryPage() {
               {/* Deliveries */}
 
               <a
-                href="/dashboard/rider/deliveries"
+                href="/rider/deliveries"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <Bike className="h-4 w-4" />
                 Deliveries
@@ -194,9 +188,9 @@ export default function RiderShiftHistoryPage() {
               {/* Earnings */}
 
               <a
-                href="/dashboard/rider/earnings"
+                href="/rider/earnings"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <DollarSign className="h-4 w-4" />
                 Earnings
@@ -205,9 +199,9 @@ export default function RiderShiftHistoryPage() {
               {/* Shift History - ACTIVE */}
 
               <a
-                href="/dashboard/rider/shift-history"
+                href="/rider/shift-history"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg bg-[#f97316] px-4 py-3 text-sm font-medium text-white shadow-sm"
+                className="mb-1 flex items-center gap-3 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm"
               >
                 <History className="h-4 w-4" />
                 Shift History
@@ -216,9 +210,9 @@ export default function RiderShiftHistoryPage() {
               {/* Settings */}
 
               <a
-                href="/dashboard/rider/settings"
+                href="/rider/settings"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <Settings className="h-4 w-4" />
                 Settings
@@ -227,7 +221,8 @@ export default function RiderShiftHistoryPage() {
               {/* Logout */}
 
               <button
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500"
+                type="button"
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <LogOut className="h-4 w-4" />
                 Logout
@@ -237,7 +232,9 @@ export default function RiderShiftHistoryPage() {
           </div>
         </aside>
 
-        {/* Mobile Overlay */}
+        {/* =====================================================
+            MOBILE OVERLAY
+        ===================================================== */}
 
         {mobileMenu && (
           <div
@@ -252,9 +249,20 @@ export default function RiderShiftHistoryPage() {
 
         <main className="min-w-0 flex-1">
 
+          {/* Mobile Menu Button */}
+
+          <div className="px-5 pt-5 lg:hidden">
+            <button
+              onClick={() => setMobileMenu(true)}
+              className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm hover:bg-slate-50"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5 text-slate-700" />
+            </button>
+          </div>
+
           {/* =================================================
-              PAGE CONTENT
-              No separate navbar here
+              CONTENT
           ================================================= */}
 
           <div className="space-y-7 p-5 md:p-8 lg:p-10">
@@ -267,18 +275,21 @@ export default function RiderShiftHistoryPage() {
 
               <div>
 
-                {/* Rider Dashboard */}
+                {/* Rider */}
 
-                <p className="mb-2 text-4xl font-bold tracking-tight text-[#f97316]">
-                  Rider Dashboard
+                <p className="mb-2 text-4xl font-bold tracking-tight text-green-500">
+                  Rider
                 </p>
+
+                {/* Shift History */}
 
                 <h1 className="text-3xl font-bold tracking-tight text-slate-900">
                   Shift History
                 </h1>
 
                 <p className="mt-2 max-w-xl text-sm text-slate-500">
-                  Review your previous shifts, working hours, deliveries and earnings.
+                  Review your previous shifts, working hours, deliveries and
+                  earnings.
                 </p>
 
               </div>
@@ -337,14 +348,14 @@ export default function RiderShiftHistoryPage() {
                 CURRENT SHIFT
             ================================================= */}
 
-            <section className="rounded-2xl border border-orange-200 bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
 
               <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
 
                 <div className="flex items-start gap-4">
 
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-50">
-                    <Clock3 className="h-6 w-6 text-orange-500" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-50">
+                    <Clock3 className="h-6 w-6 text-green-500" />
                   </div>
 
                   <div>
@@ -407,7 +418,9 @@ export default function RiderShiftHistoryPage() {
 
             </section>
 
-            {/* SHIFT HISTORY TABLE */}
+            {/* =================================================
+                SHIFT HISTORY TABLE
+            ================================================= */}
 
             <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
@@ -427,12 +440,12 @@ export default function RiderShiftHistoryPage() {
 
                 </div>
 
-                <button className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50">
-
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                >
                   <CalendarDays className="h-4 w-4" />
-
                   This Month
-
                 </button>
 
               </div>
@@ -622,7 +635,7 @@ function ShiftStat({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
 
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
         {icon}
       </div>
 
@@ -694,7 +707,7 @@ function ShiftRow({
 
         <div className="flex items-center gap-2">
 
-          <Bike className="h-4 w-4 text-orange-500" />
+          <Bike className="h-4 w-4 text-green-500" />
 
           <span className="text-sm font-semibold text-slate-800">
             {shift.deliveries}
@@ -723,7 +736,7 @@ function ShiftRow({
 
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-600">
+          <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-600">
 
             <Clock3 className="h-3 w-3" />
 
@@ -769,7 +782,7 @@ function MobileShiftCard({
             Completed
           </span>
         ) : (
-          <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-600">
+          <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-600">
             In Progress
           </span>
         )}
@@ -779,7 +792,6 @@ function MobileShiftCard({
       <div className="mt-5 grid grid-cols-2 gap-4">
 
         <div>
-
           <p className="text-xs text-slate-400">
             Shift Time
           </p>
@@ -787,11 +799,9 @@ function MobileShiftCard({
           <p className="mt-1 text-sm font-medium text-slate-700">
             {shift.start} - {shift.end}
           </p>
-
         </div>
 
         <div>
-
           <p className="text-xs text-slate-400">
             Duration
           </p>
@@ -799,11 +809,9 @@ function MobileShiftCard({
           <p className="mt-1 text-sm font-medium text-slate-700">
             {shift.duration}
           </p>
-
         </div>
 
         <div>
-
           <p className="text-xs text-slate-400">
             Deliveries
           </p>
@@ -811,11 +819,9 @@ function MobileShiftCard({
           <p className="mt-1 text-sm font-semibold text-slate-800">
             {shift.deliveries}
           </p>
-
         </div>
 
         <div>
-
           <p className="text-xs text-slate-400">
             Earnings
           </p>
@@ -823,7 +829,6 @@ function MobileShiftCard({
           <p className="mt-1 text-sm font-bold text-green-600">
             {shift.earnings}
           </p>
-
         </div>
 
       </div>
@@ -889,7 +894,7 @@ function ProgressRow({
       <div className="h-2 overflow-hidden rounded-full bg-slate-100">
 
         <div
-          className="h-full rounded-full bg-orange-400"
+          className="h-full rounded-full bg-green-500"
           style={{ width: progress }}
         />
 

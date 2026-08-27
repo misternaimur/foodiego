@@ -51,8 +51,8 @@ export default function RiderDashboard() {
               <div className="flex items-center gap-3">
 
                 {/* Avatar */}
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-100">
-                  <User className="h-6 w-6 text-orange-500" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100">
+                  <User className="h-6 w-6 text-green-500" />
                 </div>
 
                 {/* Profile Info */}
@@ -61,12 +61,12 @@ export default function RiderDashboard() {
                     Afrin
                   </p>
 
-                  <p className="text-xs font-medium text-orange-500">
+                  <p className="text-xs font-medium text-green-500">
                     Rider
                   </p>
 
                   <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                    <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     <span>4.9 Rating</span>
                   </div>
                 </div>
@@ -79,9 +79,9 @@ export default function RiderDashboard() {
 
               {/* Home - ACTIVE */}
               <a
-                href="/dashboard/rider"
+                href="/rider"
                 onClick={() => setMobileMenu(false)}
-                className="mb-2 flex items-center gap-3 rounded-lg bg-[#f97316] px-4 py-3 text-sm font-medium text-white"
+                className="mb-2 flex items-center gap-3 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white"
               >
                 <Home className="h-4 w-4" />
                 Dashboard
@@ -89,9 +89,9 @@ export default function RiderDashboard() {
 
               {/* Orders */}
               <a
-                href="/dashboard/rider/orders"
+                href="/rider/orders"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <Package className="h-4 w-4" />
                 Orders
@@ -99,9 +99,9 @@ export default function RiderDashboard() {
 
               {/* Deliveries */}
               <a
-                href="/dashboard/rider/deliveries"
+                href="/rider/deliveries"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <Bike className="h-4 w-4" />
                 Deliveries
@@ -109,9 +109,9 @@ export default function RiderDashboard() {
 
               {/* Earnings */}
               <a
-                href="/dashboard/rider/earnings"
+                href="/rider/earnings"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <DollarSign className="h-4 w-4" />
                 Earnings
@@ -119,9 +119,9 @@ export default function RiderDashboard() {
 
               {/* Shift History */}
               <a
-                href="/dashboard/rider/shift-history"
+                href="/rider/shift-history"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <History className="h-4 w-4" />
                 Shift History
@@ -129,9 +129,9 @@ export default function RiderDashboard() {
 
               {/* Settings */}
               <a
-                href="/dashboard/rider/settings"
+                href="/rider/settings"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <Settings className="h-4 w-4" />
                 Settings
@@ -140,7 +140,7 @@ export default function RiderDashboard() {
               {/* Logout */}
               <button
                 type="button"
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500"
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <LogOut className="h-4 w-4" />
                 Logout
@@ -276,8 +276,8 @@ export default function RiderDashboard() {
 
                 <div className="mb-5 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-medium text-[#f97316]">
-                      On the way
+                    <p className="text-xs font-medium text-green-500">
+                      On The Way
                     </p>
 
                     <h3 className="mt-1 text-lg font-bold">
@@ -330,7 +330,7 @@ export default function RiderDashboard() {
 
                   <button
                     type="button"
-                    className="rounded-lg bg-[#f97316] px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                    className="rounded-lg bg-green-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
                   >
                     View Delivery
                   </button>
@@ -361,8 +361,8 @@ export default function RiderDashboard() {
                     <div className="h-full w-full bg-[radial-gradient(circle_at_30%_40%,#60a5fa_0,transparent_25%),radial-gradient(circle_at_70%_55%,#fb923c_0,transparent_25%)]" />
                   </div>
 
-                  <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/20">
-                    <MapPin className="h-6 w-6 text-orange-600" />
+                  <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-green-500/20">
+                    <MapPin className="h-6 w-6 text-green-500" />
                   </div>
 
                 </div>
@@ -374,7 +374,7 @@ export default function RiderDashboard() {
 
                 <button
                   type="button"
-                  className="mt-3 flex items-center gap-1 text-sm font-semibold text-[#f97316]"
+                  className="mt-3 flex items-center gap-1 text-sm font-semibold text-green-500"
                 >
                   View Heatmap
                   <ChevronRight className="h-4 w-4" />
@@ -592,7 +592,7 @@ function Activity({
   return (
     <div className="flex items-start gap-3">
 
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-50 text-orange-500">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-500">
         {icon}
       </div>
 
