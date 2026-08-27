@@ -12,7 +12,7 @@ function roleHome(role: Role) {
     case "admin":
       return "/admin";
     case "restaurant":
-      return "/vendor/restaurant";
+      return "/vendor";
     case "rider":
       return "/rider";
     default:

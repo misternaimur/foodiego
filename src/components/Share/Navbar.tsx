@@ -5,8 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown } from 'lucide-react';
-import { useApp } from '@/context/AppContext'; // আপনার প্রজেক্টের AppContext থেকে কার্ট ডাটা নেয়ার জন্য
-
+import { useApp } from '@/context/AppContext'; // Get cart data from the app context.
+import Logo from '@/components/Share/logo';
 export interface NavItem {
   label: string;
   href: string;
@@ -84,11 +84,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         
         {/* Left Section: Logo & Nav Links */}
         <div className="flex items-center gap-6 lg:gap-8">
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <span className="text-2xl font-bold tracking-tight text-[#c83214]">
-              Foodiego
-            </span>
-          </Link>
+          <Logo className="shrink-0" />
 
           <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
             {navItems.map((item) => {
