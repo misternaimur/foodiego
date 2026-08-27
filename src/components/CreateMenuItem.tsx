@@ -314,9 +314,9 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
     const totalRevenue = popularItemsState.reduce((sum, item) => sum + item.revenue, 0);
 
     return (
-      <div className="space-y-6">
-        {/* Header Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
               Dashboard Overview
@@ -341,7 +341,7 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
             <button
               type="button"
               onClick={downloadReport}
-              className="inline-flex items-center gap-2 bg-[#b93815] text-white hover:bg-[#9a2c0f] font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all text-sm"
+              className="inline-flex items-center gap-2 bg-[#b93815] text-white hover:bg-[#9a2c0f] font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all text-sm hover:scale-105 active:scale-95"
             >
               <Download size={16} />
               Download Report
@@ -349,170 +349,227 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
           </div>
         </div>
 
-        {/* Stat Cards */}
+        {/* 3D Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Today&apos;s Orders</p>
-              <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <ShoppingBag size={20} />
-              </div>
-            </div>
-            <p className="text-2xl font-extrabold text-gray-900">{derivedStats.totalOrders}</p>
-            <p className="text-xs text-gray-400 mt-1">+8% from yesterday</p>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Revenue</p>
-              <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                <DollarSign size={20} />
-              </div>
-            </div>
-            <p className="text-2xl font-extrabold text-gray-900">${derivedStats.revenue.toLocaleString()}</p>
-            <p className="text-xs text-gray-400 mt-1">+12% from yesterday</p>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Avg Rating</p>
-              <div className="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <Star size={20} />
-              </div>
-            </div>
-            <p className="text-2xl font-extrabold text-gray-900">{derivedStats.avgRating}</p>
-            <p className="text-xs text-gray-400 mt-1">Based on 128 reviews</p>
-          </div>
-
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Weekly Growth</p>
-              <div className="h-10 w-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                <TrendingUp size={20} />
-              </div>
-            </div>
-            <p className="text-2xl font-extrabold text-gray-900">{derivedStats.weeklyGrowth}%</p>
-            <div className="mt-2 w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+          {[
+            { label: "Today's Orders", value: derivedStats.totalOrders, icon: ShoppingBag, color: 'from-blue-400 to-blue-600', bg: 'bg-blue-50', text: 'text-blue-600' },
+            { label: 'Revenue', value: `$${derivedStats.revenue.toLocaleString()}`, icon: DollarSign, color: 'from-emerald-400 to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+            { label: 'Avg Rating', value: derivedStats.avgRating, icon: Star, color: 'from-amber-400 to-amber-600', bg: 'bg-amber-50', text: 'text-amber-600' },
+            { label: 'Weekly Growth', value: `${derivedStats.weeklyGrowth}%`, icon: TrendingUp, color: 'from-purple-400 to-purple-600', bg: 'bg-purple-50', text: 'text-purple-600' },
+          ].map((stat, index) => (
+            <div
+              key={stat.label}
+              className="relative group"
+              style={{ perspective: '1000px' }}
+            >
               <div
-                className="bg-[#b93815] h-2 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(derivedStats.weeklyGrowth * 5, 100)}%` }}
-              />
+                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu hover:rotate-y-6 hover:-translate-y-1"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                <div className={`absolute -top-px left-6 right-6 h-1 rounded-full bg-gradient-to-r ${stat.color} opacity-60 group-hover:opacity-100 transition-opacity`} />
+
+                <div className="p-5 relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`h-12 w-12 rounded-2xl ${stat.bg} ${stat.text} flex items-center justify-center border border-gray-100 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                      <stat.icon size={22} />
+                    </div>
+                    <div className={`h-2.5 w-2.5 rounded-full bg-gradient-to-r ${stat.color} animate-pulse shadow-lg`} />
+                  </div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className="text-2xl font-extrabold text-gray-900 tracking-tight group-hover:tracking-normal transition-all">{stat.value}</p>
+                  {stat.label === 'Weekly Growth' && (
+                    <div className="mt-3 w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-[#b93815] h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(derivedStats.weeklyGrowth * 5, 100)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
 
         {/* Main Grid: Live Orders + Popular Items */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Live Orders */}
-          <div className="lg:col-span-1 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Flame size={20} className="text-[#b93815]" />
-                <h2 className="text-lg font-bold text-gray-900">Live Orders</h2>
-              </div>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-xs font-bold">
-                <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-                {liveOrdersList.length}
-              </span>
-            </div>
-            <div className="divide-y divide-gray-100">
-              {orders.map((order) => {
-                const isLive = order.status === 'Preparing' || order.status === 'Ready';
-                const statusColor =
-                  order.status === 'Preparing'
-                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                    : order.status === 'Ready'
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-gray-50 text-gray-500 border-gray-200';
-                return (
-                  <div key={order.id} className="p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-900">{order.id}</span>
-                        {isLive && (
-                          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                        )}
+          {/* Live Orders - 3D Pipeline */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Live Orders Header */}
+            <div className="relative group" style={{ perspective: '1200px' }}>
+              <div
+                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className="absolute -top-px left-8 right-8 h-1 rounded-full bg-gradient-to-r from-red-300 to-pink-300 opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center border border-red-200 shadow-inner">
+                        <Flame size={24} />
                       </div>
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusColor}`}>
-                        {order.status}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-1">{order.customer}</p>
-                    <p className="text-xs text-gray-400 mb-3 line-clamp-1">{order.items}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-extrabold text-gray-900">${order.total.toFixed(2)}</span>
-                      <div className="flex items-center gap-2">
-                        {order.status === 'Preparing' && (
-                          <button
-                            type="button"
-                            onClick={() => updateOrderStatus(order.id, 'Ready')}
-                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg transition-colors"
-                          >
-                            Mark Ready
-                          </button>
-                        )}
-                        {order.status === 'Ready' && (
-                          <button
-                            type="button"
-                            onClick={() => updateOrderStatus(order.id, 'Delivered')}
-                            className="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition-colors"
-                          >
-                            Delivered
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="text-xs font-semibold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 p-1.5 rounded-lg transition-colors"
-                        >
-                          <Receipt size={14} />
-                        </button>
+                      <div>
+                        <h2 className="text-lg font-bold text-gray-900">Live Orders</h2>
+                        <p className="text-xs text-gray-500">Active orders</p>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-400 mt-2">{order.time}</p>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-600 text-xs font-bold border border-red-200">
+                      <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-lg shadow-red-200" />
+                      {liveOrdersList.length}
+                    </span>
                   </div>
-                );
-              })}
+
+                  <div className="space-y-3">
+                    {orders.map((order, index) => {
+                      const isLive = order.status === 'Preparing' || order.status === 'Ready';
+                      const statusColor =
+                        order.status === 'Preparing'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : order.status === 'Ready'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-gray-50 text-gray-500 border-gray-200';
+                      return (
+                        <div
+                          key={order.id}
+                          className="relative bg-gray-50 rounded-2xl border border-gray-100 p-4 hover:border-gray-200 hover:shadow-md transition-all duration-300 group/card"
+                          style={{
+                            animation: `fadeSlideIn 0.5s ease-out ${index * 0.08}s both`,
+                            transform: 'translateZ(0)',
+                          }}
+                        >
+                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-extrabold text-gray-900 tracking-tight">#{order.id.replace('#', '')}</span>
+                              {isLive && (
+                                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-200" />
+                              )}
+                            </div>
+                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${statusColor} uppercase tracking-wider`}>
+                              {order.status}
+                            </span>
+                          </div>
+
+                          <p className="text-xs font-semibold text-gray-700 mb-1 truncate">{order.customer}</p>
+                          <p className="text-[11px] text-gray-400 mb-3 line-clamp-1 leading-relaxed">{order.items}</p>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-extrabold text-gray-900">${order.total.toFixed(2)}</span>
+                            <div className="flex items-center gap-1.5">
+                              {order.status === 'Preparing' && (
+                                <button
+                                  type="button"
+                                  onClick={() => updateOrderStatus(order.id, 'Ready')}
+                                  className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                                >
+                                  Mark Ready
+                                </button>
+                              )}
+                              {order.status === 'Ready' && (
+                                <button
+                                  type="button"
+                                  onClick={() => updateOrderStatus(order.id, 'Delivered')}
+                                  className="text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
+                                >
+                                  Delivered
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className="text-gray-400 hover:text-gray-700 bg-white hover:bg-gray-100 p-2 rounded-xl transition-all hover:scale-110 active:scale-95 border border-gray-200 shadow-sm hover:shadow-md"
+                              >
+                                <Receipt size={14} />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 flex items-center justify-between">
+                            <span className="text-[10px] text-gray-400 font-medium">{order.time}</span>
+                            <div className="flex items-center gap-1">
+                              <div className="h-1.5 w-1.5 rounded-full bg-gray-300" />
+                              <div className="h-1.5 w-1.5 rounded-full bg-gray-300" />
+                              <div className="h-1.5 w-1.5 rounded-full bg-gray-300" />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="absolute bottom-0 left-8 right-8 h-8 bg-gradient-to-t from-gray-100/50 to-transparent rounded-b-3xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              </div>
             </div>
           </div>
 
           {/* Right Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Popular Items Today */}
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
-              <div className="flex items-center gap-2 mb-6">
-                <Flame size={20} className="text-[#b93815]" />
-                <h2 className="text-lg font-bold text-gray-900">Popular Items Today</h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {popularItemsState.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all bg-white"
-                  >
-                    <div className="relative h-16 w-16 rounded-xl overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
-                      <Image src={item.image} alt={item.alt} fill className="object-cover" />
+            {/* Popular Items Today - 3D Grid */}
+            <div className="relative group" style={{ perspective: '1200px' }}>
+              <div
+                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className="absolute -top-px left-8 right-8 h-1 rounded-full bg-gradient-to-r from-orange-300 to-amber-300 opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div className="p-6 sm:p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#b93815] to-[#9a2c0f] text-white flex items-center justify-center shadow-lg shadow-orange-200">
+                      <Flame size={20} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{item.orders} orders</p>
-                      <p className="text-sm font-extrabold text-[#b93815] mt-1">${item.revenue}</p>
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900">Popular Items Today</h2>
+                      <p className="text-xs text-gray-500">Top performing dishes</p>
                     </div>
                   </div>
-                ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {popularItemsState.map((item, index) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 group/item"
+                        style={{ animation: `fadeSlideIn 0.5s ease-out ${index * 0.08}s both` }}
+                      >
+                        <div className="relative h-16 w-16 rounded-xl overflow-hidden border border-gray-200 shrink-0 bg-gray-100 group-hover/item:scale-110 group-hover/item:rotate-3 transition-all duration-300 shadow-sm">
+                          <Image src={item.image} alt={item.alt} fill className="object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-gray-900 truncate group-hover/item:text-[#b93815] transition-colors">{item.name}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{item.orders} orders</p>
+                          <p className="text-sm font-extrabold text-[#b93815] mt-1">${item.revenue}</p>
+                        </div>
+                        <div className="h-8 w-8 rounded-lg bg-[#fff1ec] text-[#b93815] flex items-center justify-center opacity-0 group-hover/item:opacity-100 transition-all duration-300 group-hover/item:scale-110">
+                          <TrendingUp size={16} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* AI Insight */}
-            <div className="bg-purple-50 border border-purple-100 rounded-2xl p-6 sm:p-8 shadow-sm">
-              <div className="flex items-start gap-4">
-                <div className="h-10 w-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-                  <Sparkles size={20} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-purple-900 uppercase tracking-wide">AI Insight</h3>
-                  <p className="mt-1 text-sm text-purple-800 leading-relaxed">
-                    Truffle Smashburger is trending 23% higher than last week. Consider adding a combo meal with fries to increase average order value by an estimated 18%.
-                  </p>
+            {/* AI Insight - 3D */}
+            <div className="relative group" style={{ perspective: '1200px' }}>
+              <div
+                className="relative bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className="absolute -top-px left-8 right-8 h-1 rounded-full bg-gradient-to-r from-purple-300 to-pink-300 opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div className="p-6 sm:p-8">
+                  <div className="flex items-start gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center shadow-lg shadow-purple-200 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                      <Sparkles size={22} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-sm font-bold text-purple-900 uppercase tracking-wide">AI Insight</h3>
+                        <span className="h-2 w-2 rounded-full bg-purple-500 animate-pulse shadow-lg shadow-purple-200" />
+                      </div>
+                      <p className="text-sm text-purple-800 leading-relaxed">
+                        Truffle Smashburger is trending 23% higher than last week. Consider adding a combo meal with fries to increase average order value by an estimated 18%.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1324,299 +1381,385 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
       'Get help, contact us, or browse FAQs.'
     );
 
-  const renderAIFoodStudio = () => (
-    <div className="space-y-8">
-      {/* Title + Description */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
-          Create New Menu Item with AI Assistant
-        </h1>
-        <p className="mt-2 text-base text-gray-500 max-w-2xl leading-relaxed">
-          Tell us about your dish, or start by uploading an image. Our AI will help
-          you with descriptions, tags, and optimization.
-        </p>
-      </div>
-
-      {/* Steppers */}
-      <div className="flex items-center gap-3 mb-10 flex-wrap">
-        {steps.map((step, i) => {
-          const isFirst = i === 0;
-          return (
-            <div key={step} className="flex items-center gap-3">
-              <span
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
-                  isFirst
-                    ? 'bg-[#f5ecd9] text-[#9a2c0f]'
-                    : 'bg-gray-200 text-gray-500'
-                }`}
-              >
-                <span
-                  className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
-                    isFirst ? 'bg-[#b93815] text-white' : 'bg-gray-300 text-gray-600'
-                  }`}
-                >
-                  {i + 1}
-                </span>
-                {step}
-              </span>
-              {i < steps.length - 1 && (
-                <span className="h-px w-6 bg-gray-300 hidden sm:block" />
-              )}
-            </div>
-          );
-        })}
-      </div>
-
+  const renderAIFoodStudio = () => {
+    return (
       <div className="space-y-8">
-        {/* ---------------- DISH DETAILS ---------------- */}
-        <section className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">Dish Details</h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                Dish Name
-              </label>
-              <input
-                type="text"
-                value={dishName}
-                onChange={(e) => setDishName(e.target.value)}
-                className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                Price ($)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all"
-              />
-            </div>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+              AI Food Studio
+            </h1>
+            <p className="mt-1 text-base text-gray-500">
+              Create and optimize menu items with AI-powered tools.
+            </p>
           </div>
-
-          <div className="mt-5">
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-              Description
-            </label>
-            <textarea
-              rows={3}
-              placeholder="Describe your dish, ingredients, and story..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all"
-            />
-            <button
-              type="button"
-              className="mt-3 inline-flex items-center gap-2 bg-[#fff1ec] text-[#b93815] hover:bg-[#fbe2d8] font-semibold py-2.5 px-4 rounded-xl border border-[#f3c9ba] transition-all"
-            >
-              <Sparkles size={16} />
-              Generate description with AI
-            </button>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-purple-50 text-purple-700 border border-purple-200 shadow-sm">
+              <Sparkles size={18} />
+              <span className="text-sm font-bold">AI Ready</span>
+            </span>
           </div>
+        </div>
 
-          <div className="mt-5 sm:max-w-xs">
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-              Category
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-gray-700 focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all bg-white"
-            >
-              <option>Any gory...</option>
-              <option>Burgers</option>
-              <option>Pizza</option>
-              <option>Drinks</option>
-              <option>Sides</option>
-            </select>
-          </div>
-        </section>
-
-        {/* ---------------- DISH IMAGES ---------------- */}
-        <section className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">Dish Images</h2>
-
-          {/* Drop-zone with AI Analysis overlay */}
-          <div className="relative border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 hover:border-[#b93815]/40 transition-colors p-10">
-            <div className="flex flex-col items-center justify-center text-center">
-              <div className="bg-[#fff1ec] text-[#b93815] h-16 w-16 rounded-full flex items-center justify-center mb-4">
-                <Camera size={28} />
-              </div>
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 bg-[#b93815] text-white hover:bg-[#9a2c0f] font-bold py-3 px-5 rounded-xl shadow-sm transition-all"
-              >
-                <Plus size={18} strokeWidth={2.5} />
-                Upload Food Images or Drag and Drop
-              </button>
-              <p className="mt-3 text-xs text-gray-400">
-                PNG, JPG up to 10MB each
-              </p>
-            </div>
-
-            {/* AI Image Analysis Overlay */}
-            {analyzing && (
-              <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center text-center px-6">
-                <Loader2 size={32} className="text-[#b93815] animate-spin mb-3" />
-                <p className="text-sm font-semibold text-gray-700">
-                  Analyzing... detecting tags...
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setAnalyzing(false)}
-                  className="mt-4 text-xs font-semibold text-gray-500 hover:text-gray-700 underline"
+        {/* 3D Steppers */}
+        <div className="flex items-center gap-3 mb-10 flex-wrap">
+          {steps.map((step, i) => {
+            const isFirst = i === 0;
+            return (
+              <div key={step} className="flex items-center gap-3">
+                <div
+                  className="relative group"
+                  style={{ perspective: '800px' }}
                 >
-                  Dismiss
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Suggested Tags */}
-          <div className="mt-6">
-            <h3 className="text-sm font-bold text-gray-700 mb-3">Suggested tags</h3>
-            <div className="flex flex-wrap gap-2.5">
-              {allTags.map((tag) => {
-                const checked = selectedTags.includes(tag);
-                return (
-                  <label
-                    key={tag}
-                    className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium cursor-pointer border transition-all ${
-                      checked
-                        ? 'bg-[#fff1ec] text-[#b93815] border-[#f3c9ba]'
-                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  <div
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold transition-all duration-300 border ${
+                      isFirst
+                        ? 'bg-gradient-to-r from-[#b93815] to-[#9a2c0f] text-white border-[#b93815] shadow-lg shadow-orange-200'
+                        : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
                     }`}
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      transform: 'translateZ(0)',
+                    }}
                   >
+                    {isFirst && (
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#b93815]/20 to-[#9a2c0f]/20 animate-pulse" />
+                    )}
                     <span
-                      className={`flex h-4 w-4 items-center justify-center rounded border ${
-                        checked ? 'bg-[#b93815] border-[#b93815]' : 'bg-white border-gray-300'
+                      className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
+                        isFirst ? 'bg-white text-[#b93815]' : 'bg-gray-300 text-gray-600'
                       }`}
                     >
-                      {checked && <Check size={12} className="text-white" strokeWidth={3} />}
+                      {i + 1}
                     </span>
-                    <input
-                      type="checkbox"
-                      className="hidden"
-                      checked={checked}
-                      onChange={() => toggleTag(tag)}
-                    />
-                    {tag}
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-
-        {/* ---------------- MENU CUSTOMIZATION ---------------- */}
-        <section className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">Menu Customization</h2>
-
-          <div className="space-y-4">
-            {/* Best Seller Toggle */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Star size={18} className="text-gray-400" />
-                <span className="text-sm font-semibold text-gray-700">
-                  Is it a best seller?
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setBestSeller((v) => !v)}
-                className={`relative h-6 w-11 rounded-full transition-colors ${
-                  bestSeller ? 'bg-[#b93815]' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                    bestSeller ? 'left-0.5 translate-x-5' : 'left-0.5'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Vegetarian Toggle */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Leaf size={18} className="text-gray-400" />
-                <span className="text-sm font-semibold text-gray-700">
-                  Is it vegetarian?
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setVegetarian((v) => !v)}
-                className={`relative h-6 w-11 rounded-full transition-colors ${
-                  vegetarian ? 'bg-[#b93815]' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                    vegetarian ? 'left-0.5 translate-x-5' : 'left-0.5'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Keywords */}
-            <div className="pt-2">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                Keywords
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. juicy, gourmet, comfort food"
-                value={keywords}
-                onChange={(e) => setKeywords(e.target.value)}
-                className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* ---------------- RECENT UPLOADS GALLERY ---------------- */}
-        <section className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900 mb-6">Recently Uploaded</h2>
-          {gallery.length === 0 ? (
-            <p className="text-sm text-gray-400 flex items-center gap-2">
-              <ImageIcon size={16} /> No images uploaded yet.
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {gallery.map((img) => (
-                <div
-                  key={img.id}
-                  className="relative group rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-100"
-                >
-                  <Image
-                    src={img.src}
-                    alt={img.alt}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeFromGallery(img.id)}
-                    aria-label={`Remove ${img.alt}`}
-                    className="absolute top-2 right-2 h-7 w-7 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-red-600 transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
+                    <span className="relative z-10">{step}</span>
+                  </div>
                 </div>
-              ))}
+                {i < steps.length - 1 && (
+                  <span className="h-px w-6 bg-gray-300 hidden sm:block" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Dish Details & Images */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Dish Details - 3D Card */}
+            <div className="relative group" style={{ perspective: '1200px' }}>
+              <div
+                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className="absolute -top-px left-8 right-8 h-1 rounded-full bg-gradient-to-r from-[#b93815] to-[#9a2c0f] opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div className="p-6 sm:p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#b93815] to-[#9a2c0f] text-white flex items-center justify-center shadow-lg shadow-orange-200">
+                      <Sparkles size={20} />
+                    </div>
+                    <h2 className="text-lg font-bold text-gray-900">Dish Details</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                        Dish Name
+                      </label>
+                      <input
+                        type="text"
+                        value={dishName}
+                        onChange={(e) => setDishName(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                        Price ($)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-5">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Description
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="Describe your dish, ingredients, and story..."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all"
+                    />
+                    <button
+                      type="button"
+                      className="mt-3 inline-flex items-center gap-2 bg-[#fff1ec] text-[#b93815] hover:bg-[#fbe2d8] font-semibold py-2.5 px-4 rounded-xl border border-[#f3c9ba] transition-all hover:scale-105 active:scale-95"
+                    >
+                      <Sparkles size={16} />
+                      Generate description with AI
+                    </button>
+                  </div>
+
+                  <div className="mt-5 sm:max-w-xs">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Category
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-gray-700 focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all bg-white"
+                    >
+                      <option>Any gory...</option>
+                      <option>Burgers</option>
+                      <option>Pizza</option>
+                      <option>Drinks</option>
+                      <option>Sides</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
-        </section>
+
+            {/* Dish Images - 3D Card */}
+            <div className="relative group" style={{ perspective: '1200px' }}>
+              <div
+                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className="absolute -top-px left-8 right-8 h-1 rounded-full bg-gradient-to-r from-blue-300 to-cyan-300 opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div className="p-6 sm:p-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-blue-200">
+                      <Camera size={20} />
+                    </div>
+                    <h2 className="text-lg font-bold text-gray-900">Dish Images</h2>
+                  </div>
+
+                  {/* Drop-zone with AI Analysis overlay */}
+                  <div className="relative border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 hover:border-[#b93815]/40 transition-colors p-10">
+                    <div className="flex flex-col items-center justify-center text-center">
+                      <div className="bg-[#fff1ec] text-[#b93815] h-16 w-16 rounded-full flex items-center justify-center mb-4">
+                        <Camera size={28} />
+                      </div>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2 bg-[#b93815] text-white hover:bg-[#9a2c0f] font-bold py-3 px-5 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95"
+                      >
+                        <Plus size={18} strokeWidth={2.5} />
+                        Upload Food Images or Drag and Drop
+                      </button>
+                      <p className="mt-3 text-xs text-gray-400">
+                        PNG, JPG up to 10MB each
+                      </p>
+                    </div>
+
+                    {/* AI Image Analysis Overlay */}
+                    {analyzing && (
+                      <div className="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-2xl flex flex-col items-center justify-center text-center px-6">
+                        <div className="relative">
+                          <Loader2 size={48} className="text-[#b93815] animate-spin mb-3" />
+                          <div className="absolute inset-0 bg-[#b93815]/20 rounded-full animate-ping" />
+                        </div>
+                        <p className="text-sm font-semibold text-gray-700">
+                          Analyzing... detecting tags...
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setAnalyzing(false)}
+                          className="mt-4 text-xs font-semibold text-gray-500 hover:text-gray-700 underline"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Suggested Tags */}
+                  <div className="mt-6">
+                    <h3 className="text-sm font-bold text-gray-700 mb-3">Suggested tags</h3>
+                    <div className="flex flex-wrap gap-2.5">
+                      {allTags.map((tag) => {
+                        const checked = selectedTags.includes(tag);
+                        return (
+                          <label
+                            key={tag}
+                            className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-sm font-medium cursor-pointer border transition-all hover:scale-105 ${
+                              checked
+                                ? 'bg-[#fff1ec] text-[#b93815] border-[#f3c9ba]'
+                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                            }`}
+                          >
+                            <span
+                              className={`flex h-4 w-4 items-center justify-center rounded border ${
+                                checked ? 'bg-[#b93815] border-[#b93815]' : 'bg-white border-gray-300'
+                              }`}
+                            >
+                              {checked && <Check size={12} className="text-white" strokeWidth={3} />}
+                            </span>
+                            <input
+                              type="checkbox"
+                              className="hidden"
+                              checked={checked}
+                              onChange={() => toggleTag(tag)}
+                            />
+                            {tag}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Customization & Gallery */}
+          <div className="space-y-6">
+            {/* Menu Customization - 3D Card */}
+            <div className="relative group" style={{ perspective: '1200px' }}>
+              <div
+                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className="absolute -top-px left-8 right-8 h-1 rounded-full bg-gradient-to-r from-amber-300 to-orange-300 opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-amber-200">
+                      <Star size={20} />
+                    </div>
+                    <h2 className="text-lg font-bold text-gray-900">Menu Customization</h2>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Best Seller Toggle */}
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
+                          <Star size={16} />
+                        </div>
+                        <span className="text-sm font-semibold text-gray-700">
+                          Best Seller
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setBestSeller((v) => !v)}
+                        className={`relative h-6 w-11 rounded-full transition-colors ${
+                          bestSeller ? 'bg-[#b93815]' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                            bestSeller ? 'left-0.5 translate-x-5' : 'left-0.5'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Vegetarian Toggle */}
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                          <Leaf size={16} />
+                        </div>
+                        <span className="text-sm font-semibold text-gray-700">
+                          Vegetarian
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setVegetarian((v) => !v)}
+                        className={`relative h-6 w-11 rounded-full transition-colors ${
+                          vegetarian ? 'bg-[#b93815]' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                            vegetarian ? 'left-0.5 translate-x-5' : 'left-0.5'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Keywords */}
+                    <div>
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                        Keywords
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. juicy, gourmet, comfort food"
+                        value={keywords}
+                        onChange={(e) => setKeywords(e.target.value)}
+                        className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Uploads - 3D Card */}
+            <div className="relative group" style={{ perspective: '1200px' }}>
+              <div
+                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className="absolute -top-px left-8 right-8 h-1 rounded-full bg-gradient-to-r from-purple-300 to-pink-300 opacity-60 group-hover:opacity-100 transition-opacity" />
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center shadow-lg shadow-purple-200">
+                      <ImageIcon size={20} />
+                    </div>
+                    <h2 className="text-lg font-bold text-gray-900">Recently Uploaded</h2>
+                  </div>
+                  {gallery.length === 0 ? (
+                    <p className="text-sm text-gray-400 flex items-center gap-2">
+                      <ImageIcon size={16} /> No images uploaded yet.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      {gallery.map((img) => (
+                        <div
+                          key={img.id}
+                          className="relative group/img rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-100 hover:shadow-md transition-all"
+                        >
+                          <Image
+                            src={img.src}
+                            alt={img.alt}
+                            fill
+                            className="object-cover group-hover/img:scale-110 transition-transform duration-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeFromGallery(img.id)}
+                            aria-label={`Remove ${img.alt}`}
+                            className="absolute top-2 right-2 h-7 w-7 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-red-600 transition-all hover:scale-110 active:scale-95"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
