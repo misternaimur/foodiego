@@ -18,9 +18,7 @@ import {
   Pencil,
   X,
   Menu,
-  User,
-  Check,
-  AlertCircle
+  User
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -39,12 +37,17 @@ interface MenuItem {
   };
 }
 
+type DashboardTab = 'Menu Management' | 'Orders' | 'AI Food Studio' | 'Analytics' | 'Review';
+type MenuCategory = MenuItem['category'];
+type MenuStatus = MenuItem['status'];
+type MenuTag = 'BEST SELLER' | 'VEGETARIAN' | 'NEW' | 'None';
+
 export default function RestaurantDashboard() {
   const router = useRouter();
   const pathname = usePathname();
 
   // Navigation & UI States
-  const [activeTab, setActiveTab] = useState<'Menu Management' | 'Orders' | 'AI Food Studio' | 'Analytics' | 'Review'>('Menu Management');
+  const [activeTab, setActiveTab] = useState<DashboardTab>('Menu Management');
   const [activeFilter, setActiveFilter] = useState<'All Items' | 'Burgers' | 'Pizza' | 'Drinks' | 'Sides'>('All Items');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -58,9 +61,9 @@ export default function RestaurantDashboard() {
   const [newTitle, setNewTitle] = useState('');
   const [newPrice, setNewPrice] = useState('');
   const [newDesc, setNewDesc] = useState('');
-  const [newCategory, setNewCategory] = useState<'Burgers' | 'Pizza' | 'Drinks' | 'Sides'>('Burgers');
-  const [newStatus, setNewStatus] = useState<'Available' | 'Sold Out'>('Available');
-  const [newTag, setNewTag] = useState<'BEST SELLER' | 'VEGETARIAN' | 'NEW' | 'None'>('None');
+  const [newCategory, setNewCategory] = useState<MenuCategory>('Burgers');
+  const [newStatus, setNewStatus] = useState<MenuStatus>('Available');
+  const [newTag, setNewTag] = useState<MenuTag>('None');
 
   // Menu items list state
   const [menuItems, setMenuItems] = useState<MenuItem[]>([
@@ -96,7 +99,7 @@ export default function RestaurantDashboard() {
   ];
 
   // Tag color mapping
-  const getTagColors = (tagType: 'BEST SELLER' | 'VEGETARIAN' | 'NEW' | 'None') => {
+  const getTagColors = (tagType: MenuTag) => {
     switch (tagType) {
       case 'BEST SELLER':
         return { bg: 'bg-[#fef08a]', textCol: 'text-[#854d0e]' };
@@ -198,7 +201,7 @@ export default function RestaurantDashboard() {
             return (
               <button
                 key={link.name}
-                onClick={() => setActiveTab(link.name as any)}
+                onClick={() => setActiveTab(link.name as DashboardTab)}
                 className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                   isActive
                     ? 'bg-[#fff1ec] text-[#b93815] border-l-4 border-[#b93815] pl-3'
@@ -318,7 +321,7 @@ export default function RestaurantDashboard() {
                     <button
                       key={link.name}
                       onClick={() => {
-                        setActiveTab(link.name as any);
+                        setActiveTab(link.name as DashboardTab);
                         setIsMobileSidebarOpen(false);
                       }}
                       className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
@@ -699,7 +702,7 @@ export default function RestaurantDashboard() {
                     </label>
                     <select
                       value={newCategory}
-                      onChange={(e) => setNewCategory(e.target.value as any)}
+                      onChange={(e) => setNewCategory(e.target.value as MenuCategory)}
                       className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all bg-white"
                     >
                       <option value="Burgers">Burgers</option>
@@ -715,7 +718,7 @@ export default function RestaurantDashboard() {
                     </label>
                     <select
                       value={newStatus}
-                      onChange={(e) => setNewStatus(e.target.value as any)}
+                      onChange={(e) => setNewStatus(e.target.value as MenuStatus)}
                       className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all bg-white"
                     >
                       <option value="Available">Available</option>
@@ -730,7 +733,7 @@ export default function RestaurantDashboard() {
                   </label>
                   <select
                     value={newTag}
-                    onChange={(e) => setNewTag(e.target.value as any)}
+                    onChange={(e) => setNewTag(e.target.value as MenuTag)}
                     className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all bg-white"
                   >
                     <option value="None">None</option>
@@ -850,7 +853,7 @@ export default function RestaurantDashboard() {
                     </label>
                     <select
                       value={editingItem.category}
-                      onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value as any })}
+                      onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value as MenuCategory })}
                       className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all bg-white"
                     >
                       <option value="Burgers">Burgers</option>
@@ -866,7 +869,7 @@ export default function RestaurantDashboard() {
                     </label>
                     <select
                       value={editingItem.status}
-                      onChange={(e) => setEditingItem({ ...editingItem, status: e.target.value as any })}
+                      onChange={(e) => setEditingItem({ ...editingItem, status: e.target.value as MenuStatus })}
                       className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 transition-all bg-white"
                     >
                       <option value="Available">Available</option>
@@ -888,7 +891,7 @@ export default function RestaurantDashboard() {
                       } else {
                         setEditingItem({
                           ...editingItem,
-                          tag: { text, ...getTagColors(text as any) }
+                          tag: { text, ...getTagColors(text as MenuTag) }
                         });
                       }
                     }}
