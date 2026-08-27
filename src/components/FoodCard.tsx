@@ -3,6 +3,11 @@
 import React from 'react';
 import Image from 'next/image';
 
+export interface SelectedOption {
+  name: string;
+  price: number;
+}
+
 export interface FoodItem {
   id: string;
   name: string;
@@ -17,22 +22,33 @@ export interface FoodItem {
   matchPercentage?: number | null;
   imageUrl: string;
   isFavorite?: boolean;
+  sizes?: SelectedOption[];
+  addons?: SelectedOption[];
 }
 
 interface FoodCardProps {
   food: FoodItem;
   onAddToCart?: (food: FoodItem) => void;
   onToggleFavorite?: (id: string) => void;
+  onCardClick?: (food: FoodItem) => void;
 }
 
 export const FoodCard: React.FC<FoodCardProps> = ({
   food,
   onAddToCart,
   onToggleFavorite,
+  onCardClick,
 }) => {
+  const handleCardClick = () => {
+    if (onCardClick) {
+      onCardClick(food);
+    }
+  };
+
   return (
     <div 
-      className="group relative bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col justify-between hover:-translate-y-1"
+      onClick={handleCardClick}
+      className="group relative bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col justify-between cursor-pointer hover:-translate-y-1"
       style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}
     >
       <div>
@@ -62,7 +78,10 @@ export const FoodCard: React.FC<FoodCardProps> = ({
           {/* Favorite Button */}
           <button
             type="button"
-            onClick={() => onToggleFavorite && onToggleFavorite(food.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onToggleFavorite) onToggleFavorite(food.id);
+            }}
             className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center text-gray-400 hover:text-red-500 transition-all duration-300 shadow-lg hover:scale-110 active:scale-95"
             aria-label="Add to favorites"
           >
@@ -120,7 +139,10 @@ export const FoodCard: React.FC<FoodCardProps> = ({
 
           <button
             type="button"
-            onClick={() => onAddToCart(food)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToCart(food);
+            }}
             className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
           >
             Add to Cart
@@ -130,3 +152,5 @@ export const FoodCard: React.FC<FoodCardProps> = ({
     </div>
   );
 };
+
+export default FoodCard;
