@@ -31,6 +31,7 @@ import {
   Flame,
   Receipt,
   Bike,
+  Pencil,
 } from 'lucide-react';
 
 interface NavItem {
@@ -781,100 +782,535 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
   };
 
   const renderMenuManagement = () => {
+    const totalItems = menuItems.length;
+    const availableItems = menuItems.filter((i) => i.status === 'Available').length;
+    const soldOutItems = menuItems.filter((i) => i.status === 'Sold Out').length;
+    const avgPrice = (menuItems.reduce((sum, i) => sum + i.price, 0) / totalItems).toFixed(2);
+
     return (
-      <div className="space-y-6">
-        <div className="mb-2">
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Menu Management</h1>
-          <p className="mt-2 text-base text-gray-500 max-w-2xl leading-relaxed">
-            Organize your menu items, categories, and pricing.
-          </p>
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+              Menu Management
+            </h1>
+            <p className="mt-1 text-base text-gray-500">
+              Organize your menu items, categories, and pricing.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 bg-[#b93815] text-white hover:bg-[#9a2c0f] font-bold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all text-sm hover:scale-105 active:scale-95"
+          >
+            <Plus size={18} />
+            Add New Item
+          </button>
         </div>
 
-        {/* Category Filters */}
+        {/* 3D Stats Row */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: 'Total Items', value: totalItems, icon: UtensilsCrossed, color: 'from-blue-400 to-blue-600', bg: 'bg-blue-50', text: 'text-blue-600' },
+            { label: 'Available', value: availableItems, icon: Check, color: 'from-emerald-400 to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+            { label: 'Sold Out', value: soldOutItems, icon: X, color: 'from-red-400 to-red-600', bg: 'bg-red-50', text: 'text-red-600' },
+            { label: 'Avg Price', value: `$${avgPrice}`, icon: DollarSign, color: 'from-amber-400 to-amber-600', bg: 'bg-amber-50', text: 'text-amber-600' },
+          ].map((stat, index) => (
+            <div
+              key={stat.label}
+              className="relative group"
+              style={{ perspective: '1000px' }}
+            >
+              <div
+                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu hover:rotate-y-6 hover:-translate-y-1"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                <div className={`absolute -top-px left-6 right-6 h-1 rounded-full bg-gradient-to-r ${stat.color} opacity-60 group-hover:opacity-100 transition-opacity`} />
+
+                <div className="p-5 relative">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`h-11 w-11 rounded-2xl ${stat.bg} ${stat.text} flex items-center justify-center border border-gray-100 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                      <stat.icon size={20} />
+                    </div>
+                    <div className={`h-2.5 w-2.5 rounded-full bg-gradient-to-r ${stat.color} animate-pulse shadow-lg`} />
+                  </div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className="text-2xl font-extrabold text-gray-900 tracking-tight group-hover:tracking-normal transition-all">{stat.value}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Category Filters - 3D Pills */}
         <div className="flex flex-wrap gap-3">
-          {categories.map((cat) => (
+          {categories.map((cat, index) => (
             <button
               key={cat}
               type="button"
               onClick={() => setMenuCategory(cat)}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
+              className={`relative px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 border ${
                 menuCategory === cat
-                  ? 'bg-[#b93815] text-white border-[#b93815] shadow-sm'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'bg-[#b93815] text-white border-[#b93815] shadow-lg shadow-orange-200 scale-105'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:scale-105'
               }`}
+              style={{ animation: `fadeSlideIn 0.4s ease-out ${index * 0.05}s both` }}
             >
-              {cat}
+              {menuCategory === cat && (
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#b93815]/20 to-[#9a2c0f]/20 animate-pulse" />
+              )}
+              <span className="relative z-10">{cat}</span>
             </button>
           ))}
         </div>
 
-        {/* Menu Grid */}
+        {/* Menu Grid - 3D Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMenuItems.map((item) => (
+          {filteredMenuItems.map((item, index) => (
             <div
               key={item.id}
-              className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-all flex flex-col"
+              className="relative group"
+              style={{ perspective: '1200px' }}
             >
-              <div className="relative aspect-[4/3] bg-gray-100">
-                <Image src={item.image} alt={item.alt} fill className="object-cover" />
-                <div className="absolute top-3 left-3">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${
-                      item.status === 'Available'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        : 'bg-red-50 text-red-700 border-red-200'
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                </div>
-              </div>
-              <div className="p-5 flex-1 flex flex-col">
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <h3 className="text-base font-bold text-gray-900 leading-tight">{item.name}</h3>
-                  <p className="text-base font-extrabold text-[#b93815] whitespace-nowrap">${item.price.toFixed(2)}</p>
-                </div>
-                <p className="text-sm text-gray-500 mb-4 line-clamp-2">{item.description}</p>
-                <div className="mt-auto flex flex-wrap gap-2">
-                  {item.tags.map((tag) => (
+              <div
+                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2 hover:scale-[1.02] overflow-hidden"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {/* Animated top glow */}
+                <div className={`absolute -top-px left-8 right-8 h-1 rounded-full bg-gradient-to-r ${item.status === 'Available' ? 'from-emerald-300 to-teal-300' : 'from-red-300 to-pink-300'} opacity-60 group-hover:opacity-100 transition-opacity`} />
+
+                {/* Image Section */}
+                <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                  <Image
+                    src={item.image}
+                    alt={item.alt}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                  {/* 3D overlay on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                  {/* Status Badge */}
+                  <div className="absolute top-4 left-4">
                     <span
-                      key={tag}
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                        tag === 'Best Seller'
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-sm ${
+                        item.status === 'Available'
+                          ? 'bg-emerald-50/90 text-emerald-700 border-emerald-200'
+                          : 'bg-red-50/90 text-red-700 border-red-200'
                       }`}
                     >
-                      {tag === 'Best Seller' ? <Star size={12} className="mr-1" /> : <Leaf size={12} className="mr-1" />}
-                      {tag}
+                      <span className={`h-1.5 w-1.5 rounded-full ${item.status === 'Available' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                      {item.status}
                     </span>
-                  ))}
+                  </div>
+
+                  {/* Quick Actions on hover */}
+                  <div className="absolute bottom-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                    <button
+                      type="button"
+                      className="h-9 w-9 rounded-xl bg-white/90 backdrop-blur-sm text-gray-700 hover:text-[#b93815] flex items-center justify-center border border-gray-200 shadow-lg hover:scale-110 transition-all"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className="h-9 w-9 rounded-xl bg-white/90 backdrop-blur-sm text-gray-700 hover:text-red-600 flex items-center justify-center border border-gray-200 shadow-lg hover:scale-110 transition-all"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content Section */}
+                <div className="p-5 flex-1 flex flex-col relative">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-[#b93815] transition-colors">{item.name}</h3>
+                    <p className="text-base font-extrabold text-[#b93815] whitespace-nowrap">${item.price.toFixed(2)}</p>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">{item.description}</p>
+
+                  {/* Tags */}
+                  <div className="mt-auto flex flex-wrap gap-2">
+                    {item.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${
+                          tag === 'Best Seller'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}
+                      >
+                        {tag === 'Best Seller' ? <Star size={12} /> : <Leaf size={12} />}
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* 3D shine effect */}
+                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                 </div>
               </div>
             </div>
           ))}
 
-          {/* Add New Item Card */}
+          {/* Add New Item Card - 3D */}
           <button
             type="button"
-            className="rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 hover:border-[#b93815] hover:bg-[#fff1ec] transition-colors flex flex-col items-center justify-center aspect-[4/3] min-h-[220px]"
+            className="relative group"
+            style={{ perspective: '1200px' }}
           >
-            <div className="h-12 w-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 mb-3">
-              <Plus size={24} />
+            <div
+              className="relative bg-white rounded-3xl border-2 border-dashed border-gray-300 hover:border-[#b93815] bg-gray-50/50 hover:bg-[#fff1ec] transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2 hover:scale-[1.02] flex flex-col items-center justify-center aspect-[4/3] min-h-[280px]"
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              {/* Animated border glow */}
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#b93815]/0 to-[#9a2c0f]/0 group-hover:from-[#b93815]/5 group-hover:to-[#9a2c0f]/5 transition-all duration-500" />
+
+              <div className="h-16 w-16 rounded-2xl bg-white border-2 border-gray-200 group-hover:border-[#b93815] flex items-center justify-center text-gray-400 group-hover:text-[#b93815] mb-4 shadow-lg group-hover:shadow-xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                <Plus size={28} strokeWidth={2.5} />
+              </div>
+              <p className="text-base font-bold text-gray-700 group-hover:text-[#b93815] transition-colors">Add New Item</p>
+              <p className="text-sm text-gray-400 group-hover:text-[#b93815]/70 transition-colors mt-1">Create a new menu entry</p>
+
+              {/* Corner accent */}
+              <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-gray-300 group-hover:bg-[#b93815] group-hover:animate-ping transition-all" />
             </div>
-            <p className="text-sm font-bold text-gray-600">Add New Item</p>
-            <p className="text-xs text-gray-400 mt-1">Create a new menu entry</p>
           </button>
         </div>
       </div>
     );
   };
 
-  const renderAnalytics = () =>
-    renderPlaceholder(
-      'Analytics',
-      'View detailed reports and insights about your business.'
+  const renderAnalytics = () => {
+    const revenueData = [
+      { day: 'Mon', value: 420 },
+      { day: 'Tue', value: 380 },
+      { day: 'Wed', value: 520 },
+      { day: 'Thu', value: 490 },
+      { day: 'Fri', value: 680 },
+      { day: 'Sat', value: 820 },
+      { day: 'Sun', value: 750 },
+    ];
+    const maxRevenue = Math.max(...revenueData.map((d) => d.value));
+
+    const categoryData = [
+      { name: 'Burgers', percentage: 45, color: 'bg-[#b93815]' },
+      { name: 'Pizza', percentage: 25, color: 'bg-blue-500' },
+      { name: 'Drinks', percentage: 18, color: 'bg-amber-500' },
+      { name: 'Sides', percentage: 12, color: 'bg-emerald-500' },
+    ];
+
+    const peakHours = [
+      { time: '11:00 AM', orders: 12 },
+      { time: '12:30 PM', orders: 28 },
+      { time: '2:00 PM', orders: 15 },
+      { time: '6:00 PM', orders: 32 },
+      { time: '8:00 PM', orders: 24 },
+    ];
+
+    return (
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+              Analytics
+            </h1>
+            <p className="mt-1 text-base text-gray-500">
+              View detailed reports and insights about your business.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <select
+                defaultValue="week"
+                className="appearance-none bg-white border border-gray-200 text-sm font-semibold text-gray-700 rounded-xl pl-4 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 focus:border-[#b93815] transition-all"
+              >
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+              </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+            <button
+              type="button"
+              onClick={downloadReport}
+              className="inline-flex items-center gap-2 bg-[#b93815] text-white hover:bg-[#9a2c0f] font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all text-sm"
+            >
+              <Download size={16} />
+              Export
+            </button>
+          </div>
+        </div>
+
+        {/* 3D Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[
+            { label: 'Total Revenue', value: '$3,940', change: '+18%', icon: DollarSign, color: 'from-emerald-400 to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
+            { label: 'Total Orders', value: '156', change: '+12%', icon: ShoppingBag, color: 'from-blue-400 to-blue-600', bg: 'bg-blue-50', text: 'text-blue-600' },
+            { label: 'Avg Order Value', value: '$25.26', change: '+5%', icon: TrendingUp, color: 'from-amber-400 to-amber-600', bg: 'bg-amber-50', text: 'text-amber-600' },
+            { label: 'Customers', value: '89', change: '+8%', icon: User, color: 'from-purple-400 to-purple-600', bg: 'bg-purple-50', text: 'text-purple-600' },
+          ].map((stat, index) => (
+            <div
+              key={stat.label}
+              className="relative group"
+              style={{ perspective: '1000px' }}
+            >
+              <div
+                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu hover:rotate-y-6 hover:-translate-y-1"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                <div className={`absolute -top-px left-6 right-6 h-1 rounded-full bg-gradient-to-r ${stat.color} opacity-60 group-hover:opacity-100 transition-opacity`} />
+
+                <div className="p-5 relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`h-12 w-12 rounded-2xl ${stat.bg} ${stat.text} flex items-center justify-center border border-gray-100 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                      <stat.icon size={22} />
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">
+                      {stat.change}
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className="text-2xl font-extrabold text-gray-900 tracking-tight group-hover:tracking-normal transition-all">{stat.value}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Main Grid: Revenue Chart + Category Distribution */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Revenue Chart - 3D Bar Chart */}
+          <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Revenue Overview</h2>
+                <p className="text-xs text-gray-500 mt-0.5">Daily revenue for this week</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-gradient-to-r from-[#b93815] to-[#9a2c0f]" />
+                <span className="text-xs font-semibold text-gray-600">Revenue</span>
+              </div>
+            </div>
+
+            <div className="relative h-72 flex items-end gap-3 sm:gap-4">
+              {revenueData.map((item, index) => {
+                const height = (item.value / maxRevenue) * 100;
+                return (
+                  <div
+                    key={item.day}
+                    className="flex-1 flex flex-col items-center gap-3"
+                    style={{ animation: `fadeSlideIn 0.5s ease-out ${index * 0.08}s both` }}
+                  >
+                    <div className="relative w-full flex justify-center" style={{ perspective: '800px' }}>
+                      <div
+                        className="relative w-full max-w-[60px] rounded-t-2xl bg-gradient-to-t from-[#b93815] to-[#9a2c0f] shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group/bar"
+                        style={{
+                          height: `${height}%`,
+                          minHeight: '20px',
+                          transformStyle: 'preserve-3d',
+                          transform: 'rotateX(0deg)',
+                        }}
+                      >
+                        {/* 3D top surface */}
+                        <div className="absolute inset-x-0 top-0 h-3 rounded-t-2xl bg-gradient-to-r from-[#b93815]/80 to-[#9a2c0f]/80 group-hover/bar:from-[#b93815] group-hover/bar:to-[#9a2c0f] transition-all" />
+                        {/* Glow effect */}
+                        <div className="absolute inset-0 rounded-t-2xl bg-gradient-to-t from-transparent to-white/20 opacity-0 group-hover/bar:opacity-100 transition-opacity" />
+                        {/* Value tooltip */}
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap">
+                          ${item.value}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-xs font-semibold text-gray-500">{item.day}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Category Distribution - 3D Pie */}
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+            <div className="mb-6">
+              <h2 className="text-lg font-bold text-gray-900">Sales by Category</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Distribution of orders</p>
+            </div>
+
+            {/* 3D Donut Chart */}
+            <div className="relative w-48 h-48 mx-auto mb-6" style={{ perspective: '1000px' }}>
+              <div
+                className="relative w-full h-full rounded-full transition-transform duration-500 hover:rotate-y-12"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                  {categoryData.map((item, index) => {
+                    const circumference = 2 * Math.PI * 15.9155;
+                    const offset = categoryData.slice(0, index).reduce((sum, d) => sum + (d.percentage / 100) * circumference, 0);
+                    const strokeDasharray = `${(item.percentage / 100) * circumference} ${circumference}`;
+                    return (
+                      <circle
+                        key={item.name}
+                        cx="50"
+                        cy="50"
+                        r="15.9155"
+                        fill="none"
+                        strokeWidth="8"
+                        strokeDasharray={strokeDasharray}
+                        strokeDashoffset={-offset}
+                        className={item.color.replace('bg-', 'stroke-')}
+                        style={{ transition: 'all 0.5s ease-out' }}
+                      />
+                    );
+                  })}
+                </svg>
+                {/* Center content */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <p className="text-2xl font-extrabold text-gray-900">100%</p>
+                  <p className="text-[10px] text-gray-500 font-medium">Total</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Legend */}
+            <div className="space-y-3">
+              {categoryData.map((item, index) => (
+                <div
+                  key={item.name}
+                  className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group/legend"
+                  style={{ animation: `fadeSlideIn 0.4s ease-out ${index * 0.1}s both` }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`h-3 w-3 rounded-full ${item.color} shadow-sm group-hover/legend:scale-125 transition-transform`} />
+                    <span className="text-sm font-semibold text-gray-700">{item.name}</span>
+                  </div>
+                  <span className="text-sm font-extrabold text-gray-900">{item.percentage}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Peak Hours + Top Items */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Peak Hours */}
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-amber-200">
+                <TrendingUp size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Peak Hours</h2>
+                <p className="text-xs text-gray-500">Busiest times today</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {peakHours.map((hour, index) => {
+                const maxOrders = Math.max(...peakHours.map((h) => h.orders));
+                const width = (hour.orders / maxOrders) * 100;
+                return (
+                  <div
+                    key={hour.time}
+                    className="flex items-center gap-4"
+                    style={{ animation: `fadeSlideIn 0.4s ease-out ${index * 0.08}s both` }}
+                  >
+                    <span className="text-xs font-bold text-gray-500 w-20 shrink-0">{hour.time}</span>
+                    <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                      <div
+                        className="h-3 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-1000 ease-out hover:from-amber-500 hover:to-orange-600"
+                        style={{ width: `${width}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-extrabold text-gray-900 w-10 text-right">{hour.orders}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Top Performing Items */}
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#b93815] to-[#9a2c0f] text-white flex items-center justify-center shadow-lg shadow-orange-200">
+                <Star size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Top Performing Items</h2>
+                <p className="text-xs text-gray-500">Best sellers this week</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                { name: 'Truffle Smashburger', orders: 142, revenue: '$1,840', trend: '+23%' },
+                { name: 'Street Tacos', orders: 98, revenue: '$1,180', trend: '+15%' },
+                { name: 'Margherita Pizza', orders: 76, revenue: '$920', trend: '+8%' },
+                { name: 'Berry Cake', orders: 54, revenue: '$650', trend: '+5%' },
+              ].map((item, index) => (
+                <div
+                  key={item.name}
+                  className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 group/item"
+                  style={{ animation: `fadeSlideIn 0.4s ease-out ${index * 0.08}s both` }}
+                >
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#b93815] to-[#9a2c0f] text-white flex items-center justify-center font-bold text-sm shadow-lg group-hover/item:scale-110 group-hover/item:rotate-3 transition-all">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
+                    <p className="text-xs text-gray-500">{item.orders} orders · {item.revenue}</p>
+                  </div>
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">
+                    {item.trend}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Customer Insights */}
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center shadow-lg shadow-purple-200">
+              <User size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Customer Insights</h2>
+              <p className="text-xs text-gray-500">Demographics and behavior</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {[
+              { label: 'New Customers', value: '23', change: '+15%', icon: User, color: 'from-blue-400 to-blue-600' },
+              { label: 'Returning Customers', value: '66', change: '+8%', icon: Star, color: 'from-amber-400 to-amber-600' },
+              { label: 'Customer Retention', value: '74%', change: '+3%', icon: TrendingUp, color: 'from-emerald-400 to-emerald-600' },
+            ].map((item, index) => (
+              <div
+                key={item.label}
+                className="relative p-5 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 group/insight"
+                style={{ animation: `fadeSlideIn 0.4s ease-out ${index * 0.1}s both` }}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${item.color} text-white flex items-center justify-center shadow-md group-hover/insight:scale-110 group-hover/insight:rotate-3 transition-all`}>
+                    <item.icon size={18} />
+                  </div>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">{item.label}</span>
+                </div>
+                <div className="flex items-end justify-between">
+                  <p className="text-2xl font-extrabold text-gray-900">{item.value}</p>
+                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">{item.change}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     );
+  };
 
   const renderSettings = () =>
     renderPlaceholder(
