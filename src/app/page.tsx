@@ -8,9 +8,9 @@ export default function Home() {
   return (
     <main className="flex-1">
       <Hero />
+      <WhatAreYouCraving />
       <NotSure />
       <HungryCTA />
-      <WhatAreYouCraving />
       <PickedForYouSection />
     </main>
   );
