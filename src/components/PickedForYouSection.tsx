@@ -8,14 +8,19 @@ import { useApp } from '@/context/AppContext';
 
 export const PickedForYouSection: React.FC = () => {
   const [foods, setFoods] = useState<FoodItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
 
   const { toggleFavorite, favorites } = useApp();
 
   useEffect(() => {
     fetch('/data/foods.json')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch food items');
+        }
+        return res.json();
+      })
       .then((data) => {
         setFoods(data);
         setLoading(false);
@@ -50,17 +55,23 @@ export const PickedForYouSection: React.FC = () => {
           </Link>
         </div>
 
-        {/* Cards Grid */}
+        {/* Cards Grid / Skeletons / Empty State */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="w-full h-80 bg-gray-200/60 rounded-3xl animate-pulse" />
+              <div 
+                key={n} 
+                className="w-full h-80 bg-gray-200/60 rounded-3xl animate-pulse" 
+              />
             ))}
+          </div>
+        ) : foods.length === 0 ? (
+          <div className="text-center py-12 text-gray-500 text-sm">
+            No food items available at the moment.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {foods.map((food) => (
-              /* HERE IS WHERE IT GOES */
               <FoodCard
                 key={food.id}
                 food={{

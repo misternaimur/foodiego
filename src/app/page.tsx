@@ -12,8 +12,6 @@ export default function Home() {
       <HungryCTA />
       <WhatAreYouCraving />
       <PickedForYouSection />
-      <HungryCTA />
-      <NotSure />
     </main>
   );
 }

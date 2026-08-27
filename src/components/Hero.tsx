@@ -37,7 +37,7 @@
 
     return (
         <section className="w-full bg-[#faf9f6] py-12 lg:py-20 px-4 sm:px-6 lg:px-12">
-        <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="max-w-350 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             
             {/* Left Column: Headline & AI Prompt Input */}
             <div className="flex flex-col space-y-6 max-w-xl">
@@ -104,7 +104,7 @@
             </div>
 
             {/* Right Column: Hero Visual Container */}
-            <div className="relative w-full aspect-[4/3] sm:aspect-[14/11] lg:aspect-square rounded-[32px] overflow-hidden bg-gray-100 shadow-sm border border-gray-100">
+            <div className="relative w-full aspect-4/3 sm:aspect-14/11 lg:aspect-square rounded-4xl overflow-hidden bg-gray-100 shadow-sm border border-gray-100">
             
             {/* Main Food Image */}
             <Image
