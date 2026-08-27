@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown } from 'lucide-react';
+
 import { useApp } from '@/context/AppContext';
 
 export interface NavItem {
@@ -325,7 +326,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Order Now
               </Link>
 
-              <div className="pt-2 flex gap-3 border-t border-[#E8E2D5]">
+              <div className="pt-2 flex gap-3 border-[#E8E2D5]">
                 <Link
                   href="/auth/login"
                   onClick={() => setIsMobileMenuOpen(false)}
