@@ -1,6 +1,4 @@
 import Hero from "@/components/Hero";
-import HungryCTA from "@/components/HungryCTA";
-import NotSure from "@/components/NotSure";
 import PickedForYouSection from "@/components/PickedForYouSection";
 import WhatAreYouCraving from "@/components/WhatAreYouCraving";
 
@@ -10,8 +8,6 @@ export default function Home() {
       <Hero />
       <WhatAreYouCraving />
       <PickedForYouSection />
-      <NotSure />
-      <HungryCTA />
     </main>
   );
 }
