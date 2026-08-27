@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export interface FooterLink {
   label: string;
@@ -57,6 +58,12 @@ export const Footer: React.FC<FooterProps> = ({
   columns = defaultColumns,
   copyrightText = `© ${new Date().getFullYear()} Foodiego AI Logistics. All rights reserved.`,
 }) => {
+  const pathname = usePathname();
+
+  if (pathname && pathname.startsWith('/dashboard')) {
+    return null;
+  }
+
   return (
     <footer className="w-full bg-[#2d2d2d] text-[#a1a1a1]">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pt-14 pb-10">
