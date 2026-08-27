@@ -68,28 +68,6 @@
       { "name": "Caramelized Onions", "price": 1.00 },
       { "name": "Truffle Dip Side", "price": 2.00 }
     ]
-  },
-  {
-    "id": "food-4",
-    "name": "Authentic Pad Thai",
-    "description": "Stir-fried rice noodles with tiger prawns, tofu, bean sprouts, crushed peanuts, and lime.",
-    "price": 19.00,
-    "rating": 4.6,
-    "deliveryTime": "25-35 min",
-    "deliveryFee": "$1.49 delivery",
-    "restaurantName": "Bangkok Street",
-    "cuisine": "Thai",
-    "dietary": "Non-Veg",
-    "matchPercentage": null,
-    "imageUrl": "https://images.unsplash.com/photo-1555126634-323283e090fa?auto=format&fit=crop&w=800&q=80",
-    "sizes": [
-      { "name": "Regular Portion", "price": 0 },
-      { "name": "Large Portion", "price": 3.00 }
-    ],
-    "addons": [
-      { "name": "Extra Tiger Prawns", "price": 5.00 },
-      { "name": "Fried Egg on Top", "price": 1.50 },
-      { "name": "Extra Crushed Peanuts", "price": 0.50 }
-    ]
   }
+  
 ]

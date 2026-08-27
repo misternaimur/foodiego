@@ -32,60 +32,53 @@ export const PickedForYouSection: React.FC = () => {
   }, []);
 
   return (
-    <section className="relative w-full bg-white py-20 lg:py-28 overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-orange-50/60 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-red-50/60 to-transparent rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="w-full bg-[#FAF7EE] py-16 lg:py-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header Area */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 text-left">
           <div>
-            <div className="inline-flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-full px-4 py-2 mb-4">
-              <span className="text-orange-500 text-sm">✨</span>
-              <span className="text-xs font-bold text-orange-700 uppercase tracking-wider">For You</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
-              Picked for you
+            <p className="text-xs font-bold text-emerald-800 tracking-widest uppercase mb-2">
+              CURATED, NOT CROWDED
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-2">
+              Restaurants worth discovering
             </h2>
-            <p className="mt-2 text-base text-gray-500 max-w-lg">
-              Foodiego learns what you love and finds your next favorite meal.
+            <p className="text-sm sm:text-base text-gray-600 font-normal">
+              A short list of kitchens we'd happily send our own friends to.
             </p>
           </div>
 
           <Link
             href="/restaurants"
-            className="inline-flex items-center gap-2 bg-white border border-gray-200 hover:border-orange-200 text-gray-700 hover:text-orange-700 text-sm font-bold px-5 py-2.5 rounded-xl transition-all duration-300 hover:shadow-md shrink-0"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-800 hover:text-emerald-950 transition-colors shrink-0 mb-1"
           >
-            See more
+            View All Restaurants
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
             </svg>
           </Link>
         </div>
 
         {/* Cards Grid / Skeletons / Empty State */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((n) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((n) => (
               <div 
                 key={n} 
-                className="w-full h-96 bg-gray-100 rounded-3xl animate-pulse" 
+                className="w-full h-[420px] bg-white/60 rounded-3xl animate-pulse" 
               />
             ))}
           </div>
         ) : foods.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="text-center py-16 bg-white/40 rounded-3xl border border-gray-200/50">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
               <span className="text-3xl">🍽️</span>
             </div>
             <p className="text-gray-500 text-sm font-medium">No food items available at the moment.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {foods.map((food, index) => (
               <div
                 key={food.id}
