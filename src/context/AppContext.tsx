@@ -6,8 +6,18 @@ import { FoodItem } from '@/components/FoodCard';
 import { auth } from '@/lib/firebase/client';
 import { logout } from '@/app/(public)/actions/auth';
 
+export interface SelectedOption {
+    name: string;
+    price: number;
+}
+
 export interface CartItem extends FoodItem {
+    cartItemId: string; // Unique ID per custom configuration
+    selectedSize?: SelectedOption;
+    selectedAddons?: SelectedOption[];
+    specialInstructions?: string;
     quantity: number;
+    totalUnitPrice: number;
 }
 
 export interface AuthUser {
@@ -17,13 +27,20 @@ export interface AuthUser {
     avatarUrl?: string | null;
 }
 
+interface CustomizationOptions {
+    selectedSize?: SelectedOption;
+    selectedAddons?: SelectedOption[];
+    specialInstructions?: string;
+    quantity?: number;
+}
+
 interface AppContextType {
     cart: CartItem[];
     favorites: string[];
     user: AuthUser | null;
     isAuthLoading: boolean;
-    addToCart: (food: FoodItem) => void;
-    removeFromCart: (id: string) => void;
+    addToCart: (food: FoodItem, customization?: CustomizationOptions) => void;
+    removeFromCart: (cartItemId: string) => void;
     toggleFavorite: (id: string) => void;
     clearCart: () => void;
     logoutUser: () => Promise<void>;
@@ -98,31 +115,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     }, [favorites]);
 
-    const addToCart = (food: FoodItem) => {
-        setCart((prevCart) => {
-            const existingItem = prevCart.find((item) => item.id === food.id);
+    const addToCart = (food: FoodItem, customization?: CustomizationOptions) => {
+        const selectedSize = customization?.selectedSize;
+        const selectedAddons = customization?.selectedAddons || [];
+        const specialInstructions = customization?.specialInstructions || '';
+        const qty = customization?.quantity || 1;
 
-            if (existingItem) {
-                return prevCart.map((item) =>
-                    item.id === food.id ? { ...item, quantity: item.quantity + 1 } : item
+        // Calculate unit price including options
+        const addonsPrice = selectedAddons.reduce((sum, item) => sum + item.price, 0);
+        const sizePrice = selectedSize ? selectedSize.price : 0;
+        const totalUnitPrice = food.price + sizePrice + addonsPrice;
+
+        // Unique ID based on choices
+        const addonKeys = selectedAddons.map((a) => a.name).sort().join('-');
+        const cartItemId = `${food.id}_${selectedSize?.name || 'def'}_${addonKeys}_${specialInstructions}`;
+
+        setCart((prev) => {
+            const existing = prev.find((item) => item.cartItemId === cartItemId);
+            if (existing) {
+                return prev.map((item) =>
+                    item.cartItemId === cartItemId
+                        ? { ...item, quantity: item.quantity + qty }
+                        : item
                 );
             }
-
-            return [...prevCart, { ...food, quantity: 1 }];
+            return [
+                ...prev,
+                {
+                    ...food,
+                    cartItemId,
+                    selectedSize,
+                    selectedAddons,
+                    specialInstructions,
+                    quantity: qty,
+                    totalUnitPrice,
+                },
+            ];
         });
     };
 
-    const removeFromCart = (id: string) => {
-        setCart((prevCart) => {
-            const existingItem = prevCart.find((item) => item.id === id);
+    const removeFromCart = (cartItemId: string) => {
+        setCart((prev) => {
+            const existing = prev.find((item) => item.cartItemId === cartItemId);
 
-            if (existingItem && existingItem.quantity > 1) {
-                return prevCart.map((item) =>
-                    item.id === id ? { ...item, quantity: item.quantity - 1 } : item
+            if (existing && existing.quantity > 1) {
+                return prev.map((item) =>
+                    item.cartItemId === cartItemId
+                        ? { ...item, quantity: item.quantity - 1 }
+                        : item
                 );
             }
 
-            return prevCart.filter((item) => item.id !== id);
+            return prev.filter((item) => item.cartItemId !== cartItemId);
         });
     };
 
