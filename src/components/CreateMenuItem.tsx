@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -26,6 +26,11 @@ import {
   DollarSign,
   Clock,
   TrendingUp,
+  Download,
+  ChevronDown,
+  Flame,
+  Receipt,
+  Bike,
 } from 'lucide-react';
 
 interface NavItem {
@@ -87,6 +92,122 @@ const popularItems = [
   { name: 'Berry Cake', orders: 15, revenue: '$225' },
 ];
 
+interface LiveOrder {
+  id: string;
+  customer: string;
+  items: string;
+  total: number;
+  status: 'Preparing' | 'Ready' | 'Delivered';
+  time: string;
+}
+
+interface PopularItem {
+  id: string;
+  name: string;
+  orders: number;
+  revenue: number;
+  image: string;
+  alt: string;
+}
+
+const initialOrders: LiveOrder[] = [
+  { id: '#1024', customer: 'Rahim Ahmed', items: 'Truffle Smashburger x1, Fries x1', total: 14.5, status: 'Preparing', time: '2 min ago' },
+  { id: '#1023', customer: 'Sara Khan', items: 'Street Tacos x2', total: 12.0, status: 'Ready', time: '5 min ago' },
+  { id: '#1022', customer: 'Karim Hassan', items: 'Creamy Pasta x1', total: 10.0, status: 'Preparing', time: '8 min ago' },
+  { id: '#1021', customer: 'Nusrat Jahan', items: 'Berry Cake x1, Coffee x1', total: 9.5, status: 'Delivered', time: '12 min ago' },
+  { id: '#1020', customer: 'Imran Hossain', items: 'Truffle Smashburger x2', total: 23.0, status: 'Ready', time: '15 min ago' },
+];
+
+const initialPopularItems: PopularItem[] = [
+  { id: 'burger', name: 'Truffle Smashburger', orders: 42, revenue: 892, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=400', alt: 'Truffle Smashburger' },
+  { id: 'tacos', name: 'Street Tacos', orders: 28, revenue: 420, image: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&q=80&w=400', alt: 'Street Tacos' },
+  { id: 'pasta', name: 'Creamy Pasta', orders: 19, revenue: 285, image: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&q=80&w=400', alt: 'Creamy Pasta' },
+  { id: 'cake', name: 'Berry Cake', orders: 15, revenue: 225, image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=400', alt: 'Berry Cake' },
+];
+
+interface MenuItem {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  description: string;
+  image: string;
+  alt: string;
+  status: 'Available' | 'Sold Out';
+  tags: string[];
+}
+
+const menuItems: MenuItem[] = [
+  {
+    id: 'burger',
+    name: 'Truffle Smashburger',
+    category: 'Burgers',
+    price: 12.99,
+    description: 'Double patty with truffle aioli and cheddar.',
+    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=600',
+    alt: 'Truffle Smashburger',
+    status: 'Available',
+    tags: ['Best Seller'],
+  },
+  {
+    id: 'tacos',
+    name: 'Street Tacos',
+    category: 'Sides',
+    price: 9.5,
+    description: 'Three soft tacos with seasoned chicken.',
+    image: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&q=80&w=600',
+    alt: 'Street Tacos',
+    status: 'Available',
+    tags: ['Best Seller', 'Vegetarian'],
+  },
+  {
+    id: 'pasta',
+    name: 'Creamy Pasta',
+    category: 'Pizza',
+    price: 14.0,
+    description: 'Rich creamy sauce with parmesan and basil.',
+    image: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&q=80&w=600',
+    alt: 'Creamy Pasta',
+    status: 'Sold Out',
+    tags: ['Vegetarian'],
+  },
+  {
+    id: 'cake',
+    name: 'Berry Cake',
+    category: 'Drinks',
+    price: 7.99,
+    description: 'Fresh berry layered cake with cream.',
+    image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=600',
+    alt: 'Berry Cake',
+    status: 'Available',
+    tags: ['Best Seller'],
+  },
+  {
+    id: 'pizza',
+    name: 'Margherita Pizza',
+    category: 'Pizza',
+    price: 11.99,
+    description: 'Classic tomato, mozzarella, and basil.',
+    image: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&q=80&w=600',
+    alt: 'Margherita Pizza',
+    status: 'Available',
+    tags: ['Vegetarian'],
+  },
+  {
+    id: 'soda',
+    name: 'Citrus Soda',
+    category: 'Drinks',
+    price: 4.5,
+    description: 'Fresh sparkling citrus blend.',
+    image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&q=80&w=600',
+    alt: 'Citrus Soda',
+    status: 'Available',
+    tags: [],
+  },
+];
+
+const categories = ['All Items', 'Burgers', 'Pizza', 'Drinks', 'Sides'];
+
 export default function CreateMenuItem() {
   const [activeTab, setActiveTab] = useState('Overview');
   const pathname = usePathname();
@@ -109,6 +230,14 @@ export default function CreateMenuItem() {
   // Gallery
   const [gallery, setGallery] = useState(gallerySeed);
 
+  // Overview state
+  const [timeFilter, setTimeFilter] = useState<'Today' | 'Week' | 'Month'>('Today');
+  const [orders, setOrders] = useState<LiveOrder[]>(initialOrders);
+  const [popularItemsState, setPopularItems] = useState<PopularItem[]>(initialPopularItems);
+
+  // Menu Management state
+  const [menuCategory, setMenuCategory] = useState('All Items');
+
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
@@ -119,64 +248,278 @@ export default function CreateMenuItem() {
     setGallery((prev) => prev.filter((g) => g.id !== id));
   };
 
-  const renderOverview = () => (
-    <div className="space-y-8">
-      <div className="mb-2">
-        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
-          Dashboard Overview
-        </h1>
-        <p className="mt-2 text-base text-gray-500 max-w-2xl leading-relaxed">
-          Here&apos;s what&apos;s happening with your restaurant today.
-        </p>
-      </div>
+  const updateOrderStatus = (orderId: string, newStatus: LiveOrder['status']) => {
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
+  };
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {overviewStats.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm flex items-center gap-4"
-          >
-            <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${stat.color}`}>
-              <stat.icon size={22} />
+  const derivedStats = useMemo(() => {
+    const multiplier = timeFilter === 'Today' ? 1 : timeFilter === 'Week' ? 5.2 : 22;
+    const totalOrders = Math.round(24 * multiplier);
+    const revenue = Math.round(1250 * multiplier);
+    const avgRating = 4.8;
+    const weeklyGrowth = 12.5;
+    return { totalOrders, revenue, avgRating, weeklyGrowth };
+  }, [timeFilter]);
+
+  const downloadReport = () => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const totalRevenue = popularItemsState.reduce((sum, item) => sum + item.revenue, 0);
+    const liveCount = orders.filter((o) => o.status === 'Preparing' || o.status === 'Ready').length;
+
+    const report = `
+Foodiego Merchant Dashboard Report
+Generated: ${dateStr} at ${timeStr}
+Period: ${timeFilter}
+
+STATS
+-----
+Today's Orders: ${derivedStats.totalOrders}
+Revenue: $${derivedStats.revenue.toLocaleString()}
+Avg Rating: ${derivedStats.avgRating}
+Weekly Growth: ${derivedStats.weeklyGrowth}%
+Live Orders: ${liveCount}
+
+POPULAR ITEMS
+-------------
+${popularItemsState.map((item) => `${item.name} - ${item.orders} orders - $${item.revenue}`).join('\n')}
+
+Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
+`.trim();
+
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `dashboard-report-${timeFilter.toLowerCase()}-${now.toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const filteredMenuItems = useMemo(() => {
+    if (menuCategory === 'All Items') return menuItems;
+    return menuItems.filter((item) => item.category === menuCategory);
+  }, [menuCategory]);
+
+  const renderOverview = () => {
+    const liveOrdersList = orders.filter((o) => o.status === 'Preparing' || o.status === 'Ready');
+    const totalRevenue = popularItemsState.reduce((sum, item) => sum + item.revenue, 0);
+
+    return (
+      <div className="space-y-6">
+        {/* Header Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
+              Dashboard Overview
+            </h1>
+            <p className="mt-1 text-base text-gray-500">
+              Here&apos;s what&apos;s happening with your restaurant.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <select
+                value={timeFilter}
+                onChange={(e) => setTimeFilter(e.target.value as typeof timeFilter)}
+                className="appearance-none bg-white border border-gray-200 text-sm font-semibold text-gray-700 rounded-xl pl-4 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 focus:border-[#b93815] transition-all"
+              >
+                <option value="Today">Today</option>
+                <option value="Week">This Week</option>
+                <option value="Month">This Month</option>
+              </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
-            <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-                {stat.label}
-              </p>
-              <p className="text-xl font-extrabold text-gray-900 mt-0.5">{stat.value}</p>
+            <button
+              type="button"
+              onClick={downloadReport}
+              className="inline-flex items-center gap-2 bg-[#b93815] text-white hover:bg-[#9a2c0f] font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all text-sm"
+            >
+              <Download size={16} />
+              Download Report
+            </button>
+          </div>
+        </div>
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Today&apos;s Orders</p>
+              <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <ShoppingBag size={20} />
+              </div>
+            </div>
+            <p className="text-2xl font-extrabold text-gray-900">{derivedStats.totalOrders}</p>
+            <p className="text-xs text-gray-400 mt-1">+8% from yesterday</p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Revenue</p>
+              <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <DollarSign size={20} />
+              </div>
+            </div>
+            <p className="text-2xl font-extrabold text-gray-900">${derivedStats.revenue.toLocaleString()}</p>
+            <p className="text-xs text-gray-400 mt-1">+12% from yesterday</p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Avg Rating</p>
+              <div className="h-10 w-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Star size={20} />
+              </div>
+            </div>
+            <p className="text-2xl font-extrabold text-gray-900">{derivedStats.avgRating}</p>
+            <p className="text-xs text-gray-400 mt-1">Based on 128 reviews</p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Weekly Growth</p>
+              <div className="h-10 w-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <TrendingUp size={20} />
+              </div>
+            </div>
+            <p className="text-2xl font-extrabold text-gray-900">{derivedStats.weeklyGrowth}%</p>
+            <div className="mt-2 w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-[#b93815] h-2 rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(derivedStats.weeklyGrowth * 5, 100)}%` }}
+              />
             </div>
           </div>
-        ))}
-      </div>
+        </div>
 
-      <section className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
-        <div className="flex items-center gap-2 mb-6">
-          <TrendingUp size={20} className="text-[#b93815]" />
-          <h2 className="text-lg font-bold text-gray-900">Popular Items</h2>
+        {/* Main Grid: Live Orders + Popular Items */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Live Orders */}
+          <div className="lg:col-span-1 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Flame size={20} className="text-[#b93815]" />
+                <h2 className="text-lg font-bold text-gray-900">Live Orders</h2>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50 text-red-600 text-xs font-bold">
+                <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                {liveOrdersList.length}
+              </span>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {orders.map((order) => {
+                const isLive = order.status === 'Preparing' || order.status === 'Ready';
+                const statusColor =
+                  order.status === 'Preparing'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : order.status === 'Ready'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-gray-50 text-gray-500 border-gray-200';
+                return (
+                  <div key={order.id} className="p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-gray-900">{order.id}</span>
+                        {isLive && (
+                          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        )}
+                      </div>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusColor}`}>
+                        {order.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-1">{order.customer}</p>
+                    <p className="text-xs text-gray-400 mb-3 line-clamp-1">{order.items}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-extrabold text-gray-900">${order.total.toFixed(2)}</span>
+                      <div className="flex items-center gap-2">
+                        {order.status === 'Preparing' && (
+                          <button
+                            type="button"
+                            onClick={() => updateOrderStatus(order.id, 'Ready')}
+                            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg transition-colors"
+                          >
+                            Mark Ready
+                          </button>
+                        )}
+                        {order.status === 'Ready' && (
+                          <button
+                            type="button"
+                            onClick={() => updateOrderStatus(order.id, 'Delivered')}
+                            className="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg transition-colors"
+                          >
+                            Delivered
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 p-1.5 rounded-lg transition-colors"
+                        >
+                          <Receipt size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">{order.time}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Popular Items Today */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+              <div className="flex items-center gap-2 mb-6">
+                <Flame size={20} className="text-[#b93815]" />
+                <h2 className="text-lg font-bold text-gray-900">Popular Items Today</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {popularItemsState.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all bg-white"
+                  >
+                    <div className="relative h-16 w-16 rounded-xl overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
+                      <Image src={item.image} alt={item.alt} fill className="object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{item.orders} orders</p>
+                      <p className="text-sm font-extrabold text-[#b93815] mt-1">${item.revenue}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* AI Insight */}
+            <div className="bg-purple-50 border border-purple-100 rounded-2xl p-6 sm:p-8 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="h-10 w-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                  <Sparkles size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-purple-900 uppercase tracking-wide">AI Insight</h3>
+                  <p className="mt-1 text-sm text-purple-800 leading-relaxed">
+                    Truffle Smashburger is trending 23% higher than last week. Consider adding a combo meal with fries to increase average order value by an estimated 18%.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="pb-3 font-bold text-gray-500 uppercase tracking-wide text-xs">Item</th>
-                <th className="pb-3 font-bold text-gray-500 uppercase tracking-wide text-xs text-right">Orders</th>
-                <th className="pb-3 font-bold text-gray-500 uppercase tracking-wide text-xs text-right">Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-              {popularItems.map((item) => (
-                <tr key={item.name} className="border-b border-gray-100 last:border-0">
-                  <td className="py-3.5 font-semibold text-gray-900">{item.name}</td>
-                  <td className="py-3.5 text-right text-gray-600">{item.orders}</td>
-                  <td className="py-3.5 text-right font-semibold text-gray-900">{item.revenue}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-  );
+      </div>
+    );
+  };
 
   const renderPlaceholder = (title: string, description: string) => (
     <div className="space-y-6">
@@ -196,11 +539,95 @@ export default function CreateMenuItem() {
       'Track and manage incoming customer orders in real-time.'
     );
 
-  const renderMenuManagement = () =>
-    renderPlaceholder(
-      'Menu Management',
-      'Organize your menu items, categories, and pricing.'
+  const renderMenuManagement = () => {
+    return (
+      <div className="space-y-6">
+        <div className="mb-2">
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Menu Management</h1>
+          <p className="mt-2 text-base text-gray-500 max-w-2xl leading-relaxed">
+            Organize your menu items, categories, and pricing.
+          </p>
+        </div>
+
+        {/* Category Filters */}
+        <div className="flex flex-wrap gap-3">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setMenuCategory(cat)}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
+                menuCategory === cat
+                  ? 'bg-[#b93815] text-white border-[#b93815] shadow-sm'
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Menu Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredMenuItems.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-all flex flex-col"
+            >
+              <div className="relative aspect-[4/3] bg-gray-100">
+                <Image src={item.image} alt={item.alt} fill className="object-cover" />
+                <div className="absolute top-3 left-3">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${
+                      item.status === 'Available'
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-red-50 text-red-700 border-red-200'
+                    }`}
+                  >
+                    {item.status}
+                  </span>
+                </div>
+              </div>
+              <div className="p-5 flex-1 flex flex-col">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <h3 className="text-base font-bold text-gray-900 leading-tight">{item.name}</h3>
+                  <p className="text-base font-extrabold text-[#b93815] whitespace-nowrap">${item.price.toFixed(2)}</p>
+                </div>
+                <p className="text-sm text-gray-500 mb-4 line-clamp-2">{item.description}</p>
+                <div className="mt-auto flex flex-wrap gap-2">
+                  {item.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                        tag === 'Best Seller'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}
+                    >
+                      {tag === 'Best Seller' ? <Star size={12} className="mr-1" /> : <Leaf size={12} className="mr-1" />}
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Add New Item Card */}
+          <button
+            type="button"
+            className="rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50 hover:border-[#b93815] hover:bg-[#fff1ec] transition-colors flex flex-col items-center justify-center aspect-[4/3] min-h-[220px]"
+          >
+            <div className="h-12 w-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 mb-3">
+              <Plus size={24} />
+            </div>
+            <p className="text-sm font-bold text-gray-600">Add New Item</p>
+            <p className="text-xs text-gray-400 mt-1">Create a new menu entry</p>
+          </button>
+        </div>
+      </div>
     );
+  };
 
   const renderAnalytics = () =>
     renderPlaceholder(
@@ -536,7 +963,7 @@ export default function CreateMenuItem() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex font-sans">
+    <div className="w-full min-h-screen bg-gray-100 flex font-sans">
       {/* -------------------- SIDEBAR (LEFT) -------------------- */}
       <aside className="hidden lg:flex flex-col w-72 bg-white border-r border-gray-200 shrink-0 sticky top-0 h-screen">
         {/* Brand Header */}
@@ -637,7 +1064,7 @@ export default function CreateMenuItem() {
       </aside>
 
       {/* -------------------- MAIN AREA (RIGHT) -------------------- */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 w-full flex flex-col min-w-0">
         {/* Header Bar */}
         <header className="h-20 bg-white border-b border-gray-200 sticky top-0 z-40 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
           <div className="relative max-w-md w-full flex-1 md:flex-initial">
@@ -668,7 +1095,7 @@ export default function CreateMenuItem() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 max-w-5xl w-full mx-auto">
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 mx-auto w-full max-w-7xl">
           <div className="transition-all duration-300 ease-in-out">
             {renderTabContent()}
           </div>
@@ -676,7 +1103,7 @@ export default function CreateMenuItem() {
 
         {/* ---------------- BOTTOM ACTION BAR ---------------- */}
         <div className="sticky bottom-0 z-30 bg-white/95 backdrop-blur border-t border-gray-200 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-5xl mx-auto py-4 flex items-center justify-end gap-3">
+          <div className="py-4 flex items-center justify-end gap-3 mx-auto w-full max-w-7xl">
             <button
               type="button"
               className="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 rounded-xl hover:bg-gray-100 transition-colors"
