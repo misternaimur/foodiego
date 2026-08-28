@@ -16,6 +16,7 @@ import {
   X,
   MapPin,
   Lock,
+  Menu,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -41,12 +42,13 @@ export default function RiderSettingsPage() {
             mobileMenu ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="flex h-full flex-col">
+          <div className="relative flex h-full flex-col">
 
             {/* Mobile Close Button */}
             <button
               onClick={() => setMobileMenu(false)}
-              className="absolute right-4 top-5 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+              className="absolute right-4 top-5 z-10 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+              aria-label="Close menu"
             >
               <X className="h-5 w-5 text-slate-600" />
             </button>
@@ -55,12 +57,12 @@ export default function RiderSettingsPage() {
                 RIDER PROFILE
             ================================================= */}
 
-            <div className="border-b border-slate-100 px-5 py-7">
+            <div className="border-b border-slate-100 px-5 py-6">
               <div className="flex items-center gap-3">
 
-                {/* Profile Icon */}
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange-100">
-                  <User className="h-6 w-6 text-orange-500" />
+                {/* Avatar */}
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100">
+                  <User className="h-6 w-6 text-green-500" />
                 </div>
 
                 {/* Profile Info */}
@@ -70,19 +72,17 @@ export default function RiderSettingsPage() {
                     Afrin
                   </p>
 
-                  {/* Rider Role */}
-                  <p className="mt-0.5 text-xs font-medium text-orange-500">
+                  <p className="mt-0.5 text-xs font-medium text-green-500">
                     Rider
                   </p>
 
-                  {/* Rating */}
+                  {/* Rating - Yellow */}
                   <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                    <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
+                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                     <span>4.9 Rating</span>
                   </div>
 
                 </div>
-
               </div>
             </div>
 
@@ -94,9 +94,9 @@ export default function RiderSettingsPage() {
 
               {/* Dashboard */}
               <a
-                href="/dashboard/rider"
+                href="/rider"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <Home className="h-4 w-4" />
                 Dashboard
@@ -104,9 +104,9 @@ export default function RiderSettingsPage() {
 
               {/* Orders */}
               <a
-                href="/dashboard/rider/orders"
+                href="/rider/orders"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <Package className="h-4 w-4" />
                 Orders
@@ -114,9 +114,9 @@ export default function RiderSettingsPage() {
 
               {/* Deliveries */}
               <a
-                href="/dashboard/rider/deliveries"
+                href="/rider/deliveries"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <Bike className="h-4 w-4" />
                 Deliveries
@@ -124,9 +124,9 @@ export default function RiderSettingsPage() {
 
               {/* Earnings */}
               <a
-                href="/dashboard/rider/earnings"
+                href="/rider/earnings"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <DollarSign className="h-4 w-4" />
                 Earnings
@@ -134,9 +134,9 @@ export default function RiderSettingsPage() {
 
               {/* Shift History */}
               <a
-                href="/dashboard/rider/shift-history"
+                href="/rider/shift-history"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-orange-50 hover:text-orange-600"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
               >
                 <History className="h-4 w-4" />
                 Shift History
@@ -144,16 +144,19 @@ export default function RiderSettingsPage() {
 
               {/* Settings - ACTIVE */}
               <a
-                href="/dashboard/rider/settings"
+                href="/rider/settings"
                 onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg bg-[#f97316] px-4 py-3 text-sm font-medium text-white shadow-sm"
+                className="mb-1 flex items-center gap-3 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm"
               >
                 <SettingsIcon className="h-4 w-4" />
                 Settings
               </a>
 
               {/* Logout */}
-              <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500">
+              <button
+                type="button"
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
+              >
                 <LogOut className="h-4 w-4" />
                 Logout
               </button>
@@ -183,15 +186,12 @@ export default function RiderSettingsPage() {
           <div className="px-5 pt-5 lg:hidden">
             <button
               onClick={() => setMobileMenu(true)}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm hover:bg-slate-50"
+              aria-label="Open menu"
             >
-              ☰ Menu
+              <Menu className="h-5 w-5 text-slate-700" />
             </button>
           </div>
-
-          {/* =================================================
-              CONTENT
-          ================================================= */}
 
           <div className="space-y-7 p-5 md:p-8 lg:p-10">
 
@@ -201,12 +201,10 @@ export default function RiderSettingsPage() {
 
             <section>
 
-            
-              <h1 className="text-4xl font-bold tracking-tight text-[#f97316]">
+              <h1 className="text-4xl font-bold tracking-tight text-green-500">
                 Rider Dashboard
               </h1>
 
-              
               <h2 className="mt-2 text-3xl font-bold text-slate-900">
                 Settings
               </h2>
@@ -224,12 +222,11 @@ export default function RiderSettingsPage() {
 
             <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-              {/* Header */}
               <div className="border-b border-slate-100 p-6">
 
                 <div className="flex items-center gap-3">
 
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
                     <User className="h-5 w-5" />
                   </div>
 
@@ -247,7 +244,6 @@ export default function RiderSettingsPage() {
 
               </div>
 
-              {/* Profile Details */}
               <div className="grid gap-6 p-6 md:grid-cols-2">
 
                 {/* Full Name */}
@@ -291,7 +287,7 @@ export default function RiderSettingsPage() {
 
                   <div className="flex items-center gap-2">
 
-                    <Bike className="h-4 w-4 text-orange-500" />
+                    <Bike className="h-4 w-4 text-green-500" />
 
                     <span className="text-sm font-semibold text-slate-800">
                       Rider
@@ -306,10 +302,13 @@ export default function RiderSettingsPage() {
 
               </div>
 
-              {/* Save Button */}
+              {/* Save */}
               <div className="flex justify-end border-t border-slate-100 p-5">
 
-                <button className="rounded-lg bg-[#f97316] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600">
+                <button
+                  type="button"
+                  className="rounded-lg bg-green-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600"
+                >
                   Save Changes
                 </button>
 
@@ -327,7 +326,7 @@ export default function RiderSettingsPage() {
 
                 <div className="flex items-center gap-3">
 
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
                     <Bike className="h-5 w-5" />
                   </div>
 
@@ -381,7 +380,7 @@ export default function RiderSettingsPage() {
 
                 <div className="flex items-center gap-3">
 
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
                     <Bell className="h-5 w-5" />
                   </div>
 
@@ -445,7 +444,7 @@ export default function RiderSettingsPage() {
 
                 <div className="flex items-center gap-3">
 
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
                     <ShieldCheck className="h-5 w-5" />
                   </div>
 
@@ -465,7 +464,10 @@ export default function RiderSettingsPage() {
 
               <div className="p-6">
 
-                <button className="flex w-full items-center gap-4 rounded-xl border border-slate-200 p-4 text-left transition hover:bg-slate-50">
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-4 rounded-xl border border-slate-200 p-4 text-left transition hover:bg-slate-50"
+                >
 
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
                     <Lock className="h-5 w-5 text-slate-600" />
@@ -483,7 +485,7 @@ export default function RiderSettingsPage() {
 
                   </div>
 
-                  <span className="text-sm font-semibold text-orange-500">
+                  <span className="text-sm font-semibold text-green-500">
                     Change
                   </span>
 
@@ -581,6 +583,7 @@ function SettingRow({
 
       {/* Toggle */}
       <button
+        type="button"
         onClick={onToggle}
         aria-label={`Toggle ${title}`}
         className={`relative h-7 w-12 shrink-0 rounded-full transition ${

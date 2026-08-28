@@ -1,16 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf9f6;
+  --background: #FAF7EE;
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -19,10 +14,15 @@
   }
 }
 
+@font-face {
+  font-family:'font-01';
+  src: url('/fonts/3y9K6as8bTXq_nANBjzKo3IeZx8z6up5BeSl9D4dj_x9PpZBMlGIInE.woff2');
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "font-01";
 }
 
 @keyframes fadeSlideIn {

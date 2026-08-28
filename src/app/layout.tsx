@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Navbar } from "@/components/Share/Navbar";
 import Footer from "@/components/Share/Footer";
 import Providers from "@/components/Providers";
+import { getOptionalSession } from "@/lib/dal";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,11 +21,13 @@ export const metadata: Metadata = {
   description: "Smarter food delivery",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getOptionalSession();
+
   return (
     <html
       lang="en"
@@ -32,7 +35,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <Providers>
-          <Navbar />
+          <Navbar user={session ? { name: session.name } : null} />
           {children}
           <Footer />
         </Providers>
