@@ -77,9 +77,9 @@ export default function HeroSection() {
             {marqueeImages.map((img, index) => (
               <div
                 key={`${img.id}-${index}`}
-                className="mx-3 flex-shrink-0"
+                className="mx-3 shrink-0"
               >
-                <div className="relative w-[160px] h-[220px] sm:w-[200px] sm:h-[280px] md:w-[220px] md:h-[300px] rounded-t-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 shadow-lg cursor-pointer bg-emerald-900/20">
+                <div className="relative w-40 h-55 sm:w-50 sm:h-70 md:w-55 md:h-[300px] rounded-t-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 shadow-lg cursor-pointer bg-emerald-900/20">
                   <Image
                     src={img.src}
                     alt={img.alt}
