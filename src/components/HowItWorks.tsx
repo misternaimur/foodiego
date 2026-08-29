@@ -103,43 +103,43 @@ export const HowItWorksSection: React.FC = () => {
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4">
-          {/* Google Play Button */}
-       <Link
-    href="#"
-    className="transition-transform duration-200 hover:scale-105"
-  >
-    <div className="relative w-33.75 h-10.5">
-      <Image 
-        src="/assets/icon/Google_Play_Store_badge_EN.svg" 
-        alt="Get it on Google Play" 
-        fill
-        sizes="135px"
-        className="object-contain"
-      />
-    </div>
-  </Link>
+              {/* Google Play Button */}
+              <Link
+                href="#"
+                className="transition-transform duration-200 hover:scale-105"
+              >
+                <div className="relative" style={{ width: '135px', height: '42px' }}>
+                  <Image 
+                    src="/assets/icon/Google_Play_Store_badge_EN.svg" 
+                    alt="Get it on Google Play" 
+                    fill
+                    sizes="135px"
+                    className="object-contain"
+                  />
+                </div>
+              </Link>
 
-  {/* App Store Button */}
-  <Link
-    href="#"
-    className="transition-transform duration-200 hover:scale-105"
-  >
-    <div className="relative w-33.75 h-10.5">
-      <Image 
-        src="/assets/icon/Download_on_the_App_Store_Badge.svg" 
-        alt="Download on the App Store" 
-        fill
-        sizes="135px"
-        className="object-contain"
-      />
-    </div>
-  </Link>
-</div>
+              {/* App Store Button */}
+              <Link
+                href="#"
+                className="transition-transform duration-200 hover:scale-105"
+              >
+                <div className="relative" style={{ width: '135px', height: '42px' }}>
+                  <Image 
+                    src="/assets/icon/Download_on_the_App_Store_Badge.svg" 
+                    alt="Download on the App Store" 
+                    fill
+                    sizes="135px"
+                    className="object-contain"
+                  />
+                </div>
+              </Link>
+            </div>
           </div>
 
           {/* 3D Angled Mobile Mockup overlapping container edge */}
           <div className="relative z-20 flex justify-center -mb-20 sm:-mb-24 lg:-mb-28 px-4">
-            <div className="relative w-full max-w-8xl transform rotate-x-12 hover:rotate-1 transition-transform duration-500 drop-shadow-[0_25px_35px_rgba(0,0,0,0.7)]">
+            <div className="relative w-full max-w-4xl transform rotate-x-12 hover:rotate-1 transition-transform duration-500 drop-shadow-[0_25px_35px_rgba(0,0,0,0.7)]">
               <Image 
                 src="/assets/mobile.png" 
                 alt="Mobile app preview mockup" 
