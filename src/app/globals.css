@@ -1,11 +1,11 @@
+/** @format */
+
 @import "tailwindcss";
 
 :root {
-  --background: #FAF7EE;
+  --background: #faf7ee;
   --foreground: #171717;
 }
-
-
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -15,14 +15,16 @@
 }
 
 @font-face {
-  font-family:'font-01';
-  src: url('/public/assets/font/StingerFitTrial-Bold.ttf');
+  font-family: "font01";
+  src: url("/assets/font/3y9K6as8bTXq_nANBjzKo3IeZx8z6up5BeSl9D4dj_x9PpZBMlGIInE.woff2");
+  font-weight: normal;
+  font-style: normal;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "font-01";
+  font-family: "font01";
 }
 
 @keyframes fadeSlideIn {

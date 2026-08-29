@@ -103,31 +103,38 @@ export const HowItWorksSection: React.FC = () => {
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <Link
-                href="#"
-                className="transition-transform duration-200 hover:scale-105"
-              >
-                <Image 
-                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
-                  alt="Get it on Google Play" 
-                  width={140}
-                  height={44}
-                  className="h-11 w-auto"
-                />
-              </Link>
-              <Link
-                href="#"
-                className="transition-transform duration-200 hover:scale-105"
-              >
-                <Image 
-                  src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
-                  alt="Download on the App Store" 
-                  width={140}
-                  height={44}
-                  className="h-11 w-auto"
-                />
-              </Link>
-            </div>
+          {/* Google Play Button */}
+       <Link
+    href="#"
+    className="transition-transform duration-200 hover:scale-105"
+  >
+    <div className="relative w-33.75 h-10.5">
+      <Image 
+        src="/assets/icon/Google_Play_Store_badge_EN.svg" 
+        alt="Get it on Google Play" 
+        fill
+        sizes="135px"
+        className="object-contain"
+      />
+    </div>
+  </Link>
+
+  {/* App Store Button */}
+  <Link
+    href="#"
+    className="transition-transform duration-200 hover:scale-105"
+  >
+    <div className="relative w-33.75 h-10.5">
+      <Image 
+        src="/assets/icon/Download_on_the_App_Store_Badge.svg" 
+        alt="Download on the App Store" 
+        fill
+        sizes="135px"
+        className="object-contain"
+      />
+    </div>
+  </Link>
+</div>
           </div>
 
           {/* 3D Angled Mobile Mockup overlapping container edge */}

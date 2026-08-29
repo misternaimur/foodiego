@@ -5,7 +5,7 @@ import WhatAreYouCraving from "@/components/WhatAreYouCraving";
 import FAQSection from "@/components/FAQ";
 export default function Home() {
   return (
-    <main className="flex-1 bg-amber-50">
+    <main className="flex-1 bg-amber-50 " suppressHydrationWarning>
       <Hero />
       <WhatAreYouCraving />
       <PickedForYouSection />

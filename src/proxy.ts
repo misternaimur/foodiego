@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifySessionCookie } from "@/lib/session";
 
-const protectedPrefixes = ["/rider", "/admin", "/vendor", "client/checkout"  ];
+const protectedPrefixes = ["/account", "/admin", "/dashboard"];
 const authRoutes = ["/login", "/register"];
 
 export default async function proxy(req: NextRequest) {
