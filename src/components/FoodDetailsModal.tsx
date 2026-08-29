@@ -21,7 +21,10 @@ export const FoodDetailsModal: React.FC<FoodDetailsModalProps> = ({ food, onClos
   // Set sizes & addons dynamically whenever food item changes
   useEffect(() => {
     if (food) {
-      setSelectedSize(food.sizes && food.sizes.length > 0 ? food.sizes[0] : null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedSize((prev) => 
+        food.sizes && food.sizes.length > 0 ? food.sizes[0] : null
+      );
       setSelectedAddons([]);
       setSpecialInstructions('');
       setQuantity(1);
