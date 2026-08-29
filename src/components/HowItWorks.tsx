@@ -17,19 +17,19 @@ const defaultSteps: HowItWorksStep[] = [
     number: '01',
     title: 'Download App & create a free account',
     description: 'Lorem Ipsum is simply dummy text of the printing and typesetting industry Ipsum has.',
-    icon: <Smartphone className="w-5 h-5 text-amber-500" />,
+    icon: <Smartphone className="w-5 h-5 text-emerald-500" />,
   },
   {
     number: '02',
     title: 'Place orders at your preferred eatery',
     description: 'Dummy text of the printing and typesetting industry lorem Ipsum has been the industrys.',
-    icon: <Utensils className="w-5 h-5 text-amber-500" />,
+    icon: <Utensils className="w-5 h-5 text-emerald-500" />,
   },
   {
     number: '03',
     title: 'Get it delivered directly to your home, effortlessly',
     description: 'Printing and typesetting industry lorem Ipsum has been the industrys standard dummy.',
-    icon: <Bike className="w-5 h-5 text-amber-500" />,
+    icon: <Bike className="w-5 h-5 text-emerald-500" />,
   },
 ];
 
@@ -38,18 +38,18 @@ export const HowItWorksSection: React.FC = () => {
     <section className="w-full bg-[#FAF7EE] py-20 lg:py-28">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Main Dark Card Container - overflow নিয়ম এখানে হটিয়ে দেওয়া হয়েছে যাতে মোবাইল ইমেজ নিচে বের হয়ে থাকতে পারে */}
+        {/* Main Dark Card Container */}
         <div className="relative bg-[#111111] rounded-[2.5rem] pt-14 pb-2 px-6 sm:px-12 lg:px-16 text-center text-white shadow-2xl border border-white/10">
           
-          {/* Ambient Background Warm Glows */}
+          {/* Ambient Background Green Glows */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]">
-            <div className="absolute top-1/4 -left-32 w-80 h-80 bg-amber-600/20 rounded-full blur-[100px]" />
-            <div className="absolute bottom-1/3 -right-32 w-80 h-80 bg-amber-600/15 rounded-full blur-[100px]" />
+            <div className="absolute top-1/4 -left-32 w-80 h-80 bg-emerald-600/20 rounded-full blur-[100px]" />
+            <div className="absolute bottom-1/3 -right-32 w-80 h-80 bg-emerald-700/15 rounded-full blur-[100px]" />
           </div>
 
           <div className="relative z-10 max-w-2xl mx-auto mb-12">
             {/* Top Pill Tag */}
-            <div className="inline-flex items-center justify-center bg-emerald-600 text-gray-900 px-4 py-1.5 rounded-full mb-4 shadow-sm">
+            <div className="inline-flex items-center justify-center bg-emerald-600 text-white px-4 py-1.5 rounded-full mb-4 shadow-sm">
               <span className="text-[11px] font-extrabold uppercase tracking-widest">
                 EASY STEPS
               </span>
@@ -69,7 +69,7 @@ export const HowItWorksSection: React.FC = () => {
             {defaultSteps.map((step) => (
               <div
                 key={step.number}
-                className="relative bg-[#1E1E1E]/80 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-between text-center shadow-lg transition-all duration-300 hover:border-amber-500/30"
+                className="relative bg-[#1E1E1E]/80 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col items-center justify-between text-center shadow-lg transition-all duration-300 hover:border-emerald-500/40"
               >
                 <div>
                   {/* Icon Circle */}
@@ -86,9 +86,9 @@ export const HowItWorksSection: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Number Badge at Bottom */}
+                {/* Number Badge at Bottom - Green Accent */}
                 <div className="mt-8">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#F6A429] text-gray-900 font-black text-xs shadow-md">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500 text-gray-950 font-black text-xs shadow-md">
                     {step.number}
                   </span>
                 </div>
@@ -99,7 +99,7 @@ export const HowItWorksSection: React.FC = () => {
           {/* Banner Callout & Store Buttons */}
           <div className="relative z-10 flex flex-col items-center gap-4 pt-2 mb-16">
             <p className="text-xs sm:text-sm font-medium text-gray-300">
-              Get <span className="text-[#113220] font-bold">50% off</span> on your first order <span className="text-[#F6A429] font-bold">Grab it now.</span>
+              Get <span className="text-emerald-400 font-bold">50% off</span> on your first order <span className="text-emerald-500 font-bold">Grab it now.</span>
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4">
@@ -107,9 +107,11 @@ export const HowItWorksSection: React.FC = () => {
                 href="#"
                 className="transition-transform duration-200 hover:scale-105"
               >
-                <img 
+                <Image 
                   src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
                   alt="Get it on Google Play" 
+                  width={140}
+                  height={44}
                   className="h-11 w-auto"
                 />
               </Link>
@@ -117,9 +119,11 @@ export const HowItWorksSection: React.FC = () => {
                 href="#"
                 className="transition-transform duration-200 hover:scale-105"
               >
-                <img 
+                <Image 
                   src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" 
                   alt="Download on the App Store" 
+                  width={140}
+                  height={44}
                   className="h-11 w-auto"
                 />
               </Link>
@@ -130,7 +134,7 @@ export const HowItWorksSection: React.FC = () => {
           <div className="relative z-20 flex justify-center -mb-20 sm:-mb-24 lg:-mb-28 px-4">
             <div className="relative w-full max-w-8xl transform rotate-x-12 hover:rotate-1 transition-transform duration-500 drop-shadow-[0_25px_35px_rgba(0,0,0,0.7)]">
               <Image 
-                src="/assets/Mobile.png" 
+                src="/assets/mobile.png" 
                 alt="Mobile app preview mockup" 
                 width={800}
                 height={400}
