@@ -5,8 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown } from 'lucide-react';
-
 import { useApp } from '@/context/AppContext';
+import LogoGreen from './LogoGreen';
 
 export interface NavItem {
   label: string;
@@ -85,12 +85,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         
         {/* Left Section: Logo & Nav Links */}
         <div className="flex items-center gap-6 lg:gap-8">
-          <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <span className="text-2xl font-black tracking-tight text-[#15462D]">
-              Foodiego
-            </span>
-          </Link>
-
+          <div>
+          <LogoGreen></LogoGreen>
+          </div>
           <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
