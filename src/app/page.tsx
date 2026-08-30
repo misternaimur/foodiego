@@ -7,18 +7,18 @@ import Footer from "@/components/Share/Footer";
 import { getOptionalSession } from "@/lib/dal";
 import FAQSection from "@/components/FAQ";
 
-const session = await getOptionalSession();
+export default async function Home() {
+  const session = await getOptionalSession();
 
-export default function Home() {
   return (
-    <main className="flex-1 bg-amber-50 " suppressHydrationWarning>
-     <Navbar user={session ? { name: session.name } : null} />
+    <main className="flex-1 bg-amber-50" suppressHydrationWarning>
+      <Navbar user={session ? { name: session.name } : null} />
       <Hero />
       <WhatAreYouCraving />
       <PickedForYouSection />
-      <FAQSection></FAQSection>
-      <HowItWorksSection></HowItWorksSection>
-      <Footer></Footer>
+      <FAQSection />
+      <HowItWorksSection />
+      <Footer />
     </main>
   );
 }
