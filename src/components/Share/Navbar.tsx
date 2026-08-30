@@ -148,7 +148,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Right Section: Actions & Conditional Profile / Order Now */}
         <div className="flex items-center gap-4 sm:gap-5 shrink-0">
           <Link 
-            href="/client/cart" 
+            href="/cart" 
             className="relative p-2 text-gray-700 hover:text-[#15462D] transition-colors bg-white/60 hover:bg-white rounded-full border border-gray-200/50 shadow-xs"
             aria-label="Cart"
           >
