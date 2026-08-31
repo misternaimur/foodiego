@@ -18,7 +18,13 @@ export const getOptionalSession = cache(async () => {
   const user = await User.findOne({ uid: decoded.uid }).lean();
   if (!user) return null;
 
-  return { id: user._id.toString(), userId: decoded.uid, role: user.role, name: user.name };
+  return {
+    id: user._id.toString(),
+    userId: decoded.uid,
+    role: user.role,
+    name: user.name,
+    email: user.email,
+  };
 });
 
 export const verifySession = cache(async () => {

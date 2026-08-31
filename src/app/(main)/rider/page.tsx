@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
-import { dbConnect } from "@/lib/dbConnect";
-import { Rider } from "@/models/Rider";
+import { getOrCreateRiderProfile } from "@/lib/profile";
 import RiderDashboard from "@/components/rider/RiderDashboard";
 
 export default async function RiderPage() {
@@ -11,16 +10,13 @@ export default async function RiderPage() {
     redirect("/");
   }
 
-  await dbConnect();
-  const rider = await Rider.findOne({ userId: session.id }).lean();
+  // Ensure a rider profile exists (auto-provisioned if missing) so a logged-in
+  // rider always lands on the dashboard instead of the registration form.
+  await getOrCreateRiderProfile(session);
 
-  if (!rider) {
-    redirect("/auth/register/rider");
-  }
-
-  if (rider.status !== "approved") {
-    redirect("/rider/pending");
-  }
+  // TEMP: Admin approval disabled — riders can use the dashboard without being approved.
+  // Re-enable the admin-approval gate by restoring the status check here and in
+  // src/app/(main)/rider/pending/page.tsx.
 
   return <RiderDashboard />;
 }
