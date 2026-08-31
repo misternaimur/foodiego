@@ -47,7 +47,10 @@ export async function registerRider(
 
   let user = await User.findOne({ uid });
 
-  if (user && user.role !== "rider") {
+  // Role is auto-assigned by which registration form was used: anyone who signs
+  // up through this form becomes a "rider" account. Only an existing admin
+  // account is left untouched.
+  if (user && user.role === "admin") {
     return { message: "This account is already registered with a different role." };
   }
 
@@ -63,6 +66,10 @@ export async function registerRider(
       email: authEmail ?? data.email,
       role: "rider",
     });
+  } else if (user.role !== "rider") {
+    // Existing non-admin account (e.g. a "customer") — upgrade it to "rider".
+    user.role = "rider";
+    await user.save();
   }
 
   const existingRider = await Rider.findOne({ userId: user._id }).lean();
@@ -79,11 +86,15 @@ export async function registerRider(
       vehicleNumber: data.vehicleNumber,
       licenseNumber: data.licenseNumber,
       photoUrl: data.photoUrl,
-      status: "pending",
+      // TEMP: Admin approval disabled — new riders are auto-approved.
+      // Restore `status: "pending"` to re-enable the admin-approval flow.
+      // status: "pending",
+      status: "approved",
     });
   }
 
   await createSession(idToken);
 
-  redirect("/rider");
+  // Land on the home page right after registering.
+  redirect("/");
 }

@@ -107,16 +107,16 @@ async function registerRiderAction(
     }
   }
 
-  let photoUrl: string;
+  // Best-effort photo upload: if Storage is unreachable (e.g. missing bucket
+  // CORS policy for web origins) we still complete the registration rather than
+  // leaving the form stuck. The photo can be added later from the profile page.
+  let photoUrl: string | undefined;
   try {
     const photoRef = ref(storage, `rider-photos/${uid}/${Date.now()}-${photoFile.name}`);
     await uploadBytes(photoRef, photoFile);
     photoUrl = await getDownloadURL(photoRef);
-  } catch {
-    return {
-      message:
-        "Your account was created, but the photo upload failed. Please contact support to finish your application.",
-    };
+  } catch (error) {
+    console.warn("Rider photo upload failed, continuing without it:", error);
   }
 
   return registerRider(idToken, { ...validatedFields.data, photoUrl });
