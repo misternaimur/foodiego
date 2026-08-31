@@ -1,0 +1,94 @@
+[
+  {
+    "id": "rest-1",
+    "name": "Al Arafa Restora – Sonadanga",
+    "slug": "al-arafa-restora-sonadanga",
+    "logo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200",
+    "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
+    "rating": 4.5,
+    "reviewCount": 100,
+    "deliveryTime": "15-25 min",
+    "deliveryFee": 20,
+    "minOrder": 50,
+    "cuisines": ["Rice Dishes", "Curry", "Bangladeshi"],
+    "badge": "Top Rated",
+    "offers": [
+      {
+        "id": "deal-1",
+        "title": "10% off",
+        "description": "Valid for selected items. Auto applied."
+      }
+    ],
+    "menuCategories": [
+      {
+        "category": "Popular",
+        "items": [
+          {
+            "id": "item-1",
+            "name": "Beef Nehari",
+            "price": 120,
+            "description": "Slow-cooked rich beef marrow broth infused with traditional spices.",
+            "image": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400",
+            "popular": true
+          },
+          {
+            "id": "item-2",
+            "name": "Chicken Lotpoti",
+            "price": 80,
+            "description": "Spicy chicken liver and gizzard curry cooked with garlic and onion.",
+            "image": "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400",
+            "popular": true
+          }
+        ]
+      },
+      {
+        "category": "Roti & Paratha",
+        "items": [
+          {
+            "id": "item-3",
+            "name": "Special Butter Paratha",
+            "price": 25,
+            "description": "Crispy layered flatbread brushed with fresh ghee.",
+            "image": "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=400"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-2",
+    "name": "Oltijhyo Restora",
+    "slug": "oltijhyo-restora",
+    "logo": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200",
+    "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800",
+    "rating": 4.2,
+    "reviewCount": 58,
+    "deliveryTime": "15-30 min",
+    "deliveryFee": 25,
+    "minOrder": 60,
+    "cuisines": ["Bangladeshi", "Asian"],
+    "badge": "Local Favorite",
+    "offers": [
+      {
+        "id": "deal-2",
+        "title": "Tk 50 off",
+        "description": "On orders over Tk 300"
+      }
+    ],
+    "menuCategories": [
+      {
+        "category": "Popular",
+        "items": [
+          {
+            "id": "item-4",
+            "name": "Kacchi Biryani",
+            "price": 240,
+            "description": "Tender mutton layered with aromatic basmati rice.",
+            "image": "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400",
+            "popular": true
+          }
+        ]
+      }
+    ]
+  }
+]
