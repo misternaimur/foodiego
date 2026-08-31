@@ -45,7 +45,7 @@ export const PickedForYouSection: React.FC = () => {
               Restaurants worth discovering
             </h2>
             <p className="text-sm sm:text-base text-gray-600 font-normal">
-              A short list of kitchens we'd happily send our own friends to.
+              A short list of kitchens we&apos;d happily send our own friends to.
             </p>
           </div>
 

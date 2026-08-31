@@ -15,7 +15,6 @@ const FOOD_IMAGES = [
 ];
 
 export default function HeroSection() {
-  // Duplicated 4x for a perfectly seamless endless loop
   const marqueeImages = [...FOOD_IMAGES, ...FOOD_IMAGES, ...FOOD_IMAGES, ...FOOD_IMAGES];
 
   return (
@@ -29,13 +28,14 @@ export default function HeroSection() {
           display: flex;
           width: max-content;
           animation: custom-marquee 40s linear infinite;
+          align-items: flex-end;
         }
         .animate-custom-marquee:hover {
           animation-play-state: paused;
         }
       `}</style>
 
-      {/* Hero Container - overflow-hidden is key to clipping the bottoms perfectly */}
+      {/* Hero Container */}
       <section className="relative overflow-hidden bg-[#15462D] text-white rounded-[2.5rem] pt-12 md:pt-16 shadow-2xl flex flex-col justify-between">
         
         {/* Top Content */}
@@ -59,51 +59,37 @@ export default function HeroSection() {
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-4 items-center justify-center w-full sm:w-auto">
-            <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#F6A429] hover:bg-[#e0931f] text-gray-900 font-semibold px-7 py-3 rounded-full transition-all duration-200 shadow-md">
+            <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#F6A429] hover:bg-[#e0931f] text-gray-900 font-semibold px-7 py-3 rounded-full transition-all duration-200 shadow-md cursor-pointer">
               <ShoppingCart className="w-4 h-4" />
               SHOP NOW
             </button>
             
-            <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-gray-900 hover:bg-gray-100 font-semibold px-7 py-3 rounded-full transition-all duration-200 shadow-md">
+            <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-gray-900 hover:bg-gray-100 font-semibold px-7 py-3 rounded-full transition-all duration-200 shadow-md cursor-pointer">
               <Utensils className="w-4 h-4" />
               EXPLORE MENU
             </button>
           </div>
         </div>
 
-        {/* Marquee Track aligned flush to the bottom */}
-        <div className="mt-14 relative w-full flex items-end">
-          <div className="animate-custom-marquee items-end">
-            {marqueeImages.map((img, index) => {
-              // 1. Sine Wave Rotation: Creates a smooth, continuous ribbon effect 
-              // that loops flawlessly without any sharp V-shape jumps.
-              const waveCycle = (index / FOOD_IMAGES.length) * Math.PI * 2;
-              const rotateDeg = Math.sin(waveCycle) * 4.5; // Max tilt is 4.5 degrees
-              
-              return (
-                <div
-                  key={`${img.id}-${index}`}
-                  className="mx-2 flex-shrink-0"
-                  style={{
-                    // 2. Downward Push: translateY(16px) forces the lifted corners below the 
-                    // container's bounding box, so the green gap never shows.
-                    transform: `translateY(16px) rotate(${rotateDeg}deg)`,
-                    transformOrigin: "bottom center",
-                  }}
-                >
-                  {/* Inner div handles the hover pop-up effect without breaking the layout */}
-                  <div className="relative w-[160px] h-[220px] sm:w-[200px] sm:h-[280px] md:w-[230px] md:h-[310px] rounded-t-3xl overflow-hidden transition-transform duration-300 hover:scale-105 hover:-translate-y-4 cursor-pointer">
-                    <Image
-                      src={img.src}
-                      alt={img.alt}
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                  </div>
+        {/* Marquee Track - Perfectly Aligned */}
+        <div className="mt-14 relative w-full flex items-end overflow-hidden">
+          <div className="animate-custom-marquee">
+            {marqueeImages.map((img, index) => (
+              <div
+                key={`${img.id}-${index}`}
+                className="mx-3 shrink-0"
+              >
+                <div className="relative w-40 h-55 sm:w-50 sm:h-70 md:w-55 md:h-[300px] rounded-t-3xl overflow-hidden transition-all duration-300 hover:-translate-y-2 shadow-lg cursor-pointer bg-emerald-900/20">
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
 

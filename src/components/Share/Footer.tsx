@@ -3,6 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Logo from './LogoWhite'
+
 
 export interface FooterLink {
   label: string;
@@ -73,11 +75,9 @@ export const Footer: React.FC<FooterProps> = ({
           
           {/* Left Column: Brand Info & Quick Action Icons */}
           <div className="lg:col-span-2 space-y-5">
-            <Link href="/" className="inline-block">
-              <span className="text-3xl font-black tracking-tight text-white">
-                Foodiego
-              </span>
-            </Link>
+            <div>
+            <Logo></Logo>
+            </div>
 
             <p className="text-sm leading-relaxed max-w-sm text-emerald-100/80">
               Delivering smarter, faster, and tastier meals straight to your door using advanced AI logistics.
