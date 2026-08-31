@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifySessionCookie } from "@/lib/session";
 
-const protectedPrefixes = ["/account", "/admin", "/dashboard"];
-const authRoutes = ["/login", "/register"];
+const protectedPrefixes = ["/account", "/admin", "/dashboard", "/vendor"];
+const authRoutes = ["/auth/login", "/auth/register"];
 
 export default async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
@@ -17,7 +17,7 @@ export default async function proxy(req: NextRequest) {
   const session = await verifySessionCookie(req.cookies.get("session")?.value);
 
   if (isProtectedRoute && !session) {
-    const loginUrl = new URL("/login", req.nextUrl);
+    const loginUrl = new URL("/auth/login", req.nextUrl);
     loginUrl.searchParams.set("from", path);
     return NextResponse.redirect(loginUrl);
   }

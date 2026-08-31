@@ -94,14 +94,35 @@ const itemVariants: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } },
 };
 
+const ROLE_HEADINGS: Record<(typeof ROLES)[number], { title: string; subtitle: string }> = {
+  customer: {
+    title: "Create an account",
+    subtitle: "Get started with your favorite meals and food ecosystem.",
+  },
+  restaurant: {
+    title: "Become a Restaurant Partner",
+    subtitle: "Manage your menu and start receiving orders on Foodiego.",
+  },
+  rider: {
+    title: "Join as a Delivery Rider",
+    subtitle: "Deliver orders and earn on your own schedule.",
+  },
+};
+
+function isSelectableRole(value: string | null): value is (typeof ROLES)[number] {
+  return !!value && (ROLES as readonly string[]).includes(value);
+}
+
 function RegisterFormContent() {
   const [state, action, pending] = useActionState(registerAction, undefined);
-  const [role, setRole] = useState<(typeof ROLES)[number]>("customer");
   const [showPassword, setShowPassword] = useState(false);
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") ?? "";
+  const requestedRole = searchParams.get("role");
+  const role: (typeof ROLES)[number] = isSelectableRole(requestedRole) ? requestedRole : "customer";
 
   const activeRole = ROLE_OPTIONS.find((option) => option.value === role)!;
+  const heading = ROLE_HEADINGS[role];
 
   return (
     <motion.div
@@ -128,10 +149,10 @@ function RegisterFormContent() {
       {/* Header Heading */}
       <motion.div variants={itemVariants} className="mb-7">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
-          Create an account
+          {heading.title}
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          Get started with your favorite meals and food ecosystem.
+          {heading.subtitle}
         </p>
       </motion.div>
 
@@ -139,57 +160,22 @@ function RegisterFormContent() {
       <form action={action} className="space-y-5">
         <input type="hidden" name="redirect" value={redirectTo} />
 
-        {/* Role Selection Segmented Cards */}
+        {/* Account Type Banner (fixed by entry point — customer by default, or restaurant/rider via navbar links) */}
         <motion.div variants={itemVariants}>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-              Select Account Type
+              Account Type
             </span>
+            {role !== "customer" && (
+              <Link
+                href={`/auth/register${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ""}`}
+                className="text-xs font-semibold text-emerald-600 hover:underline"
+              >
+                Sign up as a customer instead
+              </Link>
+            )}
           </div>
 
-          <div role="radiogroup" aria-label="Account type" className="grid grid-cols-3 gap-2.5">
-            {ROLE_OPTIONS.map((option) => {
-              const Icon = option.icon;
-              const selected = role === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={selected}
-                  onClick={() => setRole(option.value)}
-                  className={`group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl border p-3.5 text-center transition-all ${
-                    selected
-                      ? "border-emerald-600 bg-emerald-50/40 shadow-sm shadow-emerald-600/10 ring-1 ring-emerald-600"
-                      : "border-gray-200/80 bg-gray-50/50 hover:border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  {selected && (
-                    <motion.span
-                      layoutId="role-active-bg"
-                      className="absolute inset-0 bg-emerald-600/[0.06]"
-                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                    />
-                  )}
-                  {option.badge && (
-                    <span className="absolute right-2 top-2 rounded-full bg-gray-900 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                      {option.badge}
-                    </span>
-                  )}
-                  <div className="relative mb-2 mt-1 flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-gray-200/50 transition-transform group-hover:scale-105">
-                    <Icon size={18} className={selected ? "text-emerald-600" : "text-gray-600"} strokeWidth={selected ? 2.3 : 2} />
-                  </div>
-                  <div className="relative">
-                    <span className={`block text-xs font-bold ${selected ? "text-emerald-600" : "text-gray-800"}`}>
-                      {option.label}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Role Active Description feedback */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeRole.value}
@@ -197,10 +183,23 @@ function RegisterFormContent() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 3 }}
               transition={{ duration: 0.15 }}
-              className="mt-2.5 flex items-center gap-1.5 rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-600"
+              className="relative flex items-center gap-3 overflow-hidden rounded-2xl border border-emerald-600 bg-emerald-50/40 p-3.5 shadow-sm shadow-emerald-600/10 ring-1 ring-emerald-600"
             >
-              <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
-              <span>{activeRole.description}</span>
+              {activeRole.badge && (
+                <span className="absolute right-2 top-2 rounded-full bg-gray-900 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                  {activeRole.badge}
+                </span>
+              )}
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-gray-200/50">
+                <activeRole.icon size={18} className="text-emerald-600" strokeWidth={2.3} />
+              </div>
+              <div>
+                <span className="block text-xs font-bold text-emerald-600">{activeRole.label}</span>
+                <span className="mt-0.5 flex items-center gap-1.5 text-xs text-gray-600">
+                  <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                  {activeRole.description}
+                </span>
+              </div>
             </motion.div>
           </AnimatePresence>
 
