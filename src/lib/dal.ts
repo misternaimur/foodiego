@@ -18,14 +18,24 @@ export const getOptionalSession = cache(async () => {
   const user = await User.findOne({ uid: decoded.uid }).lean();
   if (!user) return null;
 
-  return { userId: decoded.uid, role: user.role, name: user.name };
+  return { id: user._id.toString(), userId: decoded.uid, role: user.role, name: user.name };
 });
 
 export const verifySession = cache(async () => {
   const session = await getOptionalSession();
 
   if (!session) {
-    redirect("/login");
+    redirect("/auth/login");
+  }
+
+  return session;
+});
+
+export const verifyRole = cache(async (...roles: string[]) => {
+  const session = await verifySession();
+
+  if (!roles.includes(session.role)) {
+    redirect("/");
   }
 
   return session;
