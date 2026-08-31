@@ -12,7 +12,7 @@ export default async function Home() {
 
   return (
     <main className="flex-1 bg-amber-50" suppressHydrationWarning>
-      <Navbar user={session ? { name: session.name } : null} />
+      <Navbar user={session ? { name: session.name, role: session.role } : null} />
       <Hero />
       <WhatAreYouCraving />
       <PickedForYouSection />

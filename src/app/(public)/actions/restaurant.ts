@@ -48,7 +48,10 @@ export async function registerRestaurant(
 
   let user = await User.findOne({ uid });
 
-  if (user && user.role !== "restaurant") {
+  // Role is auto-assigned by which registration form was used: anyone who signs
+  // up through this form becomes a "restaurant" account. Only an existing admin
+  // account is left untouched.
+  if (user && user.role === "admin") {
     return { message: "This account is already registered with a different role." };
   }
 
@@ -64,6 +67,10 @@ export async function registerRestaurant(
       email: authEmail ?? data.email,
       role: "restaurant",
     });
+  } else if (user.role !== "restaurant") {
+    // Existing non-admin account (e.g. a "customer") — upgrade it to "restaurant".
+    user.role = "restaurant";
+    await user.save();
   }
 
   const existingRestaurant = await Restaurant.findOne({ userId: user._id }).lean();
@@ -81,11 +88,15 @@ export async function registerRestaurant(
       cuisineType: data.cuisineType,
       openingTime: data.openingTime,
       closingTime: data.closingTime,
-      status: "pending",
+      // TEMP: Admin approval disabled — new restaurants are auto-approved.
+      // Restore `status: "pending"` to re-enable the admin-approval flow.
+      // status: "pending",
+      status: "approved",
     });
   }
 
   await createSession(idToken);
 
-  redirect("/vendor");
+  // Land on the home page right after registering.
+  redirect("/");
 }
