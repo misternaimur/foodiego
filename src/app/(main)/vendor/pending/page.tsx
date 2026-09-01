@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
-import { dbConnect } from "@/lib/dbConnect";
-import { Restaurant } from "@/models/Restaurant";
+import { getOrCreateRestaurantProfile } from "@/lib/profile";
 import RestaurantStatusScreen from "@/components/vendor/RestaurantStatusScreen";
 
 export default async function VendorPendingPage() {
@@ -11,14 +10,9 @@ export default async function VendorPendingPage() {
     redirect("/");
   }
 
-  await dbConnect();
-  const restaurant = await Restaurant.findOne({ userId: session.id }).lean();
+  const restaurant = await getOrCreateRestaurantProfile(session);
 
-  if (!restaurant) {
-    redirect("/auth/register/restaurant");
-  }
-
-  if (restaurant.status === "approved") {
+  if (!restaurant || restaurant.status === "approved") {
     redirect("/vendor");
   }
 

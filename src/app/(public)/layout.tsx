@@ -1,27 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Navbar } from "@/components/Share/Navbar";
 import Footer from "@/components/Share/Footer";
-import Providers from "@/components/Providers";
 import { getOptionalSession } from "@/lib/dal";
-
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Foodiego",
   description: "Smarter food delivery",
 };
 
-export default async function RootLayout({
+// Nested layout: the root layout (src/app/layout.tsx) already renders <html>,
+// <body> and <Providers>. A nested layout must only add its own UI chrome,
+// never another <html>/<body> — doing so breaks hydration.
+export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -29,17 +19,10 @@ export default async function RootLayout({
   const session = await getOptionalSession();
 
   return (
-    <html
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      suppressHydrationWarning
-    >
-      <body className="min-h-full flex flex-col" >
-        <Providers>
-          <Navbar user={session ? { name: session.name, role: session.role } : null} />
-          {children}
-          <Footer />
-        </Providers>
-      </body>
-    </html>
+    <>
+      <Navbar user={session ? { name: session.name, role: session.role } : null} />
+      {children}
+      <Footer />
+    </>
   );
 }

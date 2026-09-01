@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
-import { dbConnect } from "@/lib/dbConnect";
-import { Restaurant } from "@/models/Restaurant";
+import { getOrCreateRestaurantProfile } from "@/lib/profile";
 import RestaurantDashboard from "@/components/vendor/RestaurantDashboard";
 
 export default async function VendorPage() {
@@ -11,16 +10,14 @@ export default async function VendorPage() {
     redirect("/");
   }
 
-  await dbConnect();
-  const restaurant = await Restaurant.findOne({ userId: session.id }).lean();
+  // Ensure a restaurant profile exists (auto-provisioned if missing) so a
+  // logged-in restaurant always lands on the dashboard instead of the
+  // registration form.
+  await getOrCreateRestaurantProfile(session);
 
-  if (!restaurant) {
-    redirect("/auth/register/restaurant");
-  }
-
-  if (restaurant.status !== "approved") {
-    redirect("/vendor/pending");
-  }
+  // TEMP: Admin approval disabled — restaurants can use the dashboard without
+  // being approved. Re-enable the admin-approval gate by restoring the status
+  // check here and in src/app/(main)/vendor/pending/page.tsx.
 
   return <RestaurantDashboard />;
 }

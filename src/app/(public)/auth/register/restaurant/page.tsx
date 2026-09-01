@@ -108,16 +108,16 @@ async function registerRestaurantAction(
     }
   }
 
-  let logoUrl: string;
+  // Best-effort logo upload: if Storage is unreachable (e.g. missing bucket
+  // CORS policy for web origins) we still complete the registration rather than
+  // leaving the form stuck. The logo can be added later from the profile page.
+  let logoUrl: string | undefined;
   try {
     const logoRef = ref(storage, `restaurant-logos/${uid}/${Date.now()}-${logoFile.name}`);
     await uploadBytes(logoRef, logoFile);
     logoUrl = await getDownloadURL(logoRef);
-  } catch {
-    return {
-      message:
-        "Your account was created, but the logo upload failed. Please contact support to finish your application.",
-    };
+  } catch (error) {
+    console.warn("Restaurant logo upload failed, continuing without it:", error);
   }
 
   return registerRestaurant(idToken, { ...validatedFields.data, logoUrl });
