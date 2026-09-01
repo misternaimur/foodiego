@@ -1,8 +1,11 @@
+import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
-import MerchantProfile from "@/components/MerchantProfile";
 
 export default async function AccountPage() {
   const session = await verifySession();
 
-  return <MerchantProfile name={session.name} role={session.role} />;
+  if (session.role === "admin") redirect("/admin");
+  if (session.role === "restaurant") redirect("/vendor");
+  if (session.role === "rider") redirect("/rider");
+  redirect("/client/dashboard");
 }

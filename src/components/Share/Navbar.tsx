@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useSyncExternalStore } from 'react'
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown, UtensilsCrossed, Bike } from 'lucide-react';
+import { Sparkles, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown, UtensilsCrossed, Bike } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import LogoGreen from './LogoGreen';
 
@@ -89,6 +89,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+
+  if (pathname?.includes('/dashboard')) {
+    return null;
+  }
 
   return (
     <>
@@ -226,15 +230,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                   <div className="py-1">
                     <Link
-                      href="/account"
-                      onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
-                    >
-                      <User size={16} className="text-[#15462D]" />
-                      <span>Profile</span>
-                    </Link>
-
-                    <Link
                       href="/client/cart"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
@@ -369,7 +364,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             </>
           ) : (
             <div className="pt-3 border-t border-[#E8E2D5] space-y-1">
-              <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Profile</Link>
               <Link href="/client/cart" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">My Cart</Link>
               <Link href={dashboardHref} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Dashboard</Link>
               <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Settings</Link>
