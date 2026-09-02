@@ -27,6 +27,43 @@ export interface AuthUser {
     avatarUrl?: string | null;
 }
 
+export interface RestaurantOffer {
+    id: string;
+    title: string;
+    description: string;
+}
+
+export interface RestaurantMenuItem {
+    id: string;
+    name: string;
+    price: number;
+    description: string;
+    image: string;
+    popular?: boolean;
+}
+
+export interface RestaurantMenuCategory {
+    category: string;
+    items: RestaurantMenuItem[];
+}
+
+export interface Restaurant {
+    id: string;
+    name: string;
+    slug: string;
+    logo: string;
+    image: string;
+    rating: number;
+    reviewCount: number;
+    deliveryTime: string;
+    deliveryFee: number;
+    minOrder: number;
+    cuisines: string[];
+    badge?: string;
+    offers: RestaurantOffer[];
+    menuCategories: RestaurantMenuCategory[];
+}
+
 interface CustomizationOptions {
     selectedSize?: SelectedOption;
     selectedAddons?: SelectedOption[];
@@ -39,6 +76,10 @@ interface AppContextType {
     favorites: string[];
     user: AuthUser | null;
     isAuthLoading: boolean;
+    restaurants: Restaurant[];
+    isRestaurantsLoading: boolean;
+    getRestaurantBySlug: (slug: string) => Restaurant | undefined;
+    getRestaurantById: (id: string) => Restaurant | undefined;
     addToCart: (food: FoodItem, customization?: CustomizationOptions) => void;
     removeFromCart: (cartItemId: string) => void;
     toggleFavorite: (id: string) => void;
@@ -90,6 +131,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [user, setUser] = useState<AuthUser | null>(null);
     const [isAuthLoading, setIsAuthLoading] = useState(true);
 
+    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+    const [isRestaurantsLoading, setIsRestaurantsLoading] = useState(true);
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
             setUser(normalizeAuthUser(firebaseUser));
@@ -97,6 +141,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
 
         return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        fetch('/data/restaurants.json')
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error('Failed to fetch restaurants');
+                }
+                return res.json();
+            })
+            .then((data: Restaurant[]) => {
+                setRestaurants(data);
+                setIsRestaurantsLoading(false);
+            })
+            .catch((err) => {
+                console.error('Failed to load restaurants:', err);
+                setIsRestaurantsLoading(false);
+            });
     }, []);
 
     useEffect(() => {
@@ -114,6 +176,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             console.error('Failed to save favorites to localStorage:', error);
         }
     }, [favorites]);
+
+    const getRestaurantBySlug = (slug: string) => {
+        return restaurants.find((r) => r.slug === slug);
+    };
+
+    const getRestaurantById = (id: string) => {
+        return restaurants.find((r) => r.id === id);
+    };
 
     const addToCart = (food: FoodItem, customization?: CustomizationOptions) => {
         const selectedSize = customization?.selectedSize;
@@ -197,6 +267,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 favorites,
                 user,
                 isAuthLoading,
+                restaurants,
+                isRestaurantsLoading,
+                getRestaurantBySlug,
+                getRestaurantById,
                 addToCart,
                 removeFromCart,
                 toggleFavorite,
