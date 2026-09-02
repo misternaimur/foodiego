@@ -4,7 +4,6 @@ import {
   Bike,
   CheckCircle2,
   ChevronRight,
-  Clock3,
   DollarSign,
   History,
   Home,
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 type RiderDashboardProps = {
   rider?: any;
@@ -30,8 +30,7 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 /* ============================================================
-   RIDER PROFILE
-   সব page-এ এই একইভাবে profile দেখানো হবে
+   HELPERS
 ============================================================ */
 
 function getRiderName(rider: any) {
@@ -39,6 +38,7 @@ function getRiderName(rider: any) {
     rider?.name ||
     rider?.fullName ||
     rider?.riderName ||
+    rider?.userId?.name ||
     "Rider"
   );
 }
@@ -50,7 +50,13 @@ function getRiderRating(rider: any) {
     rider?.ratings ??
     4.9;
 
-  return Number(rating) > 0 ? Number(rating).toFixed(1) : "4.9";
+  const number = Number(rating);
+
+  return number > 0 ? number.toFixed(1) : "4.9";
+}
+
+function getOrderId(order: any) {
+  return String(order?._id || order?.id || "").slice(-6);
 }
 
 /* ============================================================
@@ -82,15 +88,13 @@ export default function RiderDashboard({
         let riderId =
           localStorage.getItem("riderId");
 
-        /*
-         * যদি rider prop থেকে ID পাওয়া যায়,
-         * তাহলে localStorage-এ save করে রাখি।
-         */
+        // Rider prop থেকে ID পাওয়া গেলে save করি
         if (!riderId && rider?._id) {
-          riderId = rider._id;
+          riderId = String(rider._id);
+
           localStorage.setItem(
             "riderId",
-            rider._id
+            riderId
           );
         }
 
@@ -102,41 +106,39 @@ export default function RiderDashboard({
         const response = await fetch(
           `${API_URL}/api/riders/${riderId}/dashboard`,
           {
+            method: "GET",
             cache: "no-store",
           }
         );
 
-        if (!response.ok) {
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
           throw new Error(
-            "Failed to fetch dashboard"
+            result.message ||
+              "Failed to load dashboard"
           );
         }
 
-        const result = await response.json();
+        setDashboard(result.data);
 
-        if (result.success) {
-          setDashboard(result.data);
+        // Current availability
+        setIsOnline(
+          Boolean(
+            result.data?.rider?.isAvailable
+          )
+        );
 
-          setIsOnline(
-            Boolean(
-              result.data?.rider?.isAvailable
-            )
+        // Rider profile save
+        if (result.data?.rider) {
+          localStorage.setItem(
+            "riderProfile",
+            JSON.stringify(result.data.rider)
           );
-
-          /*
-           * Rider profile localStorage-এ রাখছি,
-           * যাতে অন্য rider page-ও একই profile ব্যবহার করতে পারে।
-           */
-          if (result.data?.rider) {
-            localStorage.setItem(
-              "riderProfile",
-              JSON.stringify(result.data.rider)
-            );
-          }
         }
       } catch (error) {
         console.error(
-          "Failed to load rider dashboard:",
+          "Dashboard loading error:",
           error
         );
       } finally {
@@ -148,7 +150,7 @@ export default function RiderDashboard({
   }, [rider?._id]);
 
   /* ==========================================================
-     AVAILABILITY
+     UPDATE AVAILABILITY
   ========================================================== */
 
   const handleAvailabilityChange = async () => {
@@ -190,35 +192,31 @@ export default function RiderDashboard({
         );
       }
 
-      setIsOnline(
-        result.data.isAvailable
-      );
+      const updatedStatus =
+        Boolean(result.data?.isAvailable);
+
+      setIsOnline(updatedStatus);
 
       setDashboard((previous: any) => ({
         ...previous,
         rider: {
           ...previous?.rider,
-          isAvailable:
-            result.data.isAvailable,
+          isAvailable: updatedStatus,
         },
       }));
 
-      /*
-       * Updated profile save
-       */
-      const oldProfile =
-        JSON.parse(
-          localStorage.getItem(
-            "riderProfile"
-          ) || "{}"
-        );
+      // Update local profile
+      const oldProfile = JSON.parse(
+        localStorage.getItem(
+          "riderProfile"
+        ) || "{}"
+      );
 
       localStorage.setItem(
         "riderProfile",
         JSON.stringify({
           ...oldProfile,
-          isAvailable:
-            result.data.isAvailable,
+          isAvailable: updatedStatus,
         })
       );
     } catch (error) {
@@ -228,7 +226,7 @@ export default function RiderDashboard({
       );
 
       alert(
-        "Failed to update online status"
+        "Failed to update online status."
       );
     } finally {
       setUpdatingStatus(false);
@@ -243,7 +241,7 @@ export default function RiderDashboard({
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
         <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-green-500" />
+          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-green-500" />
 
           <p className="mt-3 text-sm text-slate-500">
             Loading dashboard...
@@ -280,15 +278,19 @@ export default function RiderDashboard({
     dashboard?.performance || {
       completed: 0,
       averageTime: null,
-      distance: null,
+      distance: 0,
       rating: riderRating,
     };
 
   const activeDelivery =
-    dashboard?.activeDelivery;
+    dashboard?.activeDelivery || null;
 
   const recentActivity =
     dashboard?.recentActivity || [];
+
+  /* ==========================================================
+     UI
+  ========================================================== */
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900">
@@ -307,12 +309,14 @@ export default function RiderDashboard({
         >
           <div className="relative flex h-full flex-col">
 
+            {/* CLOSE MOBILE MENU */}
+
             <button
               type="button"
               onClick={() =>
                 setMobileMenu(false)
               }
-              className="absolute right-4 top-5 z-10 rounded-lg p-2 transition hover:bg-slate-100 lg:hidden"
+              className="absolute right-4 top-5 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
             >
               <X className="h-5 w-5 text-slate-600" />
             </button>
@@ -327,7 +331,6 @@ export default function RiderDashboard({
                 </div>
 
                 <div className="min-w-0">
-
                   <p className="truncate font-semibold text-slate-800">
                     {riderName}
                   </p>
@@ -337,71 +340,100 @@ export default function RiderDashboard({
                   </p>
 
                   <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
 
                     <span>
                       {riderRating} Rating
                     </span>
-
                   </div>
-
                 </div>
 
               </div>
             </div>
 
-            {/* NAV */}
+            {/* NAVIGATION */}
 
             <nav className="flex-1 px-4 py-5">
 
+              {/* Dashboard */}
+
               <a
                 href="/rider"
+                onClick={() =>
+                  setMobileMenu(false)
+                }
                 className="mb-2 flex items-center gap-3 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white"
               >
                 <Home className="h-4 w-4" />
                 Dashboard
               </a>
 
+              {/* Orders */}
+
               <a
                 href="/rider/orders"
+                onClick={() =>
+                  setMobileMenu(false)
+                }
                 className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
               >
                 <Package className="h-4 w-4" />
                 Orders
               </a>
 
+              {/* Deliveries */}
+
               <a
                 href="/rider/deliveries"
+                onClick={() =>
+                  setMobileMenu(false)
+                }
                 className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
               >
                 <Bike className="h-4 w-4" />
                 Deliveries
               </a>
 
+              {/* Earnings */}
+
               <a
                 href="/rider/earnings"
+                onClick={() =>
+                  setMobileMenu(false)
+                }
                 className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
               >
                 <DollarSign className="h-4 w-4" />
                 Earnings
               </a>
 
+              {/* Shift History */}
+
               <a
                 href="/rider/shift-history"
+                onClick={() =>
+                  setMobileMenu(false)
+                }
                 className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
               >
                 <History className="h-4 w-4" />
                 Shift History
               </a>
 
+              {/* Settings */}
+
               <a
                 href="/rider/settings"
+                onClick={() =>
+                  setMobileMenu(false)
+                }
                 className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
               >
                 <Settings className="h-4 w-4" />
                 Settings
               </a>
+
+              {/* Logout */}
 
               <button
                 type="button"
@@ -415,7 +447,9 @@ export default function RiderDashboard({
           </div>
         </aside>
 
-        {/* OVERLAY */}
+        {/* ====================================================
+            MOBILE OVERLAY
+        ==================================================== */}
 
         {mobileMenu && (
           <div
@@ -432,9 +466,10 @@ export default function RiderDashboard({
 
         <main className="min-w-0 flex-1">
 
-          {/* MOBILE MENU */}
+          {/* MOBILE HEADER */}
 
-          <div className="px-5 pt-5 lg:hidden">
+          <div className="flex items-center gap-3 px-5 pt-5 lg:hidden">
+
             <button
               type="button"
               onClick={() =>
@@ -444,27 +479,37 @@ export default function RiderDashboard({
             >
               <Menu className="h-5 w-5 text-slate-700" />
             </button>
-          </div>
 
-          {/* MOBILE HEADING */}
-
-          <div className="px-5 pt-5 lg:hidden">
-
-            <h2 className="text-2xl font-bold">
-              Good morning,{" "}
-              {riderName}!
-            </h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Here&apos;s your delivery overview
-              for today.
-            </p>
+            <div>
+              <h2 className="text-lg font-bold">
+                Rider Dashboard
+              </h2>
+            </div>
 
           </div>
+
+          {/* CONTENT */}
 
           <div className="space-y-6 p-5 md:p-8 lg:p-10">
 
-            {/* ONLINE */}
+            {/* ==================================================
+                DESKTOP HEADING
+            ================================================== */}
+
+            <div className="hidden lg:block">
+              <h1 className="text-3xl font-bold text-slate-900">
+                Good morning, {riderName}!
+              </h1>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Here&apos;s your delivery overview
+                for today.
+              </p>
+            </div>
+
+            {/* ==================================================
+                ONLINE / OFFLINE
+            ================================================== */}
 
             <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
 
@@ -473,7 +518,7 @@ export default function RiderDashboard({
                 <div className="flex items-center gap-4">
 
                   <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
                       isOnline
                         ? "bg-green-100"
                         : "bg-slate-100"
@@ -489,8 +534,7 @@ export default function RiderDashboard({
                   </div>
 
                   <div>
-
-                    <h3 className="font-semibold">
+                    <h3 className="font-semibold text-slate-900">
                       {isOnline
                         ? "You're online"
                         : "You're offline"}
@@ -501,10 +545,11 @@ export default function RiderDashboard({
                         ? "Available for deliveries"
                         : "You are not receiving delivery requests"}
                     </p>
-
                   </div>
 
                 </div>
+
+                {/* SWITCH */}
 
                 <button
                   type="button"
@@ -512,7 +557,8 @@ export default function RiderDashboard({
                   onClick={
                     handleAvailabilityChange
                   }
-                  className={`relative h-7 w-12 rounded-full transition ${
+                  aria-label="Toggle rider availability"
+                  className={`relative h-7 w-12 shrink-0 rounded-full transition ${
                     isOnline
                       ? "bg-green-500"
                       : "bg-slate-300"
@@ -523,7 +569,7 @@ export default function RiderDashboard({
                   }`}
                 >
                   <span
-                    className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${
+                    className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${
                       isOnline
                         ? "left-6"
                         : "left-1"
@@ -534,21 +580,27 @@ export default function RiderDashboard({
               </div>
             </section>
 
-            {/* STATS */}
+            {/* ==================================================
+                STATS
+            ================================================== */}
 
             <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
               <StatCard
-                icon={<Package className="h-4 w-4" />}
+                icon={
+                  <Package className="h-4 w-4" />
+                }
                 title="Today's Deliveries"
                 value={String(
-                  stats.todayDeliveries
+                  stats.todayDeliveries || 0
                 )}
                 text="Completed today"
               />
 
               <StatCard
-                icon={<DollarSign className="h-4 w-4" />}
+                icon={
+                  <DollarSign className="h-4 w-4" />
+                }
                 title="Today's Earnings"
                 value={`৳${Number(
                   stats.todayEarnings || 0
@@ -557,10 +609,12 @@ export default function RiderDashboard({
               />
 
               <StatCard
-                icon={<Bike className="h-4 w-4" />}
+                icon={
+                  <Bike className="h-4 w-4" />
+                }
                 title="Active Delivery"
                 value={String(
-                  stats.activeDelivery
+                  stats.activeDelivery || 0
                 )}
                 text="In progress"
               />
@@ -570,62 +624,68 @@ export default function RiderDashboard({
                   <CheckCircle2 className="h-4 w-4" />
                 }
                 title="Delivery Success"
-                value={`${stats.deliverySuccess}%`}
+                value={`${Number(
+                  stats.deliverySuccess || 0
+                )}%`}
                 text="Completion rate"
               />
 
             </section>
 
-            {/* ACTIVE DELIVERY */}
+            {/* ==================================================
+                ACTIVE DELIVERY + HIGH DEMAND
+            ================================================== */}
 
             <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.7fr_1fr]">
+
+              {/* ACTIVE DELIVERY */}
 
               <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
 
                 {activeDelivery ? (
                   <>
-
-                    <div className="mb-5 flex items-center justify-between">
+                    <div className="mb-6 flex items-start justify-between gap-4">
 
                       <div>
-
-                        <p className="text-xs font-medium text-green-500">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-green-500">
                           {activeDelivery.status ===
                           "out_for_delivery"
                             ? "On The Way"
-                            : activeDelivery.status}
+                            : activeDelivery.status ===
+                              "preparing"
+                            ? "Preparing"
+                            : "Accepted"}
                         </p>
 
-                        <h3 className="mt-1 text-lg font-bold">
+                        <h3 className="mt-1 text-lg font-bold text-slate-900">
                           Delivery in progress
                         </h3>
 
-                        <p className="text-sm text-slate-500">
+                        <p className="mt-1 text-sm text-slate-500">
                           Order #
-                          {String(
-                            activeDelivery._id
-                          ).slice(-6)}
+                          {getOrderId(
+                            activeDelivery
+                          )}
                         </p>
-
                       </div>
 
                       <div className="text-right">
-
                         <p className="text-xs text-slate-500">
                           Order Total
                         </p>
 
-                        <p className="text-xl font-bold">
+                        <p className="text-xl font-bold text-slate-900">
                           ৳
                           {Number(
                             activeDelivery.totalAmount ||
                               0
                           ).toFixed(0)}
                         </p>
-
                       </div>
 
                     </div>
+
+                    {/* DELIVERY STEPS */}
 
                     <div className="space-y-5">
 
@@ -662,27 +722,46 @@ export default function RiderDashboard({
 
                     </div>
 
+                    {/* BUTTONS */}
+
                     <div className="mt-6 flex flex-wrap gap-3">
 
-                      <button
-                        type="button"
-                        className="rounded-lg bg-green-500 px-6 py-3 text-sm font-semibold text-white hover:bg-green-600"
+                      <a
+                        href="/rider/deliveries"
+                        className="rounded-lg bg-green-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
                       >
                         View Delivery
-                      </button>
+                      </a>
 
                       <button
                         type="button"
-                        className="flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        onClick={() => {
+                          const phone =
+                            activeDelivery
+                              ?.customerId
+                              ?.phone ||
+                            activeDelivery?.customerPhone;
+
+                          if (phone) {
+                            window.location.href =
+                              `tel:${phone}`;
+                          } else {
+                            alert(
+                              "Customer phone number not available."
+                            );
+                          }
+                        }}
+                        className="flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                       >
                         <Phone className="h-4 w-4" />
                         Contact
                       </button>
 
                     </div>
-
                   </>
                 ) : (
+                  /* NO ACTIVE DELIVERY */
+
                   <div className="flex min-h-[300px] items-center justify-center text-center">
 
                     <div>
@@ -691,7 +770,7 @@ export default function RiderDashboard({
                         <Bike className="h-7 w-7 text-slate-400" />
                       </div>
 
-                      <h3 className="mt-4 font-bold">
+                      <h3 className="mt-4 font-bold text-slate-800">
                         No active delivery
                       </h3>
 
@@ -700,6 +779,14 @@ export default function RiderDashboard({
                         delivery in progress.
                       </p>
 
+                      <a
+                        href="/rider/orders"
+                        className="mt-5 inline-flex items-center gap-1 rounded-lg bg-green-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-600"
+                      >
+                        View Available Orders
+                        <ChevronRight className="h-4 w-4" />
+                      </a>
+
                     </div>
 
                   </div>
@@ -707,11 +794,13 @@ export default function RiderDashboard({
 
               </div>
 
-              {/* HIGH DEMAND */}
+              {/* ==================================================
+                  HIGH DEMAND
+              ================================================== */}
 
               <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
 
-                <h3 className="mb-4 font-bold">
+                <h3 className="mb-4 font-bold text-slate-900">
                   🔥 High Demand Zone
                 </h3>
 
@@ -735,7 +824,7 @@ export default function RiderDashboard({
 
                 <button
                   type="button"
-                  className="mt-3 flex items-center gap-1 text-sm font-semibold text-green-500"
+                  className="mt-3 flex items-center gap-1 text-sm font-semibold text-green-500 hover:text-green-600"
                 >
                   View Heatmap
                   <ChevronRight className="h-4 w-4" />
@@ -745,7 +834,9 @@ export default function RiderDashboard({
 
             </section>
 
-            {/* BOTTOM */}
+            {/* ==================================================
+                PERFORMANCE + RECENT ACTIVITY
+            ================================================== */}
 
             <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
@@ -756,15 +847,13 @@ export default function RiderDashboard({
                 <div className="mb-5 flex items-center justify-between">
 
                   <div>
-
-                    <h3 className="font-bold">
+                    <h3 className="font-bold text-slate-900">
                       Today&apos;s Performance
                     </h3>
 
                     <p className="text-sm text-slate-500">
                       Your delivery performance
                     </p>
-
                   </div>
 
                   <TrendingUp className="h-5 w-5 text-green-500" />
@@ -776,7 +865,7 @@ export default function RiderDashboard({
                   <MiniStat
                     label="Completed"
                     value={String(
-                      performance.completed
+                      performance.completed || 0
                     )}
                   />
 
@@ -792,8 +881,12 @@ export default function RiderDashboard({
                   <MiniStat
                     label="Distance"
                     value={
-                      performance.distance
-                        ? `${performance.distance} km`
+                      Number(
+                        performance.distance || 0
+                      ) > 0
+                        ? `${Number(
+                            performance.distance
+                          ).toFixed(1)} km`
                         : "—"
                     }
                   />
@@ -814,7 +907,7 @@ export default function RiderDashboard({
 
               <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
 
-                <h3 className="mb-5 font-bold">
+                <h3 className="mb-5 font-bold text-slate-900">
                   Recent Activity
                 </h3>
 
@@ -824,7 +917,9 @@ export default function RiderDashboard({
                     recentActivity.map(
                       (activity: any) => (
                         <Activity
-                          key={activity.id}
+                          key={String(
+                            activity.id
+                          )}
                           icon={
                             activity.status ===
                             "delivered" ? (
@@ -837,27 +932,38 @@ export default function RiderDashboard({
                             activity.status ===
                             "delivered"
                               ? "Order completed"
+                              : activity.status ===
+                                "out_for_delivery"
+                              ? "Delivery in progress"
                               : "Delivery activity"
                           }
-                          text={`Order #${String(
+                          text={`Order #${getOrderId(
                             activity.orderId
-                          ).slice(-6)}`}
-                          time={new Date(
+                          )}`}
+                          time={
                             activity.createdAt
-                          ).toLocaleTimeString(
-                            [],
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
+                              ? new Date(
+                                  activity.createdAt
+                                ).toLocaleTimeString(
+                                  [],
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )
+                              : "—"
+                          }
                         />
                       )
                     )
                   ) : (
-                    <p className="text-sm text-slate-500">
-                      No activity today.
-                    </p>
+                    <div className="py-8 text-center">
+                      <Package className="mx-auto h-8 w-8 text-slate-300" />
+
+                      <p className="mt-2 text-sm text-slate-500">
+                        No activity today.
+                      </p>
+                    </div>
                   )}
 
                 </div>
@@ -874,7 +980,7 @@ export default function RiderDashboard({
 }
 
 /* ============================================================
-   COMPONENTS
+   STAT CARD
 ============================================================ */
 
 function StatCard({
@@ -883,7 +989,7 @@ function StatCard({
   value,
   text,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   value: string;
   text: string;
@@ -893,6 +999,7 @@ function StatCard({
 
       <div className="mb-3 flex items-center gap-2 text-slate-500">
         {icon}
+
         <span className="text-xs font-medium">
           {title}
         </span>
@@ -910,6 +1017,10 @@ function StatCard({
   );
 }
 
+/* ============================================================
+   DELIVERY STEP
+============================================================ */
+
 function DeliveryStep({
   title,
   active = false,
@@ -923,7 +1034,7 @@ function DeliveryStep({
     <div className="flex items-center gap-3">
 
       <div
-        className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${
           current
             ? "border-orange-500 bg-orange-500"
             : active
@@ -952,6 +1063,10 @@ function DeliveryStep({
   );
 }
 
+/* ============================================================
+   MINI STAT
+============================================================ */
+
 function MiniStat({
   label,
   value,
@@ -974,13 +1089,17 @@ function MiniStat({
   );
 }
 
+/* ============================================================
+   ACTIVITY
+============================================================ */
+
 function Activity({
   icon,
   title,
   text,
   time,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   text: string;
   time: string;

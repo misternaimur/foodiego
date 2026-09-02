@@ -18,7 +18,7 @@ export default async function RiderPage() {
   // Re-enable the admin-approval gate by restoring the status check here and in
   // src/app/(main)/rider/pending/page.tsx.
 
-  return <RiderDashboard rider={rider} />;
+  return <RiderDashboard riderId={rider._id.toString()} />;
 }
 
 
