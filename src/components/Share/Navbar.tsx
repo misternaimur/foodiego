@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useSyncExternalStore } from 'react'
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown, UtensilsCrossed, Bike } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import LogoGreen from './LogoGreen';
 
@@ -19,6 +19,7 @@ export interface NavbarProps {
     name?: string;
     email?: string;
     avatarUrl?: string;
+    role?: string;
   } | null;
   onSearch?: (query: string) => void;
   onLogout?: () => void;
@@ -52,6 +53,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   const user = propUser ?? contextUser;
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+  const role = propUser?.role;
+  const dashboardHref =
+    role === "admin"
+      ? "/admin"
+      : role === "restaurant"
+      ? "/vendor"
+      : role === "rider"
+      ? "/rider"
+      : "/client/dashboard";
+
   const handleLogout = async () => {
     if (onLogout) {
       onLogout();
@@ -80,7 +91,30 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#FAF7EE] border-b border-[#E8E2D5]/70 backdrop-blur-md">
+    <>
+      {/* Restaurant / Rider Partner Sign-up strip — hidden once any role is logged in */}
+      {!user && (
+        <div className="w-full bg-[#15462D] text-white/90">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3 text-xs">
+            <Link
+              href="/auth/register/restaurant"
+              className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#15462D] hover:border-white transition-colors"
+            >
+              <UtensilsCrossed size={13} />
+              <span>Create a restaurant account</span>
+            </Link>
+            <Link
+              href="/auth/register/rider"
+              className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#15462D] hover:border-white transition-colors"
+            >
+              <Bike size={13} />
+              <span>Create a rider account</span>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      <header className="sticky top-0 z-50 w-full bg-[#FAF7EE] border-b border-[#E8E2D5]/70 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
         
         {/* Left Section: Logo & Nav Links */}
@@ -210,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </Link>
 
                     <Link
-                      href="/client/dashboard"
+                      href={dashboardHref}
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
                     >
@@ -337,7 +371,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="pt-3 border-t border-[#E8E2D5] space-y-1">
               <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Profile</Link>
               <Link href="/client/cart" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">My Cart</Link>
-              <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Dashboard</Link>
+              <Link href={dashboardHref} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Dashboard</Link>
               <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Settings</Link>
               <button 
                 onClick={async () => { setIsMobileMenuOpen(false); await handleLogout(); }} 
@@ -350,6 +384,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       )}
     </header>
+    </>
   );
 };
 
