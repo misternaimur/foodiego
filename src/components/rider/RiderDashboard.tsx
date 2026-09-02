@@ -23,13 +23,45 @@ import {
 import { useEffect, useState } from "react";
 
 type RiderDashboardProps = {
-  rider: any;
+  rider?: any;
 };
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+/* ============================================================
+   RIDER PROFILE
+   সব page-এ এই একইভাবে profile দেখানো হবে
+============================================================ */
+
+function getRiderName(rider: any) {
+  return (
+    rider?.name ||
+    rider?.fullName ||
+    rider?.riderName ||
+    "Rider"
+  );
+}
+
+function getRiderRating(rider: any) {
+  const rating =
+    rider?.rating ??
+    rider?.averageRating ??
+    rider?.ratings ??
+    4.9;
+
+  return Number(rating) > 0 ? Number(rating).toFixed(1) : "4.9";
+}
+
+/* ============================================================
+   DASHBOARD
+============================================================ */
 
 export default function RiderDashboard({
   rider,
 }: RiderDashboardProps) {
   const [dashboard, setDashboard] = useState<any>(null);
+
   const [isOnline, setIsOnline] = useState(
     Boolean(rider?.isAvailable)
   );
@@ -38,48 +70,106 @@ export default function RiderDashboard({
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
-  // ============================================================
-  // LOAD RIDER DASHBOARD DATA
-  // ============================================================
+  /* ==========================================================
+     LOAD DASHBOARD
+  ========================================================== */
+
   useEffect(() => {
     const loadDashboard = async () => {
       try {
+        setLoading(true);
+
+        let riderId =
+          localStorage.getItem("riderId");
+
+        /*
+         * যদি rider prop থেকে ID পাওয়া যায়,
+         * তাহলে localStorage-এ save করে রাখি।
+         */
+        if (!riderId && rider?._id) {
+          riderId = rider._id;
+          localStorage.setItem(
+            "riderId",
+            rider._id
+          );
+        }
+
+        if (!riderId) {
+          console.error("Rider ID not found");
+          return;
+        }
+
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/riders/${rider._id}/dashboard`,
+          `${API_URL}/api/riders/${riderId}/dashboard`,
           {
             cache: "no-store",
           }
         );
 
+        if (!response.ok) {
+          throw new Error(
+            "Failed to fetch dashboard"
+          );
+        }
+
         const result = await response.json();
 
         if (result.success) {
           setDashboard(result.data);
-          setIsOnline(result.data.rider.isAvailable);
+
+          setIsOnline(
+            Boolean(
+              result.data?.rider?.isAvailable
+            )
+          );
+
+          /*
+           * Rider profile localStorage-এ রাখছি,
+           * যাতে অন্য rider page-ও একই profile ব্যবহার করতে পারে।
+           */
+          if (result.data?.rider) {
+            localStorage.setItem(
+              "riderProfile",
+              JSON.stringify(result.data.rider)
+            );
+          }
         }
       } catch (error) {
-        console.error("Failed to load rider dashboard:", error);
+        console.error(
+          "Failed to load rider dashboard:",
+          error
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    if (rider?._id) {
-      loadDashboard();
-    }
+    loadDashboard();
   }, [rider?._id]);
 
-  // ============================================================
-  // TOGGLE ONLINE / OFFLINE
-  // ============================================================
+  /* ==========================================================
+     AVAILABILITY
+  ========================================================== */
+
   const handleAvailabilityChange = async () => {
     const newStatus = !isOnline;
 
     try {
       setUpdatingStatus(true);
 
+      const riderId =
+        localStorage.getItem("riderId") ||
+        rider?._id;
+
+      if (!riderId) {
+        alert(
+          "Rider ID not found. Please login again."
+        );
+        return;
+      }
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/riders/${rider._id}/availability`,
+        `${API_URL}/api/riders/${riderId}/availability`,
         {
           method: "PATCH",
           headers: {
@@ -95,35 +185,66 @@ export default function RiderDashboard({
 
       if (!response.ok || !result.success) {
         throw new Error(
-          result.message || "Failed to update availability"
+          result.message ||
+            "Failed to update availability"
         );
       }
 
-      setIsOnline(result.data.isAvailable);
+      setIsOnline(
+        result.data.isAvailable
+      );
 
       setDashboard((previous: any) => ({
         ...previous,
         rider: {
-          ...previous.rider,
-          isAvailable: result.data.isAvailable,
+          ...previous?.rider,
+          isAvailable:
+            result.data.isAvailable,
         },
       }));
+
+      /*
+       * Updated profile save
+       */
+      const oldProfile =
+        JSON.parse(
+          localStorage.getItem(
+            "riderProfile"
+          ) || "{}"
+        );
+
+      localStorage.setItem(
+        "riderProfile",
+        JSON.stringify({
+          ...oldProfile,
+          isAvailable:
+            result.data.isAvailable,
+        })
+      );
     } catch (error) {
-      console.error("Availability update failed:", error);
-      alert("Failed to update online status");
+      console.error(
+        "Availability update failed:",
+        error
+      );
+
+      alert(
+        "Failed to update online status"
+      );
     } finally {
       setUpdatingStatus(false);
     }
   };
 
-  // ============================================================
-  // LOADING
-  // ============================================================
+  /* ==========================================================
+     LOADING
+  ========================================================== */
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
         <div className="text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-green-500" />
+
           <p className="mt-3 text-sm text-slate-500">
             Loading dashboard...
           </p>
@@ -132,31 +253,51 @@ export default function RiderDashboard({
     );
   }
 
-  const riderData = dashboard?.rider || rider;
+  /* ==========================================================
+     DATA
+  ========================================================== */
 
-  const stats = dashboard?.stats || {
-    todayDeliveries: 0,
-    todayEarnings: 0,
-    activeDelivery: 0,
-    deliverySuccess: 0,
-  };
+  const riderData =
+    dashboard?.rider ||
+    rider ||
+    {};
 
-  const performance = dashboard?.performance || {
-    completed: 0,
-    averageTime: null,
-    distance: null,
-    rating: riderData?.rating || 0,
-  };
+  const riderName =
+    getRiderName(riderData);
 
-  const activeDelivery = dashboard?.activeDelivery;
+  const riderRating =
+    getRiderRating(riderData);
 
-  const recentActivity = dashboard?.recentActivity || [];
+  const stats =
+    dashboard?.stats || {
+      todayDeliveries: 0,
+      todayEarnings: 0,
+      activeDelivery: 0,
+      deliverySuccess: 0,
+    };
+
+  const performance =
+    dashboard?.performance || {
+      completed: 0,
+      averageTime: null,
+      distance: null,
+      rating: riderRating,
+    };
+
+  const activeDelivery =
+    dashboard?.activeDelivery;
+
+  const recentActivity =
+    dashboard?.recentActivity || [];
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900">
       <div className="flex min-h-screen">
 
-        {/* ================= SIDEBAR ================= */}
+        {/* ====================================================
+            SIDEBAR
+        ==================================================== */}
+
         <aside
           className={`fixed left-0 top-0 z-50 h-screen w-64 border-r border-slate-200 bg-white transition-transform duration-300 lg:sticky lg:top-0 lg:z-30 lg:block lg:h-screen lg:translate-x-0 ${
             mobileMenu
@@ -166,28 +307,29 @@ export default function RiderDashboard({
         >
           <div className="relative flex h-full flex-col">
 
-            {/* Mobile Close Button */}
             <button
-              onClick={() => setMobileMenu(false)}
-              className="absolute right-4 top-5 z-10 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
-              aria-label="Close menu"
+              type="button"
+              onClick={() =>
+                setMobileMenu(false)
+              }
+              className="absolute right-4 top-5 z-10 rounded-lg p-2 transition hover:bg-slate-100 lg:hidden"
             >
               <X className="h-5 w-5 text-slate-600" />
             </button>
 
-            {/* ================= RIDER PROFILE ================= */}
+            {/* PROFILE */}
+
             <div className="border-b border-slate-100 px-5 py-6">
               <div className="flex items-center gap-3">
 
-                {/* Avatar */}
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100">
                   <User className="h-6 w-6 text-green-500" />
                 </div>
 
-                {/* Profile Info */}
-                <div>
-                  <p className="font-semibold text-slate-800">
-                    {riderData?.fullName || "Rider"}
+                <div className="min-w-0">
+
+                  <p className="truncate font-semibold text-slate-800">
+                    {riderName}
                   </p>
 
                   <p className="text-xs font-medium text-green-500">
@@ -195,84 +337,75 @@ export default function RiderDashboard({
                   </p>
 
                   <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
 
                     <span>
-                      {riderData?.rating || 0} Rating
+                      {riderRating} Rating
                     </span>
+
                   </div>
+
                 </div>
 
               </div>
             </div>
 
-            {/* ================= NAVIGATION ================= */}
+            {/* NAV */}
+
             <nav className="flex-1 px-4 py-5">
 
-              {/* Home - ACTIVE */}
               <a
                 href="/rider"
-                onClick={() => setMobileMenu(false)}
                 className="mb-2 flex items-center gap-3 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white"
               >
                 <Home className="h-4 w-4" />
                 Dashboard
               </a>
 
-              {/* Orders */}
               <a
                 href="/rider/orders"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
               >
                 <Package className="h-4 w-4" />
                 Orders
               </a>
 
-              {/* Deliveries */}
               <a
                 href="/rider/deliveries"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
               >
                 <Bike className="h-4 w-4" />
                 Deliveries
               </a>
 
-              {/* Earnings */}
               <a
                 href="/rider/earnings"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
               >
                 <DollarSign className="h-4 w-4" />
                 Earnings
               </a>
 
-              {/* Shift History */}
               <a
                 href="/rider/shift-history"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
               >
                 <History className="h-4 w-4" />
                 Shift History
               </a>
 
-              {/* Settings */}
               <a
                 href="/rider/settings"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
+                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
               >
                 <Settings className="h-4 w-4" />
                 Settings
               </a>
 
-              {/* Logout */}
               <button
                 type="button"
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500"
               >
                 <LogOut className="h-4 w-4" />
                 Logout
@@ -282,48 +415,63 @@ export default function RiderDashboard({
           </div>
         </aside>
 
-        {/* ================= MOBILE OVERLAY ================= */}
+        {/* OVERLAY */}
+
         {mobileMenu && (
           <div
             className="fixed inset-0 z-40 bg-black/30 lg:hidden"
-            onClick={() => setMobileMenu(false)}
+            onClick={() =>
+              setMobileMenu(false)
+            }
           />
         )}
 
-        {/* ================= MAIN ================= */}
+        {/* ====================================================
+            MAIN
+        ==================================================== */}
+
         <main className="min-w-0 flex-1">
 
-          {/* Mobile Menu Button */}
+          {/* MOBILE MENU */}
+
           <div className="px-5 pt-5 lg:hidden">
             <button
-              onClick={() => setMobileMenu(true)}
-              className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm hover:bg-slate-50"
-              aria-label="Open menu"
+              type="button"
+              onClick={() =>
+                setMobileMenu(true)
+              }
+              className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm"
             >
               <Menu className="h-5 w-5 text-slate-700" />
             </button>
           </div>
 
-          {/* Mobile Heading */}
+          {/* MOBILE HEADING */}
+
           <div className="px-5 pt-5 lg:hidden">
+
             <h2 className="text-2xl font-bold">
               Good morning,{" "}
-              {riderData?.fullName || "Rider"}!
+              {riderName}!
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Here&apos;s your delivery overview for today.
+              Here&apos;s your delivery overview
+              for today.
             </p>
+
           </div>
 
-          {/* ================= CONTENT ================= */}
           <div className="space-y-6 p-5 md:p-8 lg:p-10">
 
-            {/* ================= ONLINE STATUS ================= */}
+            {/* ONLINE */}
+
             <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+
               <div className="flex items-center justify-between gap-4">
 
                 <div className="flex items-center gap-4">
+
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full ${
                       isOnline
@@ -341,6 +489,7 @@ export default function RiderDashboard({
                   </div>
 
                   <div>
+
                     <h3 className="font-semibold">
                       {isOnline
                         ? "You're online"
@@ -352,14 +501,17 @@ export default function RiderDashboard({
                         ? "Available for deliveries"
                         : "You are not receiving delivery requests"}
                     </p>
+
                   </div>
+
                 </div>
 
-                {/* Toggle */}
                 <button
                   type="button"
                   disabled={updatingStatus}
-                  onClick={handleAvailabilityChange}
+                  onClick={
+                    handleAvailabilityChange
+                  }
                   className={`relative h-7 w-12 rounded-full transition ${
                     isOnline
                       ? "bg-green-500"
@@ -369,7 +521,6 @@ export default function RiderDashboard({
                       ? "cursor-not-allowed opacity-60"
                       : ""
                   }`}
-                  aria-label="Toggle online status"
                 >
                   <span
                     className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${
@@ -383,34 +534,41 @@ export default function RiderDashboard({
               </div>
             </section>
 
-            {/* ================= STATS ================= */}
+            {/* STATS */}
+
             <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
               <StatCard
                 icon={<Package className="h-4 w-4" />}
                 title="Today's Deliveries"
-                value={String(stats.todayDeliveries)}
+                value={String(
+                  stats.todayDeliveries
+                )}
                 text="Completed today"
               />
 
               <StatCard
                 icon={<DollarSign className="h-4 w-4" />}
                 title="Today's Earnings"
-                value={`$${Number(
+                value={`৳${Number(
                   stats.todayEarnings || 0
-                ).toFixed(2)}`}
+                ).toFixed(0)}`}
                 text="Rider payout"
               />
 
               <StatCard
                 icon={<Bike className="h-4 w-4" />}
                 title="Active Delivery"
-                value={String(stats.activeDelivery)}
+                value={String(
+                  stats.activeDelivery
+                )}
                 text="In progress"
               />
 
               <StatCard
-                icon={<CheckCircle2 className="h-4 w-4" />}
+                icon={
+                  <CheckCircle2 className="h-4 w-4" />
+                }
                 title="Delivery Success"
                 value={`${stats.deliverySuccess}%`}
                 text="Completion rate"
@@ -418,16 +576,19 @@ export default function RiderDashboard({
 
             </section>
 
-            {/* ================= ACTIVE DELIVERY + DEMAND ================= */}
+            {/* ACTIVE DELIVERY */}
+
             <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.7fr_1fr]">
 
-              {/* Active Delivery */}
               <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
 
                 {activeDelivery ? (
                   <>
+
                     <div className="mb-5 flex items-center justify-between">
+
                       <div>
+
                         <p className="text-xs font-medium text-green-500">
                           {activeDelivery.status ===
                           "out_for_delivery"
@@ -445,23 +606,27 @@ export default function RiderDashboard({
                             activeDelivery._id
                           ).slice(-6)}
                         </p>
+
                       </div>
 
                       <div className="text-right">
+
                         <p className="text-xs text-slate-500">
                           Order Total
                         </p>
 
-                        <p className="text-xl font-bold text-slate-900">
-                          $
+                        <p className="text-xl font-bold">
+                          ৳
                           {Number(
-                            activeDelivery.totalAmount || 0
-                          ).toFixed(2)}
+                            activeDelivery.totalAmount ||
+                              0
+                          ).toFixed(0)}
                         </p>
+
                       </div>
+
                     </div>
 
-                    {/* Progress */}
                     <div className="space-y-5">
 
                       <DeliveryStep
@@ -470,14 +635,12 @@ export default function RiderDashboard({
                       />
 
                       <DeliveryStep
-                        active={
-                          [
-                            "preparing",
-                            "out_for_delivery",
-                          ].includes(
-                            activeDelivery.status
-                          )
-                        }
+                        active={[
+                          "preparing",
+                          "out_for_delivery",
+                        ].includes(
+                          activeDelivery.status
+                        )}
                         title="Picked Up"
                       />
 
@@ -499,12 +662,11 @@ export default function RiderDashboard({
 
                     </div>
 
-                    {/* Buttons */}
                     <div className="mt-6 flex flex-wrap gap-3">
 
                       <button
                         type="button"
-                        className="rounded-lg bg-green-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
+                        className="rounded-lg bg-green-500 px-6 py-3 text-sm font-semibold text-white hover:bg-green-600"
                       >
                         View Delivery
                       </button>
@@ -518,10 +680,13 @@ export default function RiderDashboard({
                       </button>
 
                     </div>
+
                   </>
                 ) : (
                   <div className="flex min-h-[300px] items-center justify-center text-center">
+
                     <div>
+
                       <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
                         <Bike className="h-7 w-7 text-slate-400" />
                       </div>
@@ -531,22 +696,24 @@ export default function RiderDashboard({
                       </h3>
 
                       <p className="mt-1 text-sm text-slate-500">
-                        You currently have no delivery in progress.
+                        You currently have no
+                        delivery in progress.
                       </p>
+
                     </div>
+
                   </div>
                 )}
 
               </div>
 
-              {/* High Demand */}
+              {/* HIGH DEMAND */}
+
               <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
 
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="font-bold">
-                    🔥 High Demand Zone
-                  </h3>
-                </div>
+                <h3 className="mb-4 font-bold">
+                  🔥 High Demand Zone
+                </h3>
 
                 <div className="relative flex h-44 items-center justify-center overflow-hidden rounded-lg bg-sky-100">
 
@@ -561,7 +728,8 @@ export default function RiderDashboard({
                 </div>
 
                 <p className="mt-4 text-sm leading-6 text-slate-600">
-                  Downtown area is currently experiencing high demand.
+                  Downtown area is currently
+                  experiencing high demand.
                   Expect increased order volume.
                 </p>
 
@@ -574,17 +742,21 @@ export default function RiderDashboard({
                 </button>
 
               </div>
+
             </section>
 
-            {/* ================= BOTTOM ================= */}
+            {/* BOTTOM */}
+
             <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
 
-              {/* Performance */}
+              {/* PERFORMANCE */}
+
               <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
 
                 <div className="mb-5 flex items-center justify-between">
 
                   <div>
+
                     <h3 className="font-bold">
                       Today&apos;s Performance
                     </h3>
@@ -592,6 +764,7 @@ export default function RiderDashboard({
                     <p className="text-sm text-slate-500">
                       Your delivery performance
                     </p>
+
                   </div>
 
                   <TrendingUp className="h-5 w-5 text-green-500" />
@@ -628,14 +801,17 @@ export default function RiderDashboard({
                   <MiniStat
                     label="Rating"
                     value={String(
-                      performance.rating || 0
+                      performance.rating ||
+                        riderRating
                     )}
                   />
 
                 </div>
+
               </div>
 
-              {/* Recent Activity */}
+              {/* RECENT ACTIVITY */}
+
               <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
 
                 <h3 className="mb-5 font-bold">
@@ -668,10 +844,13 @@ export default function RiderDashboard({
                           ).slice(-6)}`}
                           time={new Date(
                             activity.createdAt
-                          ).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          ).toLocaleTimeString(
+                            [],
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          )}
                         />
                       )
                     )
@@ -682,6 +861,7 @@ export default function RiderDashboard({
                   )}
 
                 </div>
+
               </div>
 
             </section>
@@ -693,7 +873,9 @@ export default function RiderDashboard({
   );
 }
 
-/* ================= STAT CARD ================= */
+/* ============================================================
+   COMPONENTS
+============================================================ */
 
 function StatCard({
   icon,
@@ -711,7 +893,6 @@ function StatCard({
 
       <div className="mb-3 flex items-center gap-2 text-slate-500">
         {icon}
-
         <span className="text-xs font-medium">
           {title}
         </span>
@@ -728,8 +909,6 @@ function StatCard({
     </div>
   );
 }
-
-/* ================= DELIVERY STEP ================= */
 
 function DeliveryStep({
   title,
@@ -773,8 +952,6 @@ function DeliveryStep({
   );
 }
 
-/* ================= MINI STAT ================= */
-
 function MiniStat({
   label,
   value,
@@ -796,8 +973,6 @@ function MiniStat({
     </div>
   );
 }
-
-/* ================= ACTIVITY ================= */
 
 function Activity({
   icon,
