@@ -16,11 +16,11 @@ export default async function proxy(req: NextRequest) {
 
   const session = await verifySessionCookie(req.cookies.get("session")?.value);
 
-  // if (isProtectedRoute && !session) {
-  //   const loginUrl = new URL("/auth/login", req.nextUrl);
-  //   loginUrl.searchParams.set("from", path);
-  //   return NextResponse.redirect(loginUrl);
-  // }
+  if (isProtectedRoute && !session) {
+  const loginUrl = new URL("/auth/login", req.nextUrl);
+  loginUrl.searchParams.set("from", path);
+  return NextResponse.redirect(loginUrl);
+  }
 
   if (isAuthRoute && session) {
     return NextResponse.redirect(new URL("/", req.nextUrl));

@@ -1,364 +1,276 @@
-import React from 'react';
+'use client';
+
+import { useState } from 'react';
 import { 
-  ShoppingBag, 
-  DollarSign, 
-  Users, 
+  ShoppingCart, 
+  Wallet, 
   Store, 
-  Bike, 
-  Navigation, 
-  FileText, 
-  Star, 
+  Users, 
+  Download, 
   ArrowUpRight, 
-  MoreVertical,
-  ChevronDown
+  ArrowDownRight, 
+  Minus,
+  UserCheck, 
+  AlertTriangle, 
+  FileText, 
+  CheckCircle2, 
+  MoreVertical 
 } from 'lucide-react';
+import Link from 'next/link';
 
-const DashboardPage = () => {
-  return (
-    <div className="space-y-6">
-      
-      {/* Top Subtitle & Time Filter Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium text-gray-500">Here&apos;s what&apos;s happening across FoodieGo today.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="inline-flex items-center justify-between gap-4 px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 rounded-xl text-xs font-semibold transition-all shadow-2xs">
-            <span>Today</span>
-            <ChevronDown size={14} className="text-gray-400" />
-          </button>
-        </div>
-      </div>
+// ==========================================
+// 1. Types & Interfaces
+// ==========================================
+interface Metric {
+  title: string;
+  value: string;
+  trend: number;
+  icon: React.ReactNode;
+}
 
-      {/* Row 1: Main Metric Cards (4 Cards) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Total Orders */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Total Orders</span>
-            <span className="w-8 h-8 rounded-xl bg-teal-50 text-[#0d9488] flex items-center justify-center">
-              <ShoppingBag size={16} />
-            </span>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">12,842</h3>
-            <p className="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center gap-0.5">
-              <ArrowUpRight size={13} /> 14.8% vs last week
-            </p>
-          </div>
-        </div>
+interface SalesPoint {
+  day: string;
+  amount: number;
+  active?: boolean;
+}
 
-        {/* Total Revenue */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Total Revenue</span>
-            <span className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <DollarSign size={16} />
-            </span>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">৳ 1,248,500</h3>
-            <p className="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center gap-0.5">
-              <ArrowUpRight size={13} /> 18.4% vs last week
-            </p>
-          </div>
-        </div>
+interface Activity {
+  id: string;
+  type: 'vendor' | 'payment' | 'inventory' | 'system';
+  title: string;
+  timestamp: string;
+}
 
-        {/* Active Customers */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Active Customers</span>
-            <span className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Users size={16} />
-            </span>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">24,680</h3>
-            <p className="text-[11px] font-semibold text-emerald-600 mt-1 flex items-center gap-0.5">
-              <ArrowUpRight size={13} /> 8.5% vs last week
-            </p>
-          </div>
-        </div>
+interface Order {
+  id: string;
+  orderId: string;
+  customer: string;
+  vendor: string;
+  amount: number;
+  status: 'Completed' | 'Processing' | 'Cancelled';
+  date: string;
+}
 
-        {/* Active Vendors */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Active Vendors</span>
-            <span className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-              <Store size={16} />
-            </span>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">486</h3>
-            <p className="text-[11px] font-medium text-gray-400 mt-1">+12 this month</p>
-          </div>
-        </div>
+interface DashboardData {
+  metrics: Metric[];
+  salesOverview: SalesPoint[];
+  recentActivities: Activity[];
+  recentOrders: Order[];
+}
 
-      </div>
-
-      {/* Row 2: Secondary Status Cards (4 Cards) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Active Riders */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Active Riders</span>
-            <span className="w-8 h-8 rounded-xl bg-gray-50 text-gray-700 flex items-center justify-center">
-              <Bike size={16} />
-            </span>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">1,284</h3>
-            <p className="text-[11px] font-medium text-gray-400 mt-1">892 currently online</p>
-          </div>
-        </div>
-
-        {/* Live Deliveries (Highlighted Teal Border) */}
-        <div className="bg-white p-5 rounded-2xl border-2 border-[#0d9488] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-800">Live Deliveries</span>
-            <span className="w-8 h-8 rounded-xl bg-teal-50 text-[#0d9488] flex items-center justify-center">
-              <Navigation size={16} />
-            </span>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">324</h3>
-            <p className="text-[11px] font-semibold text-[#0d9488] mt-1">Currently active</p>
-          </div>
-        </div>
-
-        {/* Pending Approvals (Highlighted Red Border) */}
-        <div className="bg-white p-5 rounded-2xl border-2 border-red-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-800">Pending Approvals</span>
-            <span className="w-8 h-8 rounded-xl bg-red-50 text-red-500 flex items-center justify-center">
-              <FileText size={16} />
-            </span>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight">38</h3>
-            <p className="text-[11px] font-semibold text-red-500 mt-1">Requires attention</p>
-          </div>
-        </div>
-
-        {/* Platform Rating */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Platform Rating</span>
-            <span className="w-8 h-8 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
-              <Star size={16} className="fill-amber-400 text-amber-400" />
-            </span>
-          </div>
-          <div className="mt-3">
-            <h3 className="text-2xl font-black text-gray-900 tracking-tight flex items-center gap-1">
-              4.7 <span className="text-xs font-medium text-gray-400">/ 5.0</span>
-            </h3>
-            <p className="text-[11px] font-medium text-gray-400 mt-1">Based on 48,920 reviews</p>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Main Grid Section (Chart & Right Widgets) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left 2 Columns: Revenue Overview & Recent Orders */}
-        <div className="lg:col-span-2 space-y-6">
-          
-          {/* Revenue Overview Card */}
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-2xs">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-gray-950">Revenue Overview</h3>
-              <div className="flex items-center bg-gray-50 border border-gray-200 p-1 rounded-xl text-xs font-semibold text-gray-600">
-                <button className="px-3 py-1 bg-white shadow-2xs rounded-lg text-gray-900">7D</button>
-                <button className="px-3 py-1 hover:text-gray-900">30D</button>
-                <button className="px-3 py-1 hover:text-gray-900">1Y</button>
-              </div>
-            </div>
-
-            {/* Legend */}
-            <div className="flex items-center gap-6 text-xs text-gray-500 mb-6">
-              <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-[#0d9488]"></span> Gross Revenue</span>
-              <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-blue-400"></span> Platform Commission</span>
-              <span className="flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-gray-300"></span> Net Revenue</span>
-            </div>
-
-            {/* Chart Graphic Area */}
-            <div className="h-60 w-full bg-gray-50/40 border border-gray-100 rounded-2xl flex items-end justify-between px-8 pb-4 pt-8 gap-6 relative">
-              
-              {/* Y-Axis guide lines */}
-              <div className="absolute inset-x-8 top-12 border-b border-gray-200/60 flex justify-between text-[10px] text-gray-400">
-                <span>1.5M</span>
-              </div>
-              <div className="absolute inset-x-8 top-24 border-b border-gray-200/60 flex justify-between text-[10px] text-gray-400">
-                <span>1.0M</span>
-              </div>
-              <div className="absolute inset-x-8 top-36 border-b border-gray-200/60 flex justify-between text-[10px] text-gray-400">
-                <span>500k</span>
-              </div>
-              <div className="absolute inset-x-8 bottom-10 border-b border-gray-200/60 flex justify-between text-[10px] text-gray-400">
-                <span>0</span>
-              </div>
-
-              {/* Bars */}
-              {[
-                { label: "W1", hGross: "70%", hCom: "45%", hNet: "30%" },
-                { label: "W2", hGross: "50%", hCom: "30%", hNet: "18%" },
-                { label: "W3", hGross: "85%", hCom: "60%", hNet: "42%" },
-                { label: "W4", hGross: "65%", hCom: "40%", hNet: "32%" },
-              ].map((bar, i) => (
-                <div key={i} className="w-full h-full flex flex-col items-center justify-end z-10">
-                  <div className="w-16 h-full flex items-end justify-center gap-1">
-                    <div style={{ height: bar.hGross }} className="w-full bg-[#cce8e5] rounded-t-sm"></div>
-                    <div style={{ height: bar.hCom }} className="w-full bg-[#93c5fd] rounded-t-sm"></div>
-                    <div style={{ height: bar.hNet }} className="w-full bg-[#0d9488] rounded-t-sm"></div>
-                  </div>
-                  <span className="text-[11px] font-medium text-gray-400 mt-2">{bar.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recent Orders Table */}
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-2xs">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-gray-950">Recent Orders</h3>
-              <a href="/admin/orders" className="text-xs font-semibold text-[#0d9488] hover:underline">
-                View All
-              </a>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                    <th className="pb-3 font-semibold">Order ID</th>
-                    <th className="pb-3 font-semibold">Customer</th>
-                    <th className="pb-3 font-semibold">Restaurant</th>
-                    <th className="pb-3 font-semibold">Amount</th>
-                    <th className="pb-3 font-semibold">Status</th>
-                    <th className="pb-3 font-semibold text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 text-xs">
-                  {[
-                    { id: "#ORD-8942", name: "John Doe", initials: "JD", rest: "Burger King", amount: "৳ 850", status: "Delivering", color: "bg-emerald-50 text-emerald-600" },
-                    { id: "#ORD-8941", name: "Alice Smith", initials: "AS", rest: "KFC", amount: "৳ 1,200", status: "Preparing", color: "bg-blue-50 text-blue-600" },
-                    { id: "#ORD-8940", name: "Rahat Bose", initials: "RB", rest: "Pizza Hut", amount: "৳ 2,450", status: "Completed", color: "bg-emerald-50 text-emerald-600" },
-                    { id: "#ORD-8939", name: "Mita Khan", initials: "MK", rest: "Local Cafe", amount: "৳ 450", status: "Cancelled", color: "bg-red-50 text-red-600" },
-                  ].map((row, index) => (
-                    <tr key={index} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="py-3.5 font-bold text-[#0d9488]">{row.id}</td>
-                      <td className="py-3.5 font-medium text-gray-800 flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-gray-100 text-gray-600 font-bold text-[10px] flex items-center justify-center">
-                          {row.initials}
-                        </span>
-                        {row.name}
-                      </td>
-                      <td className="py-3.5 text-gray-500">{row.rest}</td>
-                      <td className="py-3.5 font-bold text-gray-900">{row.amount}</td>
-                      <td className="py-3.5">
-                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold ${row.color}`}>
-                          {row.status}
-                        </span>
-                      </td>
-                      <td className="py-3.5 text-right">
-                        <button className="text-gray-400 hover:text-gray-700 p-1">
-                          <MoreVertical size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Right 1 Column: Live Delivery Monitoring & Pending Approvals */}
-        <div className="space-y-6">
-          
-          {/* Live Delivery Monitoring */}
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-2xs">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-gray-950">Live Delivery Monitoring</h3>
-              <button className="text-xs font-semibold text-[#0d9488] hover:underline">View Map</button>
-            </div>
-            
-            <div className="space-y-3.5">
-              {[
-                { id: "ORD-8942", route: "Burger King → Gulshan 2", eta: "12 mins", status: "On Time", statusBg: "bg-emerald-50 text-emerald-600" },
-                { id: "ORD-8941", route: "KFC → Banani", eta: "25 mins", status: "Delayed", statusBg: "bg-amber-50 text-amber-600" },
-                { id: "ORD-8940", route: "Pizza Hut → Dhanmondi", eta: "5 mins", status: "On Time", statusBg: "bg-emerald-50 text-emerald-600" },
-                { id: "ORD-8939", route: "Local Cafe → Uttara", eta: "--", status: "Preparing", statusBg: "bg-gray-100 text-gray-600" },
-              ].map((item, idx) => (
-                <div key={idx} className="p-3.5 bg-gray-50/70 rounded-xl border border-gray-100 flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-xs font-bold text-gray-900">{item.id}</h4>
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${item.statusBg}`}>
-                        {item.status}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-500 mt-1">{item.route}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-xs font-black text-gray-900">{item.eta}</span>
-                    <p className="text-[9px] text-gray-400">ETA</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Pending Approvals */}
-          <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-2xs">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-gray-950">Pending Approvals</h3>
-              <span className="px-2 py-0.5 bg-red-500 text-white rounded-full text-[10px] font-bold">38 Total</span>
-            </div>
-            
-            <div className="space-y-3">
-              <div className="p-4 bg-gray-50/70 rounded-xl border border-gray-100 flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-gray-900">New Vendor Requests</h4>
-                  <p className="text-[11px] text-gray-500 mt-0.5">12 awaiting review</p>
-                </div>
-                <button className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-[#0d9488] rounded-xl text-xs font-bold transition-all">
-                  Review
-                </button>
-              </div>
-
-              <div className="p-4 bg-gray-50/70 rounded-xl border border-gray-100 flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-gray-900">Rider Applications</h4>
-                  <p className="text-[11px] text-gray-500 mt-0.5">18 awaiting background check</p>
-                </div>
-                <button className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-[#0d9488] rounded-xl text-xs font-bold transition-all">
-                  Review
-                </button>
-              </div>
-
-              <div className="p-4 bg-gray-50/70 rounded-xl border border-gray-100 flex items-center justify-between">
-                <div>
-                  <h4 className="text-xs font-bold text-gray-900">Restaurant Approvals</h4>
-                  <p className="text-[11px] text-gray-500 mt-0.5">8 awaiting onboarding</p>
-                </div>
-                <button className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-[#0d9488] rounded-xl text-xs font-bold transition-all">
-                  Review
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-    </div>
-  );
+// ==========================================
+// 2. Initial Mock Data (Replace with API Response)
+// ==========================================
+const initialData: DashboardData = {
+  metrics: [
+    { title: 'TOTAL ORDERS', value: '12,540', trend: 12, icon: <ShoppingCart size={20} /> },
+    { title: 'TOTAL REVENUE', value: '৳845,200', trend: 8.4, icon: <Wallet size={20} /> },
+    { title: 'TOTAL VENDORS', value: '248', trend: 0, icon: <Store size={20} /> },
+    { title: 'TOTAL CUSTOMERS', value: '8,420', trend: 24, icon: <Users size={20} /> },
+  ],
+  salesOverview: [
+    { day: 'Mon', amount: 3000 },
+    { day: 'Tue', amount: 5000 },
+    { day: 'Wed', amount: 9500, active: true },
+    { day: 'Thu', amount: 4500 },
+    { day: 'Fri', amount: 6000 },
+    { day: 'Sat', amount: 9000 },
+    { day: 'Sun', amount: 7500 },
+  ],
+  recentActivities: [
+    { id: '1', type: 'vendor', title: 'New Vendor registration approved.', timestamp: '10 mins ago' },
+    { id: '2', type: 'payment', title: 'Payment failed for Order #8920.', timestamp: '1 hour ago' },
+    { id: '3', type: 'inventory', title: 'Inventory restock requested by Vendor A.', timestamp: '3 hours ago' },
+    { id: '4', type: 'system', title: 'System update completed successfully.', timestamp: 'Yesterday, 14:00' },
+  ],
+  recentOrders: [
+    { id: '1', orderId: '#ORD-0921', customer: 'Sarah Jenkins', vendor: 'Fresh Farms Co.', amount: 1250, status: 'Completed', date: 'Today, 10:42 AM' },
+    { id: '2', orderId: '#ORD-0920', customer: 'Michael Chen', vendor: 'Daily Grocers', amount: 840, status: 'Processing', date: 'Today, 09:15 AM' },
+    { id: '3', orderId: '#ORD-0919', customer: 'Emma Wilson', vendor: 'Organic Valley', amount: 3200, status: 'Cancelled', date: 'Yesterday, 16:30 PM' },
+    { id: '4', orderId: '#ORD-0918', customer: 'David Lee', vendor: 'Fresh Farms Co.', amount: 450, status: 'Completed', date: 'Yesterday, 14:10 PM' },
+  ]
 };
 
-export default DashboardPage;
+// ==========================================
+// 3. Main Single-Page Component
+// ==========================================
+export default function SinglePageDashboard() {
+  // TODO: Ekhane apni TanStack React Query ba SWR use kore API connect korte parben.
+  // const { data, isLoading } = useQuery({ queryKey: ['dashboard'], queryFn: fetchDashboardAPI });
+  
+  const [data] = useState<DashboardData>(initialData);
+  const [timeframe, setTimeframe] = useState('This Week');
+
+  // Helper for Activity Icons
+  const getActivityIcon = (type: Activity['type']) => {
+    switch (type) {
+      case 'vendor': return <UserCheck className="text-emerald-600 bg-emerald-50 p-2 rounded-xl" size={36} />;
+      case 'payment': return <AlertTriangle className="text-amber-600 bg-amber-50 p-2 rounded-xl" size={36} />;
+      case 'inventory': return <FileText className="text-blue-600 bg-blue-50 p-2 rounded-xl" size={36} />;
+      case 'system': return <CheckCircle2 className="text-emerald-600 bg-emerald-50 p-2 rounded-xl" size={36} />;
+    }
+  };
+
+  // Helper for Order Status Badge
+  const getStatusBadge = (status: Order['status']) => {
+    switch (status) {
+      case 'Completed': return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+      case 'Processing': return 'bg-sky-50 text-sky-700 border border-sky-100';
+      case 'Cancelled': return 'bg-rose-50 text-rose-700 border border-rose-100';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50/50 p-6 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+
+        {/* ================= HEADER ================= */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard Overview</h1>
+            <p className="text-xs md:text-sm text-slate-500 mt-0.5">Monitor key metrics and recent activities across the platform.</p>
+          </div>
+          <button className="flex items-center justify-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all cursor-pointer">
+            <Download size={16} />
+            <span>Export Data</span>
+          </button>
+        </div>
+
+        {/* ================= METRICS CARDS ================= */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {data.metrics.map((metric, index) => {
+            const isPositive = metric.trend > 0;
+            const isNeutral = metric.trend === 0;
+
+            return (
+              <div key={index} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between">
+                  <div className="p-2.5 rounded-xl bg-slate-50 text-slate-700">
+                    {metric.icon}
+                  </div>
+                  <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${
+                    isNeutral ? 'bg-slate-100 text-slate-600' : isPositive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
+                  }`}>
+                    {isNeutral ? <Minus size={14} /> : isPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                    <span>{isPositive ? `+${metric.trend}%` : `${metric.trend}%`}</span>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">{metric.title}</p>
+                  <h3 className="text-2xl font-bold text-slate-900 mt-1">{metric.value}</h3>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ================= SALES CHART & RECENT ACTIVITY ================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Sales Overview Chart */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm lg:col-span-2 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-slate-900">Sales Overview</h3>
+              <select 
+                value={timeframe} 
+                onChange={(e) => setTimeframe(e.target.value)}
+                className="text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              >
+                <option>This Week</option>
+                <option>Last Week</option>
+                <option>This Month</option>
+              </select>
+            </div>
+
+            {/* Bar Bars */}
+            <div className="h-48 flex items-end justify-between gap-4 pt-6 px-2 border-b border-slate-100">
+              {data.salesOverview.map((item, idx) => {
+                const heightClasses = ['h-1/4', 'h-2/5', 'h-3/5', 'h-full', 'h-1/3', 'h-4/5', 'h-3/4'];
+                return (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                    <div 
+                      className={`w-full max-w-[48px] rounded-t-lg transition-all duration-300 ${
+                        item.active 
+                          ? 'bg-emerald-700 shadow-lg shadow-emerald-700/20' 
+                          : 'bg-slate-100 group-hover:bg-slate-200'
+                      } ${heightClasses[idx % heightClasses.length]}`}
+                    />
+                    <span className={`text-xs font-medium ${item.active ? 'text-emerald-700 font-bold' : 'text-slate-400'}`}>
+                      {item.day}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900">Recent Activity</h3>
+              <button className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <MoreVertical size={18} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {data.recentActivities.map((act) => (
+                <div key={act.id} className="flex items-start gap-3 pb-3 border-b border-slate-50 last:border-0 last:pb-0">
+                  <div className="shrink-0">{getActivityIcon(act.type)}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-slate-800 leading-snug">{act.title}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">{act.timestamp}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* ================= RECENT ORDERS TABLE ================= */}
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-6 flex items-center justify-between border-b border-slate-100">
+            <h3 className="text-lg font-bold text-slate-900">Recent Orders</h3>
+            <Link href="/dashboard/orders" className="text-xs font-semibold text-emerald-700 hover:underline">
+              View All
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50/50">
+                  <th className="py-3 px-6">Order ID</th>
+                  <th className="py-3 px-6">Customer</th>
+                  <th className="py-3 px-6">Vendor</th>
+                  <th className="py-3 px-6">Amount</th>
+                  <th className="py-3 px-6">Status</th>
+                  <th className="py-3 px-6 text-right">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-600">
+                {data.recentOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 px-6 font-semibold text-emerald-700">{order.orderId}</td>
+                    <td className="py-4 px-6 text-slate-900">{order.customer}</td>
+                    <td className="py-4 px-6">{order.vendor}</td>
+                    <td className="py-4 px-6 font-semibold text-slate-900">৳{order.amount.toLocaleString()}</td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold ${getStatusBadge(order.status)}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-right text-slate-400">{order.date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
