@@ -1,10 +1,10 @@
 [
   {
     "id": "rest-1",
-    "name": "Al Arafa Restora – Sonadanga",
-    "slug": "al-arafa-restora-sonadanga",
-    "logo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200",
-    "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
+    "name": "Al Arafa Restora",
+    "slug": "al-arafa-restora",
+    "logo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=200&q=80",
+    "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
     "rating": 4.5,
     "reviewCount": 100,
     "deliveryTime": "15-25 min",
@@ -13,43 +13,43 @@
     "cuisines": ["Rice Dishes", "Curry", "Bangladeshi"],
     "badge": "Top Rated",
     "offers": [
-      {
-        "id": "deal-1",
-        "title": "10% off",
-        "description": "Valid for selected items. Auto applied."
-      }
+      { "id": "deal-1", "title": "10% off", "description": "Valid for selected items. Auto applied." }
     ],
     "menuCategories": [
       {
         "category": "Popular",
         "items": [
           {
-            "id": "item-1",
+            "id": "item-101",
             "name": "Beef Nehari",
-            "price": 120,
             "description": "Slow-cooked rich beef marrow broth infused with traditional spices.",
-            "image": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400",
-            "popular": true
+            "price": 120,
+            "rating": 4.8,
+            "deliveryTime": "15-25 min",
+            "deliveryFee": "Tk 20",
+            "restaurantName": "Al Arafa Restora",
+            "cuisine": "Bangladeshi",
+            "dietary": "Non-Veg",
+            "matchPercentage": 95,
+            "imageUrl": "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80",
+            "sizes": [
+              { "name": "Half Bowl", "price": 0 },
+              { "name": "Full Bowl", "price": 60 }
+            ],
+            "addons": [{ "name": "Extra Naan", "price": 20 }]
           },
           {
-            "id": "item-2",
+            "id": "item-102",
             "name": "Chicken Lotpoti",
-            "price": 80,
             "description": "Spicy chicken liver and gizzard curry cooked with garlic and onion.",
-            "image": "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400",
-            "popular": true
-          }
-        ]
-      },
-      {
-        "category": "Roti & Paratha",
-        "items": [
-          {
-            "id": "item-3",
-            "name": "Special Butter Paratha",
-            "price": 25,
-            "description": "Crispy layered flatbread brushed with fresh ghee.",
-            "image": "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=400"
+            "price": 80,
+            "rating": 4.4,
+            "deliveryTime": "15-25 min",
+            "deliveryFee": "Tk 20",
+            "restaurantName": "Al Arafa Restora",
+            "cuisine": "Bangladeshi",
+            "dietary": "Non-Veg",
+            "imageUrl": "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=800&q=80"
           }
         ]
       }
@@ -59,33 +59,326 @@
     "id": "rest-2",
     "name": "Oltijhyo Restora",
     "slug": "oltijhyo-restora",
-    "logo": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200",
-    "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800",
+    "logo": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=200&q=80",
+    "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80",
     "rating": 4.2,
     "reviewCount": 58,
-    "deliveryTime": "15-30 min",
+    "deliveryTime": "20-30 min",
     "deliveryFee": 25,
     "minOrder": 60,
-    "cuisines": ["Bangladeshi", "Asian"],
+    "cuisines": ["Bangladeshi", "Biryani"],
     "badge": "Local Favorite",
     "offers": [
-      {
-        "id": "deal-2",
-        "title": "Tk 50 off",
-        "description": "On orders over Tk 300"
-      }
+      { "id": "deal-2", "title": "Tk 50 off", "description": "On orders over Tk 300" }
     ],
     "menuCategories": [
       {
-        "category": "Popular",
+        "category": "Biryani Specialties",
         "items": [
           {
-            "id": "item-4",
+            "id": "item-201",
             "name": "Kacchi Biryani",
-            "price": 240,
             "description": "Tender mutton layered with aromatic basmati rice.",
-            "image": "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400",
-            "popular": true
+            "price": 240,
+            "rating": 4.7,
+            "deliveryTime": "20-30 min",
+            "deliveryFee": "Tk 25",
+            "restaurantName": "Oltijhyo Restora",
+            "cuisine": "Biryani",
+            "dietary": "Non-Veg",
+            "matchPercentage": 92,
+            "imageUrl": "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=800&q=80"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-3",
+    "name": "Luigi's Oven",
+    "slug": "luigis-oven",
+    "logo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=200&q=80",
+    "image": "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80",
+    "rating": 4.8,
+    "reviewCount": 142,
+    "deliveryTime": "25-35 min",
+    "deliveryFee": 30,
+    "minOrder": 150,
+    "cuisines": ["Italian", "Pizza"],
+    "badge": "Trending",
+    "offers": [
+      { "id": "deal-3", "title": "Free Beverage", "description": "Free drink with any Large Pizza" }
+    ],
+    "menuCategories": [
+      {
+        "category": "Pizzas",
+        "items": [
+          {
+            "id": "item-301",
+            "name": "Margherita Classico",
+            "description": "San Marzano tomatoes, fresh mozzarella, basil, extra virgin olive oil.",
+            "price": 350,
+            "rating": 4.8,
+            "deliveryTime": "25-35 min",
+            "deliveryFee": "Tk 30",
+            "restaurantName": "Luigi's Oven",
+            "cuisine": "Italian",
+            "dietary": "Vegetarian",
+            "matchPercentage": 94,
+            "imageUrl": "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=800&q=80",
+            "sizes": [
+              { "name": "10 inch", "price": 0 },
+              { "name": "14 inch", "price": 120 }
+            ],
+            "addons": [{ "name": "Extra Cheese", "price": 40 }]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-4",
+    "name": "Burger Bros",
+    "slug": "burger-bros",
+    "logo": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80",
+    "image": "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80",
+    "rating": 4.6,
+    "reviewCount": 89,
+    "deliveryTime": "15-25 min",
+    "deliveryFee": 15,
+    "minOrder": 100,
+    "cuisines": ["American", "Burgers"],
+    "badge": "Super Fast",
+    "offers": [],
+    "menuCategories": [
+      {
+        "category": "Smash Burgers",
+        "items": [
+          {
+            "id": "item-401",
+            "name": "Truffle Smash Burger",
+            "description": "Double smashed beef patties, truffle aioli, aged cheddar on brioche.",
+            "price": 280,
+            "rating": 4.7,
+            "deliveryTime": "15-25 min",
+            "deliveryFee": "Tk 15",
+            "restaurantName": "Burger Bros",
+            "cuisine": "American",
+            "dietary": "Non-Veg",
+            "matchPercentage": 88,
+            "imageUrl": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-5",
+    "name": "Green Leaf Salads",
+    "slug": "green-leaf-salads",
+    "logo": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=200&q=80",
+    "image": "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80",
+    "rating": 4.9,
+    "reviewCount": 75,
+    "deliveryTime": "10-20 min",
+    "deliveryFee": 10,
+    "minOrder": 80,
+    "cuisines": ["Healthy", "Salads"],
+    "badge": "Healthy Pick",
+    "offers": [],
+    "menuCategories": [
+      {
+        "category": "Bowls",
+        "items": [
+          {
+            "id": "item-501",
+            "name": "Mediterranean Bowl",
+            "description": "Crisp greens, feta cheese, kalamata olives, cherry tomatoes, and lemon dressing.",
+            "price": 220,
+            "rating": 4.9,
+            "deliveryTime": "10-20 min",
+            "deliveryFee": "Tk 10",
+            "restaurantName": "Green Leaf Salads",
+            "cuisine": "Healthy",
+            "dietary": "Vegetarian",
+            "imageUrl": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-6",
+    "name": "Tokyo Express",
+    "slug": "tokyo-express",
+    "logo": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=200&q=80",
+    "image": "https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=800&q=80",
+    "rating": 4.7,
+    "reviewCount": 210,
+    "deliveryTime": "25-40 min",
+    "deliveryFee": 35,
+    "minOrder": 200,
+    "cuisines": ["Japanese", "Sushi", "Asian"],
+    "badge": "Chef Special",
+    "offers": [
+      { "id": "deal-6", "title": "15% OFF", "description": "Save 15% on orders over Tk 500" }
+    ],
+    "menuCategories": [
+      {
+        "category": "Sushi Sets",
+        "items": [
+          {
+            "id": "item-601",
+            "name": "Salmon Nigiri Combo",
+            "description": "Fresh Atlantic salmon nigiri served with wasabi and soy dip.",
+            "price": 450,
+            "rating": 4.8,
+            "deliveryTime": "25-40 min",
+            "deliveryFee": "Tk 35",
+            "restaurantName": "Tokyo Express",
+            "cuisine": "Japanese",
+            "dietary": "Seafood",
+            "matchPercentage": 96,
+            "imageUrl": "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=800&q=80"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-7",
+    "name": "Sultan's Dine",
+    "slug": "sultans-dine",
+    "logo": "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=200&q=80",
+    "image": "https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=800&q=80",
+    "rating": 4.9,
+    "reviewCount": 510,
+    "deliveryTime": "20-35 min",
+    "deliveryFee": 25,
+    "minOrder": 150,
+    "cuisines": ["Bangladeshi", "Biryani"],
+    "badge": "Most Popular",
+    "offers": [],
+    "menuCategories": [
+      {
+        "category": "Platters",
+        "items": [
+          {
+            "id": "item-701",
+            "name": "Royal Mutton Feast",
+            "price": 380,
+            "description": "Rich mutton biryani served with borhani and roasted chicken quarter.",
+            "rating": 4.9,
+            "deliveryTime": "20-35 min",
+            "deliveryFee": "Tk 25",
+            "restaurantName": "Sultan's Dine",
+            "cuisine": "Bangladeshi",
+            "dietary": "Non-Veg",
+            "matchPercentage": 98,
+            "imageUrl": "https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=800&q=80"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-8",
+    "name": "Taco Fiesta",
+    "slug": "taco-fiesta",
+    "logo": "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=200&q=80",
+    "image": "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80",
+    "rating": 4.4,
+    "reviewCount": 64,
+    "deliveryTime": "15-25 min",
+    "deliveryFee": 20,
+    "minOrder": 90,
+    "cuisines": ["Mexican", "Tacos"],
+    "offers": [],
+    "menuCategories": [
+      {
+        "category": "Street Tacos",
+        "items": [
+          {
+            "id": "item-801",
+            "name": "Beef Birria Tacos",
+            "description": "Slow-cooked beef wrapped in corn tortillas with melted cheese and consommé dip.",
+            "price": 290,
+            "rating": 4.6,
+            "deliveryTime": "15-25 min",
+            "deliveryFee": "Tk 20",
+            "restaurantName": "Taco Fiesta",
+            "cuisine": "Mexican",
+            "dietary": "Non-Veg",
+            "imageUrl": "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=800&q=80"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-9",
+    "name": "Sweet Delights Bakery",
+    "slug": "sweet-delights-bakery",
+    "logo": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=200&q=80",
+    "image": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=800&q=80",
+    "rating": 4.6,
+    "reviewCount": 92,
+    "deliveryTime": "10-20 min",
+    "deliveryFee": 15,
+    "minOrder": 70,
+    "cuisines": ["Dessert", "Bakery"],
+    "badge": "Sweet Tooth",
+    "offers": [],
+    "menuCategories": [
+      {
+        "category": "Cakes",
+        "items": [
+          {
+            "id": "item-901",
+            "name": "Belgian Chocolate Pastry",
+            "description": "Layered dark chocolate sponge topped with ganache.",
+            "price": 110,
+            "rating": 4.7,
+            "deliveryTime": "10-20 min",
+            "deliveryFee": "Tk 15",
+            "restaurantName": "Sweet Delights Bakery",
+            "cuisine": "Dessert",
+            "dietary": "Vegetarian",
+            "imageUrl": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=800&q=80"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rest-10",
+    "name": "Wok & Roll",
+    "slug": "wok-and-roll",
+    "logo": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=200&q=80",
+    "image": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=800&q=80",
+    "rating": 4.3,
+    "reviewCount": 44,
+    "deliveryTime": "20-30 min",
+    "deliveryFee": 20,
+    "minOrder": 110,
+    "cuisines": ["Chinese", "Asian"],
+    "offers": [],
+    "menuCategories": [
+      {
+        "category": "Noodles",
+        "items": [
+          {
+            "id": "item-1001",
+            "name": "Hakkan Chicken Chow Mein",
+            "description": "Stir-fried egg noodles with bell peppers, tender chicken strip, and savory dark soy.",
+            "price": 190,
+            "rating": 4.3,
+            "deliveryTime": "20-30 min",
+            "deliveryFee": "Tk 20",
+            "restaurantName": "Wok & Roll",
+            "cuisine": "Chinese",
+            "dietary": "Non-Veg",
+            "imageUrl": "https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?auto=format&fit=crop&w=800&q=80"
           }
         ]
       }
