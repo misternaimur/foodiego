@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,7 @@ import {
   ShoppingBag, BadgeCheck, Store, LayoutDashboard, Search, Bell,
   ChevronDown, DollarSign, TrendingUp, Download, Flame, CheckCircle2,
   BarChart3, Calendar, Receipt, Camera, Loader2, Clock, X, ArrowRight,
+  CreditCard, Eye, LogOut, LayoutGrid, Settings, Truck, Bike, ToggleLeft,
 } from 'lucide-react';
 import CreateMenuItem from '@/components/CreateMenuItem';
 import { useApp } from '@/context/AppContext';
@@ -20,7 +21,7 @@ interface ClientDashboardProps {
   email?: string;
 }
 
-type TabId = 'overview' | 'profile' | 'orders' | 'menu' | 'ai-studio' | 'analytics';
+type TabId = 'overview' | 'profile' | 'orders' | 'menu' | 'ai-studio' | 'analytics' | 'payments' | 'delivery';
 
 const tabs: { id: TabId; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -29,6 +30,8 @@ const tabs: { id: TabId; label: string; icon: React.ComponentType<{ size?: numbe
   { id: 'menu', label: 'Menu Management', icon: UtensilsCrossed },
   { id: 'ai-studio', label: 'AI Food Studio', icon: Sparkles },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  { id: 'payments', label: 'Payments & Earnings', icon: CreditCard },
+  { id: 'delivery', label: 'Delivery Management', icon: Truck },
 ];
 
 const infoFields = [
@@ -94,6 +97,275 @@ const popularItemsSeed = [
   { name: 'Crispy Truffle Fries', orders: 76, revenue: 836, image: 'https://images.unsplash.com/photo-1576107232684-1279f390859f?auto=format&fit=crop&q=80&w=200' },
   { name: 'Iced Caramel Latte', orders: 54, revenue: 432, image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&q=80&w=200' },
 ];
+
+type EarningStatus = 'Pending' | 'Available' | 'Paid Out';
+type PaymentMethod = 'Bank Transfer' | 'Stripe' | 'PayPal';
+type PaymentStatus = 'Completed' | 'Processing' | 'Failed';
+
+interface OrderEarning {
+  orderId: string;
+  date: string;
+  customerName: string;
+  grossAmount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  netEarning: number;
+  status: EarningStatus;
+  items?: Array<{ name: string; qty: number; price: number }>;
+}
+
+interface PaymentHistoryEntry {
+  id: string;
+  date: string;
+  amount: number;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  orderId?: string;
+  receipt?: string;
+}
+
+const orderEarningsSeed: OrderEarning[] = [
+  {
+    orderId: '#A2045',
+    date: '2026-08-30',
+    customerName: 'Priya S.',
+    grossAmount: 37.0,
+    commissionRate: 12,
+    commissionAmount: 4.44,
+    netEarning: 32.56,
+    status: 'Paid Out',
+    items: [{ name: 'Truffle Smashburger', qty: 2, price: 18.5 }],
+  },
+  {
+    orderId: '#A2044',
+    date: '2026-08-30',
+    customerName: 'Marcus J.',
+    grossAmount: 22.0,
+    commissionRate: 12,
+    commissionAmount: 2.64,
+    netEarning: 19.36,
+    status: 'Available',
+    items: [{ name: 'Woodfired Margherita', qty: 1, price: 22 }],
+  },
+  {
+    orderId: '#A2043',
+    date: '2026-08-29',
+    customerName: 'Aisha R.',
+    grossAmount: 44.0,
+    commissionRate: 12,
+    commissionAmount: 5.28,
+    netEarning: 38.72,
+    status: 'Paid Out',
+    items: [{ name: 'Woodfired Margherita', qty: 2, price: 22 }],
+  },
+  {
+    orderId: '#A2042',
+    date: '2026-08-29',
+    customerName: 'Ethan W.',
+    grossAmount: 5.5,
+    commissionRate: 12,
+    commissionAmount: 0.66,
+    netEarning: 4.84,
+    status: 'Available',
+    items: [{ name: 'Iced Caramel Latte', qty: 1, price: 5.5 }],
+  },
+  {
+    orderId: '#A2041',
+    date: '2026-08-28',
+    customerName: 'Diego R.',
+    grossAmount: 27.0,
+    commissionRate: 12,
+    commissionAmount: 3.24,
+    netEarning: 23.76,
+    status: 'Pending',
+    items: [{ name: 'Truffle Smashburger', qty: 1, price: 18.5 }, { name: 'Crispy Fries', qty: 1, price: 8.5 }],
+  },
+  {
+    orderId: '#A2040',
+    date: '2026-08-28',
+    customerName: 'Maya P.',
+    grossAmount: 18.5,
+    commissionRate: 12,
+    commissionAmount: 2.22,
+    netEarning: 16.28,
+    status: 'Pending',
+    items: [{ name: 'Truffle Smashburger', qty: 1, price: 18.5 }],
+  },
+  {
+    orderId: '#A2039',
+    date: '2026-08-27',
+    customerName: 'Liam C.',
+    grossAmount: 50.0,
+    commissionRate: 12,
+    commissionAmount: 6.0,
+    netEarning: 44.0,
+    status: 'Paid Out',
+    items: [{ name: 'Truffle Smashburger', qty: 1, price: 18.5 }, { name: 'Crispy Truffle Fries', qty: 2, price: 8.0 }, { name: 'Iced Caramel Latte', qty: 2, price: 5.75 }],
+  },
+  {
+    orderId: '#A2038',
+    date: '2026-08-27',
+    customerName: 'Sofia R.',
+    grossAmount: 30.0,
+    commissionRate: 12,
+    commissionAmount: 3.6,
+    netEarning: 26.4,
+    status: 'Available',
+    items: [{ name: 'Woodfired Margharita', qty: 1, price: 22 }, { name: 'Iced Caramel Latte', qty: 2, price: 4 }],
+  },
+  {
+    orderId: '#A2037',
+    date: '2026-08-26',
+    customerName: 'Noor K.',
+    grossAmount: 20.0,
+    commissionRate: 12,
+    commissionAmount: 2.4,
+    netEarning: 17.6,
+    status: 'Available',
+    items: [{ name: 'Crispy Truffle Fries', qty: 1, price: 8 }, { name: 'Iced Caramel Latte', qty: 2, price: 6 }],
+  },
+  {
+    orderId: '#A2036',
+    date: '2026-08-26',
+    customerName: 'Aarav M.',
+    grossAmount: 40.5,
+    commissionRate: 15,
+    commissionAmount: 6.07,
+    netEarning: 34.43,
+    status: 'Paid Out',
+    items: [{ name: 'Truffle Smashburger', qty: 2, price: 18.5 }, { name: 'Crispy Fries', qty: 1, price: 3.5 }],
+  },
+];
+
+const paymentHistorySeed: PaymentHistoryEntry[] = [
+  { id: 'P-10042', date: '2026-08-30T10:30', amount: 50.0, method: 'Bank Transfer', status: 'Completed', orderId: '#A2045', receipt: 'receipt-10042.pdf' },
+  { id: 'P-10041', date: '2026-08-30T10:30', amount: 19.36, method: 'Bank Transfer', status: 'Completed', orderId: '#A2044', receipt: 'receipt-10041.pdf' },
+  { id: 'P-10040', date: '2026-08-29T09:15', amount: 38.72, method: 'Stripe', status: 'Completed', orderId: '#A2043', receipt: 'receipt-10040.pdf' },
+  { id: 'P-10039', date: '2026-08-29T09:15', amount: 4.84, method: 'Stripe', status: 'Completed', orderId: '#A2042', receipt: 'receipt-10039.pdf' },
+  { id: 'P-10038', date: '2026-08-28T14:00', amount: 66.0, method: 'Bank Transfer', status: 'Processing', orderId: '#A2039', receipt: 'receipt-10038.pdf' },
+  { id: 'P-10037', date: '2026-08-28T14:00', amount: 26.4, method: 'PayPal', status: 'Completed', orderId: '#A2038', receipt: 'receipt-10037.pdf' },
+  { id: 'P-10036', date: '2026-08-27T11:45', amount: 17.6, method: 'PayPal', status: 'Completed', orderId: '#A2037', receipt: 'receipt-10036.pdf' },
+  { id: 'P-10035', date: '2026-08-27T11:45', amount: 34.43, method: 'Bank Transfer', status: 'Failed', orderId: '#A2036', receipt: 'receipt-10035.pdf' },
+];
+
+type DeliveryStage = 'Picked Up' | 'In Transit' | 'Arriving Soon' | 'Delivered';
+type RiderStatus = 'Available' | 'Busy' | 'Offline';
+
+interface RiderInfo {
+  id: string;
+  name: string;
+  phone: string;
+  avatarUrl?: string;
+  rating: number;
+  vehicle: string;
+  status: RiderStatus;
+  eta: string;
+}
+
+interface DeliveryRecord {
+  orderId: string;
+  customerName: string;
+  customerAddress: string;
+  customerPhone: string;
+  rider: RiderInfo;
+  stage: DeliveryStage;
+  pickupTime: string;
+  estimatedDelivery: string;
+  actualDelivery: string | null;
+  orderItems: Array<{ name: string; qty: number; price: number }>;
+}
+
+const ridersSeed: RiderInfo[] = [
+  { id: 'R-001', name: 'Afrin', phone: '+1 (555) 101-2020', avatarUrl: 'https://images.unsplash.com/photo-1595273670150-bd0c3c392e46?auto=format&fit=crop&q=80&w=100', rating: 4.9, vehicle: 'Motorcycle', status: 'Available', eta: '5 min' },
+  { id: 'R-002', name: 'Karim', phone: '+1 (555) 102-3030', rating: 4.7, vehicle: 'Bike', status: 'Busy', eta: '12 min' },
+  { id: 'R-003', name: 'Diego', phone: '+1 (555) 103-4040', rating: 4.8, vehicle: 'Car', status: 'Available', eta: '8 min' },
+  { id: 'R-004', name: 'Sara', phone: '+1 (555) 104-5050', rating: 4.6, vehicle: 'Motorcycle', status: 'Offline', eta: 'N/A' },
+];
+
+const activeDeliveriesSeed: DeliveryRecord[] = [
+  {
+    orderId: '#A2051',
+    customerName: 'Aarav Mehta',
+    customerAddress: '220 Maple St, Apt 4B',
+    customerPhone: '+1 (555) 012-3344',
+    rider: ridersSeed[0],
+    stage: 'In Transit',
+    pickupTime: '2026-09-02 11:32',
+    estimatedDelivery: '2026-09-02 11:45',
+    actualDelivery: null,
+    orderItems: [{ name: 'Truffle Smashburger', qty: 2, price: 18.5 }],
+  },
+  {
+    orderId: '#A2050',
+    customerName: 'Sofia Reyes',
+    customerAddress: '88 Oak Lane',
+    customerPhone: '+1 (555) 022-9810',
+    rider: ridersSeed[1],
+    stage: 'Arriving Soon',
+    pickupTime: '2026-09-02 11:28',
+    estimatedDelivery: '2026-09-02 11:42',
+    actualDelivery: null,
+    orderItems: [{ name: 'Woodfired Margherita', qty: 1, price: 22.0 }],
+  },
+];
+
+const deliveryHistorySeed: DeliveryRecord[] = [
+  {
+    orderId: '#A2044',
+    customerName: 'Marcus J.',
+    customerAddress: '7 Walnut Way',
+    customerPhone: '+1 (555) 909-6611',
+    rider: { id: 'R-003', name: 'Diego', phone: '+1 (555) 103-4040', rating: 4.8, vehicle: 'Car', status: 'Available', eta: 'N/A' },
+    stage: 'Delivered',
+    pickupTime: '2026-09-01 10:15',
+    estimatedDelivery: '2026-09-01 10:30',
+    actualDelivery: '2026-09-01 10:28',
+    orderItems: [{ name: 'Woodfired Margherita', qty: 2, price: 22.0 }],
+  },
+  {
+    orderId: '#A2041',
+    customerName: 'Priya S.',
+    customerAddress: '14 Pine Court',
+    customerPhone: '+1 (555) 332-9988',
+    rider: { id: 'R-001', name: 'Afrin', phone: '+1 (555) 101-2020', avatarUrl: 'https://images.unsplash.com/photo-1595273670150-bd0c3c392e46?auto=format&fit=crop&q=80&w=100', rating: 4.9, vehicle: 'Motorcycle', status: 'Available', eta: 'N/A' },
+    stage: 'Delivered',
+    pickupTime: '2026-09-01 09:45',
+    estimatedDelivery: '2026-09-01 10:00',
+    actualDelivery: '2026-09-01 09:58',
+    orderItems: [{ name: 'Truffle Smashburger', qty: 1, price: 18.5 }],
+  },
+  {
+    orderId: '#A2039',
+    customerName: 'Ethan W.',
+    customerAddress: '44 Spruce Pl',
+    customerPhone: '+1 (555) 220-7788',
+    rider: { id: 'R-002', name: 'Karim', phone: '+1 (555) 102-3030', rating: 4.7, vehicle: 'Bike', status: 'Busy', eta: 'N/A' },
+    stage: 'Delivered',
+    pickupTime: '2026-08-31 14:20',
+    estimatedDelivery: '2026-08-31 14:35',
+    actualDelivery: '2026-08-31 14:42',
+    orderItems: [{ name: 'Iced Caramel Latte', qty: 1, price: 5.5 }],
+  },
+];
+
+function deliveryStageBadge(stage: DeliveryStage): string {
+  const map: Record<DeliveryStage, string> = {
+    'Picked Up': 'bg-amber-50 text-amber-700 border border-amber-200',
+    'In Transit': 'bg-blue-50 text-blue-700 border border-blue-200',
+    'Arriving Soon': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    'Delivered': 'bg-teal-50 text-teal-700 border border-teal-200',
+  };
+  return map[stage];
+}
+
+function riderStatusBadge(status: RiderStatus): string {
+  const map: Record<RiderStatus, string> = {
+    'Available': 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+    'Busy': 'bg-orange-50 text-orange-700 border border-orange-200',
+    'Offline': 'bg-gray-100 text-gray-600 border border-gray-300',
+  };
+  return map[status];
+}
 
 function TiltCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
@@ -194,7 +466,6 @@ export default function ClientDashboard({
   const { logoutUser } = useApp();
 
   const [activeTab, setActiveTab] = useState<TabId>('overview');
-  const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState<'Today' | 'This Week' | 'This Month' | 'This Year'>('Today');
   const [orderFilter, setOrderFilter] = useState<'All' | 'New' | 'Active' | 'History'>('All');
   const [orders, setOrders] = useState<LiveOrder[]>(liveOrdersSeed);
@@ -203,6 +474,26 @@ export default function ClientDashboard({
 
   const [analyticsRange, setAnalyticsRange] = useState<'7d' | '30d' | '90d'>('7d');
   const [chartMetric, setChartMetric] = useState<'Sales' | 'Orders'>('Sales');
+
+  // Payments & Earnings state
+  const [paymentsSearch, setPaymentsSearch] = useState('');
+  const [paymentsDateRange, setPaymentsDateRange] = useState<'Today' | 'This Week' | 'This Month' | 'This Year'>('Today');
+  const [earningStatusFilter, setEarningStatusFilter] = useState<EarningStatus | 'All'>('All');
+  const [paymentsSubTab, setPaymentsSubTab] = useState<'earnings' | 'history' | 'commission'>('earnings');
+  const [orderEarnings, setOrderEarnings] = useState<OrderEarning[]>(orderEarningsSeed);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>(paymentHistorySeed);
+  const [selectedEarningOrder, setSelectedEarningOrder] = useState<OrderEarning | null>(null);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [modeDropdownOpen, setModeDropdownOpen] = useState(false);
+  const [merchantSubTab, setMerchantSubTab] = useState<'dashboard' | 'menu'>('dashboard');
+  const [storeOpen, setStoreOpen] = useState(true);
+  const [prepMode, setPrepMode] = useState<'normal' | 'rush' | 'pause'>('normal');
+
+  // Delivery Management state
+  const [deliverySubTab, setDeliverySubTab] = useState<'active' | 'riders' | 'history'>('active');
+  const [activeDeliveries, setActiveDeliveries] = useState<DeliveryRecord[]>(activeDeliveriesSeed);
+  const [deliveryHistory, setDeliveryHistory] = useState<DeliveryRecord[]>(deliveryHistorySeed);
+  const [selectedDelivery, setSelectedDelivery] = useState<DeliveryRecord | null>(null);
 
   // AI Food Studio state
   const [studioName, setStudioName] = useState('');
@@ -251,6 +542,23 @@ export default function ClientDashboard({
     await logoutUser();
     router.push('/');
   };
+
+  const userDropdownRef = useRef<HTMLDivElement | null>(null);
+  const modeDropdownRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) {
+        setShowUserDropdown(false);
+      }
+      if (modeDropdownRef.current && !modeDropdownRef.current.contains(e.target as Node)) {
+        setModeDropdownOpen(false);
+      }
+    };
+    if (showUserDropdown) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [showUserDropdown, modeDropdownOpen]);
 
   const metrics = useMemo(() => {
     const factor = dateFilter === 'Today' ? 1 : dateFilter === 'This Week' ? 6.5 : dateFilter === 'This Month' ? 27 : 312;
@@ -310,6 +618,33 @@ export default function ClientDashboard({
 
   const popularTotal = popularItemsSeed.reduce((s, i) => s + i.revenue, 0);
 
+  // Payments & Earnings computed metrics
+  const paymentsFactor = paymentsDateRange === 'Today' ? 1 : paymentsDateRange === 'This Week' ? 0.85 : paymentsDateRange === 'This Month' ? 0.75 : 0.6;
+  const paymentsMetrics = useMemo(() => {
+    const all = orderEarnings;
+    const totalGross = all.reduce((s, o) => s + o.grossAmount, 0);
+    const totalCommission = all.reduce((s, o) => s + o.commissionAmount, 0);
+    const totalNet = all.reduce((s, o) => s + o.netEarning, 0);
+    const pending = all.filter((o) => o.status === 'Pending').reduce((s, o) => s + o.netEarning, 0);
+    const available = all.filter((o) => o.status === 'Available').reduce((s, o) => s + o.netEarning, 0);
+    return {
+      totalGross: Math.round(totalGross * paymentsFactor * 100) / 100,
+      totalCommission: Math.round(totalCommission * paymentsFactor * 100) / 100,
+      totalNet: Math.round(totalNet * paymentsFactor * 100) / 100,
+      pending: Math.round(pending * paymentsFactor * 100) / 100,
+      available: Math.round(available * paymentsFactor * 100) / 100,
+    };
+  }, [paymentsDateRange]);
+
+  const filteredEarnings = useMemo(() => {
+    return orderEarnings.filter((o) => {
+      const matchesSearch = o.orderId.toLowerCase().includes(paymentsSearch.toLowerCase()) ||
+        o.customerName.toLowerCase().includes(paymentsSearch.toLowerCase());
+      const matchesStatus = earningStatusFilter === 'All' || o.status === earningStatusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [orderEarnings, paymentsSearch, earningStatusFilter]);
+
   const downloadReport = () => {
     const now = new Date();
     const report = `Foodiego Merchant Dashboard Report\nGenerated: ${now.toLocaleString()}\nPeriod: ${dateFilter}\n\nToday's Orders: ${metrics.orders}\nRevenue: $${metrics.revenue.toLocaleString()}\nAvg Rating: ${metrics.rating}\nWeekly Growth: ${metrics.growth}%\nLive Orders: ${liveCount}\n\nPopular Items:\n${popularItemsSeed.map((i) => `${i.name} - ${i.orders} orders - $${i.revenue}`).join('\n')}`;
@@ -336,23 +671,175 @@ export default function ClientDashboard({
         )}
       </AnimatePresence>
 
-      {/* TOP UTILITY BAR */}
-      <div className="w-full px-4 sm:px-8 lg:px-12 pt-6">
-        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} type="text" placeholder="Search orders, menu items, customers..." className="w-full bg-white/80 backdrop-blur-xl text-sm text-gray-800 placeholder-gray-400 rounded-2xl pl-10 pr-4 py-2.5 border border-white/60 shadow-sm shadow-gray-200/50 focus:outline-none focus:ring-2 focus:ring-[#b93815]/30 focus:border-[#b93815]/40" />
-          </div>
-          <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }} className="relative p-2.5 bg-white/80 backdrop-blur-xl text-gray-600 hover:text-[#b93815] rounded-2xl border border-white/60 shadow-sm" aria-label="Notifications">
-            <Bell size={18} />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full ring-2 ring-white" />
-          </motion.button>
-          <button onClick={() => setActiveTab('profile')} aria-label="View profile" className="flex items-center gap-2 bg-white/80 backdrop-blur-xl border border-white/60 shadow-sm px-2 py-1 rounded-full hover:bg-white transition-colors">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#fff1ec] to-[#fbe2d8] overflow-hidden flex items-center justify-center border border-white/60 shadow-inner">
-              <span className="text-xs font-bold text-[#b93815]">{(name || 'U').charAt(0).toUpperCase()}</span>
+      {/* AI MERCHANT CONTROL BAR */}
+      <div className="w-full px-4 sm:px-8 lg:px-12 mt-6">
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full bg-white/80 backdrop-blur-md rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-4"
+        >
+          {/* Left Side: Store Status Toggle */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className={`relative flex h-3 w-3 ${storeOpen ? 'animate-pulse' : ''} rounded-full ${storeOpen ? 'bg-green-500' : 'bg-gray-400'}`}>
+                <span className={`absolute inline-flex h-3 w-3 animate-ping opacity-75 rounded-full ${storeOpen ? 'bg-green-400' : 'bg-gray-400'}`} />
+              </span>
+              <button
+                onClick={() => setStoreOpen(!storeOpen)}
+                className={`text-sm font-bold transition-colors ${storeOpen ? 'text-green-700' : 'text-gray-500'}`}
+              >
+                {storeOpen ? 'Online' : 'Offline'}
+              </button>
             </div>
-            <span className="hidden sm:inline-block max-w-[120px] truncate text-sm font-semibold text-gray-800">{name}</span>
-          </button>
+
+            {/* Mode Selector Dropdown */}
+            <div className="relative" ref={modeDropdownRef}>
+              <button
+                onClick={() => setModeDropdownOpen((prev) => !modeDropdownOpen)}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-[#b93815] bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200 transition-colors"
+              >
+                {prepMode === 'normal' ? 'Normal Prep' : prepMode === 'rush' ? 'Rush Mode' : 'Pause Orders'}
+                <ChevronDown size={14} className="text-gray-500" />
+              </button>
+              <AnimatePresence>
+                {modeDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    className="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 z-50 p-1.5"
+                  >
+                    <button
+                      onClick={() => { setPrepMode('normal'); setModeDropdownOpen(false); }}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      Normal Prep
+                    </button>
+                    <button
+                      onClick={() => { setPrepMode('rush'); setModeDropdownOpen(false); showToast('Rush Mode enabled (+10 mins delay)'); }}
+                      className="w-full text-left px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
+                    >
+                      Rush Mode (+10 mins delay)
+                    </button>
+                    <button
+                      onClick={() => { setPrepMode('pause'); setModeDropdownOpen(false); showToast('Orders paused'); }}
+                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      Pause Orders
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Center: AI Insight Banner */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className={`inline-flex items-center gap-2 text-xs sm:text-sm font-medium rounded-full px-4 py-2 ${
+              prepMode === 'pause'
+                ? 'bg-red-50 text-red-700 border border-red-200'
+                : prepMode === 'rush'
+                ? 'bg-orange-50 text-orange-700 border border-orange-200'
+                : 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200'
+            }`}>
+              <Sparkles size={14} className="text-amber-400" />
+              <span className="truncate max-w-xs sm:max-w-sm">
+                🤖 AI Insight: Truffle Burgers are trending +35% in your area today. Consider running a promo!
+              </span>
+            </div>
+          </div>
+
+          {/* Right Side: Quick AI Shortcuts + Profile */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <Link
+              href="/ai-studio"
+              className="inline-flex items-center gap-1.5 bg-gradient-to-b from-[#c94118] to-[#9a2c0f] hover:from-[#b93815] hover:to-[#7a1d09] text-white text-xs font-bold py-2 px-4 rounded-xl shadow-md border border-white/20 transition-all"
+            >
+              <Camera size={14} /> AI Food Studio
+            </Link>
+            <Link
+              href="#menu-optimizer"
+              className="inline-flex items-center gap-1.5 bg-white/80 border border-gray-200 text-gray-700 hover:text-[#b93815] text-xs font-bold py-2 px-4 rounded-xl shadow-sm transition-all"
+            >
+              <Sparkles size={14} /> AI Menu Optimizer
+            </Link>
+
+            {/* User Profile Dropdown */}
+            <div className="relative inline-block" ref={userDropdownRef}>
+              <button
+                onClick={() => setShowUserDropdown((prev) => !prev)}
+                aria-label="User menu"
+                className="flex items-center gap-2 bg-white/80 backdrop-blur-xl border border-white/60 shadow-sm px-2 py-1.5 rounded-full hover:bg-white transition-colors"
+              >
+                <span className="flex items-center justify-center h-7 w-7 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs border border-emerald-200">
+                  {(name || 'U').charAt(0).toUpperCase()}
+                </span>
+                <span className="hidden sm:inline-block max-w-[120px] truncate text-sm font-semibold text-gray-800">{name}</span>
+                <motion.span animate={{ rotate: showUserDropdown ? 180 : 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+                  <ChevronDown size={16} className="text-gray-500" />
+                </motion.span>
+              </button>
+
+              {/* Floating Dropdown - directly under the pill button */}
+              <AnimatePresence>
+                {showUserDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 p-3"
+                  >
+                    <div className="px-3 py-2.5 border-b border-gray-100">
+                      <p className="font-semibold text-gray-900">{name}</p>
+                      <p className="text-xs text-gray-500">user@example.com</p>
+                    </div>
+
+                    <div className="py-1.5">
+                      <Link
+                        href="/cart"
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                        onClick={() => setShowUserDropdown(false)}
+                      >
+                        <ShoppingBag size={16} className="text-gray-500" />
+                        My Cart
+                      </Link>
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                        onClick={() => setShowUserDropdown(false)}
+                      >
+                        <LayoutGrid size={16} className="text-gray-500" />
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/settings"
+                        className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                        onClick={() => setShowUserDropdown(false)}
+                      >
+                        <Settings size={16} className="text-gray-500" />
+                        Settings
+                      </Link>
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-1.5">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => { setShowUserDropdown(false); handleLogout(); }}
+                        className="flex items-center gap-3 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                      >
+                        <LogOut size={16} />
+                        Logout
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
         </motion.div>
       </div>
 
@@ -396,35 +883,57 @@ export default function ClientDashboard({
         </motion.div>
       </div>
 
-      {/* MERCHANT ACTION BAR */}
+      {/* MERCHANT SUB-NAVIGATION PILL BAR */}
       <div className="w-full px-4 sm:px-8 lg:px-12 mt-6">
-        <motion.section whileHover={{ y: -2 }} transition={{ type: 'spring', stiffness: 200, damping: 20 }} className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6 sm:p-10">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97, y: 3 }} transition={{ type: 'spring', stiffness: 300, damping: 18 }}>
-              <Link href="/client/dashboard" className="inline-flex w-full items-center justify-center gap-2 bg-gradient-to-b from-[#c94118] to-[#9a2c0f] hover:from-[#b93815] hover:to-[#7a1d09] text-white font-semibold py-3 px-5 rounded-2xl shadow-lg shadow-[#b93815]/40 border border-white/20 border-b-4 border-b-orange-800 active:border-b-0 active:translate-y-1 active:shadow-md transition-all">
-                <LayoutDashboard size={16} /> Merchant Dashboard
-              </Link>
-            </motion.div>
-            <motion.button whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97, y: 3 }} transition={{ type: 'spring', stiffness: 300, damping: 18 }} onClick={() => setActiveTab('menu')} className="inline-flex items-center justify-center gap-2 bg-gradient-to-b from-white to-gray-50 border border-white/60 border-b-4 border-b-gray-300 hover:border-b-[3px] hover:translate-y-[1px] text-gray-800 font-semibold py-3 px-5 rounded-2xl shadow-lg shadow-gray-300/40 active:shadow-md transition-all">
-              <Sparkles size={16} /> Create Menu Item
-            </motion.button>
-          </div>
-        </motion.section>
+        <motion.nav
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-1.5 inline-flex gap-1.5"
+        >
+          {[
+            { id: 'dashboard' as const, label: 'Merchant Dashboard', icon: LayoutDashboard },
+            { id: 'menu' as const, label: 'Create Menu Item', icon: Sparkles },
+          ].map((item) => {
+            const isActive = merchantSubTab === item.id;
+            return (
+              <motion.button
+                key={item.id}
+                whileHover={{ scale: isActive ? 1 : 1.03, y: isActive ? 0 : -1 }}
+                whileTap={{ scale: 0.97, y: 2 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                onClick={() => setMerchantSubTab(item.id)}
+                className={`inline-flex items-center justify-center gap-2 font-semibold py-2.5 px-6 rounded-2xl transition-all text-sm ${
+                  isActive
+                    ? 'bg-[#c8481a] text-white shadow-lg shadow-[#b93815]/30 border border-white/30 border-b-0'
+                    : 'text-gray-700 hover:text-[#b93815] hover:bg-gray-50'
+                }`}
+              >
+                <item.icon size={16} />
+                {item.label}
+              </motion.button>
+            );
+          })}
+        </motion.nav>
       </div>
 
-      {/* INTERNAL NAV + MAIN CONTENT */}
-      <div className="w-full px-4 sm:px-8 lg:px-12 mt-10 pb-12">
-        {/* Mobile horizontal scrollable tabs */}
-        <div className="md:hidden -mx-4 sm:-mx-8 px-4 sm:px-8 mb-4">
-          <div className="flex flex-row overflow-x-auto no-scrollbar gap-2 w-full py-2">
-            {tabs.map((t) => {
-              const isActive = activeTab === t.id;
-              return (
-                <motion.button key={t.id} whileTap={{ scale: 0.96 }} onClick={() => setActiveTab(t.id)} className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${isActive ? 'bg-orange-50 text-[#b93815] border-orange-200 shadow-sm' : 'bg-white/70 text-gray-600 border-white/60 hover:bg-white'}`}>
-                  <t.icon size={14} />{t.label}
-                </motion.button>
-              );
-            })}
+      {/* MAIN CONTENT (driven by merchantSubTab for dashboard/menu, otherwise activeTab) */}
+      <div className="w-full px-4 sm:px-8 lg:px-12 mt-8 pb-12">
+        {merchantSubTab === 'menu' ? (
+          <CreateMenuItem />
+        ) : (
+          <>
+            {/* INTERNAL NAV + MAIN CONTENT (existing tabs) */}
+            <div className="md:hidden -mx-4 sm:-mx-8 px-4 sm:px-8 mb-4">
+              <div className="flex flex-row overflow-x-auto no-scrollbar gap-2 w-full py-2">
+                {tabs.map((t) => {
+                  const isActive = activeTab === t.id;
+                  return (
+                    <motion.button key={t.id} whileTap={{ scale: 0.96 }} onClick={() => setActiveTab(t.id)} className={`shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${isActive ? 'bg-orange-50 text-[#b93815] border-orange-200 shadow-sm' : 'bg-white/70 text-gray-600 border-white/60 hover:bg-white'}`}>
+                      <t.icon size={14} />{t.label}
+                    </motion.button>
+                  );
+                })}
           </div>
         </div>
 
@@ -1014,7 +1523,723 @@ export default function ClientDashboard({
                 </form>
               </motion.div>
             )}
-        </main>
+
+            {activeTab === 'payments' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                  <div>
+                    <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">Payments & Earnings</h2>
+                    <p className="mt-1 text-base text-gray-500">Track your earnings, payouts, and platform commission.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="relative">
+                      <Calendar size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <select
+                        value={paymentsDateRange}
+                        onChange={(e) => setPaymentsDateRange(e.target.value as typeof paymentsDateRange)}
+                        className="appearance-none bg-white/90 backdrop-blur-md border border-white/70 text-sm font-semibold text-gray-700 rounded-2xl pl-10 pr-10 py-2.5 shadow-lg shadow-gray-300/30 focus:outline-none focus:ring-2 focus:ring-orange-500/30 hover:shadow-xl transition-shadow"
+                      >
+                        <option>Today</option>
+                        <option>This Week</option>
+                        <option>This Month</option>
+                        <option>This Year</option>
+                      </select>
+                      <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.04, y: -1 }}
+                      whileTap={{ scale: 0.97, y: 2 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                      className="inline-flex items-center justify-center gap-2 bg-gradient-to-b from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white font-semibold py-2.5 px-5 rounded-2xl shadow-xl shadow-emerald-500/40 border border-white/30 border-b-4 border-b-emerald-800 active:border-b-0 active:translate-y-1 active:shadow-md transition-all text-sm"
+                      onClick={() => showToast('Withdrawal request submitted')}
+                    >
+                      <Download size={16} /> Request Withdrawal
+                    </motion.button>
+                  </div>
+                </div>
+
+                {/* Summary Metric Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+                  {[
+                    { label: 'Total Earnings (Gross)', value: `$${paymentsMetrics.totalGross.toLocaleString()}`, delta: '+8.2%', icon: DollarSign, bg: 'bg-emerald-50', text: 'text-emerald-600', ring: 'shadow-emerald-500/30' },
+                    { label: 'Available Earnings', value: `$${paymentsMetrics.available.toLocaleString()}`, delta: 'Ready to payout', icon: TrendingUp, bg: 'bg-blue-50', text: 'text-blue-600', ring: 'shadow-blue-500/30' },
+                    { label: 'Pending Earnings', value: `$${paymentsMetrics.pending.toLocaleString()}`, delta: 'In uncleared orders', icon: Clock, bg: 'bg-amber-50', text: 'text-amber-600', ring: 'shadow-amber-500/30' },
+                    { label: 'Total Commission', value: `$${paymentsMetrics.totalCommission.toLocaleString()}`, delta: 'Platform fees', icon: Receipt, bg: 'bg-purple-50', text: 'text-purple-600', ring: 'shadow-purple-500/30' },
+                    { label: 'Net Amount Received', value: `$${paymentsMetrics.totalNet.toLocaleString()}`, delta: '+10.3%', icon: CheckCircle2, bg: 'bg-teal-50', text: 'text-teal-600', ring: 'shadow-teal-500/30' },
+                  ].map((m) => (
+                    <Tilt3DCard key={m.label} className={`group rounded-3xl bg-white/80 backdrop-blur-md border border-white/70 shadow-2xl ${m.ring} p-5`}>
+                      <div className="absolute inset-0 rounded-[inherit] bg-gradient-to-br from-white/40 via-transparent to-white/10 pointer-events-none" />
+                      <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-gradient-to-br from-white/40 to-transparent blur-2xl pointer-events-none" />
+                      <div className="relative flex items-center justify-between">
+                        <div>
+                          <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">{m.label}</p>
+                          <p className="mt-2 text-2xl font-extrabold text-gray-900 leading-none drop-shadow-sm">{m.value}</p>
+                          <span className={`mt-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${m.bg} ${m.text} shadow-inner`}>
+                            {m.delta}
+                          </span>
+                        </div>
+                        <motion.div whileHover={{ rotate: 8, scale: 1.08 }} transition={{ type: 'spring', stiffness: 300, damping: 15 }} className={`h-14 w-14 rounded-2xl ${m.bg} ${m.text} flex items-center justify-center shadow-xl ${m.ring} border border-white/40`}>
+                          <m.icon size={26} />
+                        </motion.div>
+                      </div>
+                    </Tilt3DCard>
+                  ))}
+                </div>
+
+                {/* Sub-Module Tabs */}
+                <div className="flex gap-1.5 bg-gray-100/80 rounded-2xl p-1 border border-white/60 shadow-inner overflow-x-auto">
+                  {[
+                    { id: 'earnings', label: 'Earnings & Order Breakdown' },
+                    { id: 'history', label: 'Payment History' },
+                    { id: 'commission', label: 'Commission Summary' },
+                  ].map((s) => (
+                    <motion.button
+                      key={s.id}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => { setPaymentsSubTab(s.id as typeof paymentsSubTab); setSelectedEarningOrder(null); }}
+                      className={`relative shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${paymentsSubTab === s.id ? 'text-white' : 'text-gray-600'}`}
+                    >
+                      {paymentsSubTab === s.id && (
+                        <motion.div layoutId="payments-sub-pill" className="absolute inset-0 bg-gradient-to-b from-[#b93815] to-[#9a3412] rounded-xl shadow-lg shadow-[#b93815]/40" transition={{ type: 'spring', stiffness: 380, damping: 28 }} />
+                      )}
+                      <span className="relative z-10">{s.label}</span>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Sub-Module: Earnings & Order Breakdown */}
+                {paymentsSubTab === 'earnings' && (
+                  <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6">
+                    <div className="mb-4 flex flex-col sm:flex-row gap-3">
+                      <div className="relative flex-1">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <input
+                          value={paymentsSearch}
+                          onChange={(e) => setPaymentsSearch(e.target.value)}
+                          type="text"
+                          placeholder="Search by Order ID or Customer Name..."
+                          className="w-full bg-white/70 text-sm text-gray-800 placeholder-gray-400 rounded-xl pl-10 pr-4 py-2.5 border border-white/60 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#b93815]/30"
+                        />
+                      </div>
+                      <div className="relative">
+                        <select
+                          value={earningStatusFilter}
+                          onChange={(e) => setEarningStatusFilter(e.target.value as EarningStatus | 'All')}
+                          className="appearance-none bg-white/90 backdrop-blur-md border border-white/70 text-sm font-semibold text-gray-700 rounded-xl pl-3 pr-9 py-2 shadow focus:outline-none focus:ring-2 focus:ring-orange-500/30"
+                        >
+                          <option value="All">All Statuses</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Available">Available</option>
+                          <option value="Paid Out">Paid Out</option>
+                        </select>
+                        <ChevronDown size={16} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="bg-gray-50/80 border-b border-gray-200/60">
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Order ID</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Date</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Customer</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider text-right">Gross</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider text-right">Commission</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider text-right">Net</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider text-center">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredEarnings.length === 0 ? (
+                            <tr><td colSpan={8} className="py-8 text-center text-sm text-gray-500 italic">No earnings match your filters.</td></tr>
+                          ) : (
+                            filteredEarnings.map((oe) => (
+                              <tr key={oe.orderId} className="border-b border-gray-100/60 hover:bg-gray-50/80 transition-colors">
+                                <td className="px-4 py-3 font-extrabold text-gray-900">{oe.orderId}</td>
+                                <td className="px-4 py-3 text-gray-600">{new Date(oe.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                                <td className="px-4 py-3 text-gray-600 font-medium">{oe.customerName}</td>
+                                <td className="px-4 py-3 text-right font-bold text-gray-900">${oe.grossAmount.toFixed(2)}</td>
+                                <td className="px-4 py-3 text-right">
+                                  <span className="text-gray-600">{oe.commissionRate}%</span>
+                                  <span className="block text-xs text-gray-400">= ${oe.commissionAmount.toFixed(2)}</span>
+                                </td>
+                                <td className="px-4 py-3 text-right font-bold text-emerald-600">${oe.netEarning.toFixed(2)}</td>
+                                <td className="px-4 py-3">
+                                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                    oe.status === 'Paid Out' ? 'bg-teal-50 text-teal-700 border border-teal-200'
+                                    : oe.status === 'Available' ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                    : 'bg-amber-50 text-amber-700 border border-amber-200'
+                                  }`}>
+                                    {oe.status}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setSelectedEarningOrder(oe)}
+                                    className="inline-flex items-center justify-center gap-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm"
+                                  >
+                                    <Eye size={12} /> View
+                                  </motion.button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-gray-200/60 flex justify-between items-center text-sm text-gray-500">
+                      <span>Showing {filteredEarnings.length} of {orderEarnings.length} orders</span>
+                      <span>Net total: <span className="font-extrabold text-emerald-600">${filteredEarnings.reduce((s, o) => s + o.netEarning, 0).toFixed(2)}</span></span>
+                    </div>
+                  </TiltCard>
+                )}
+
+                {/* Order Detail Modal */}
+                <AnimatePresence>
+                  {selectedEarningOrder && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+                      onClick={() => setSelectedEarningOrder(null)}
+                    >
+                      <motion.div
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.9, y: 20 }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white rounded-3xl shadow-2xl p-6 max-w-lg w-full"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-xl font-extrabold text-gray-900">Order {selectedEarningOrder.orderId}</h3>
+                          <motion.button whileTap={{ scale: 0.9 }} onClick={() => setSelectedEarningOrder(null)} className="h-8 w-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200">
+                            <X size={16} />
+                          </motion.button>
+                        </div>
+                        <div className="space-y-3 text-sm">
+                          <div className="flex justify-between"><span className="text-gray-500">Customer:</span><span className="font-semibold text-gray-900">{selectedEarningOrder.customerName}</span></div>
+                          <div className="flex justify-between"><span className="text-gray-500">Date:</span><span className="font-semibold text-gray-900">{new Date(selectedEarningOrder.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span></div>
+                          <div className="flex justify-between"><span className="text-gray-500">Gross Amount:</span><span className="font-semibold text-gray-900">${selectedEarningOrder.grossAmount.toFixed(2)}</span></div>
+                          <div className="flex justify-between"><span className="text-gray-500">Commission Rate:</span><span className="font-semibold text-gray-900">{selectedEarningOrder.commissionRate}% (${selectedEarningOrder.commissionAmount.toFixed(2)})</span></div>
+                          <div className="flex justify-between border-t border-gray-200 pt-2 mt-2"><span className="text-gray-500">Net Earning:</span><span className="font-extrabold text-emerald-600">${selectedEarningOrder.netEarning.toFixed(2)}</span></div>
+                          <div className="flex justify-between"><span className="text-gray-500">Status:</span>
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                              selectedEarningOrder.status === 'Paid Out' ? 'bg-teal-50 text-teal-700 border border-teal-200'
+                              : selectedEarningOrder.status === 'Available' ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            }`}>
+                              {selectedEarningOrder.status}
+                            </span>
+                          </div>
+                        </div>
+                        {selectedEarningOrder.items && selectedEarningOrder.items.length > 0 && (
+                          <div className="mt-4">
+                            <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider mb-2">Items</h4>
+                            <div className="space-y-2">
+                              {selectedEarningOrder.items.map((item, idx) => (
+                                <div key={idx} className="flex justify-between text-sm">
+                                  <span className="text-gray-600">{item.qty}× {item.name}</span>
+                                  <span className="font-semibold text-gray-900">${(item.qty * item.price).toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Sub-Module: Payment History */}
+                {paymentsSubTab === 'history' && (
+                  <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="bg-gray-50/80 border-b border-gray-200/60">
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Date & Time</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider text-right">Amount</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Payment Method</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider text-center">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paymentHistory.map((p) => (
+                            <tr key={p.id} className="border-b border-gray-100/60 hover:bg-gray-50/80 transition-colors">
+                              <td className="px-4 py-3 font-extrabold text-gray-900">{p.id}</td>
+                              <td className="px-4 py-3 text-gray-600">{new Date(p.date).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                              <td className="px-4 py-3 text-right font-bold text-gray-900">${p.amount.toFixed(2)}</td>
+                              <td className="px-4 py-3 text-gray-600 font-medium">{p.method}</td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                  p.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                  : p.status === 'Processing' ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                  : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                }`}>
+                                  {p.status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                {p.receipt ? (
+                                  <motion.a
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    href={`#receipt-${p.id}`}
+                                    onClick={(e) => { e.preventDefault(); showToast(`Opening receipt ${p.receipt}`); }}
+                                    className="inline-flex items-center justify-center gap-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm"
+                                  >
+                                    <Receipt size={12} /> View Receipt
+                                  </motion.a>
+                                ) : (
+                                  <span className="text-gray-400 text-xs">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-gray-200/60 flex justify-between items-center text-sm text-gray-500">
+                      <span>Total completed payouts: {paymentHistory.filter((p) => p.status === 'Completed').length}</span>
+                      <span>Total amount paid out: <span className="font-extrabold text-emerald-600">${paymentHistory.filter((p) => p.status === 'Completed').reduce((s, p) => s + p.amount, 0).toFixed(2)}</span></span>
+                    </div>
+                  </TiltCard>
+                )}
+
+                {/* Sub-Module: Commission Summary */}
+                {paymentsSubTab === 'commission' && (
+                  <div className="space-y-6">
+                    {/* Commission Breakdown Card */}
+                    <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6">
+                      <h3 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2">
+                        <Receipt size={20} className="text-purple-600" />
+                        Commission Breakdown
+                      </h3>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                        {[
+                          { label: 'Gross Revenue', value: `$${paymentsMetrics.totalGross.toFixed(2)}`, icon: DollarSign, soft: 'bg-emerald-50', text: 'text-emerald-700' },
+                          { label: 'Platform Commission', value: `$${paymentsMetrics.totalCommission.toFixed(2)}`, icon: Receipt, soft: 'bg-rose-50', text: 'text-rose-700' },
+                          { label: 'Net Earnings', value: `$${paymentsMetrics.totalNet.toFixed(2)}`, icon: CheckCircle2, soft: 'bg-blue-50', text: 'text-blue-700' },
+                        ].map((m) => (
+                          <div key={m.label} className={`p-5 rounded-2xl ${m.soft} border border-white/60 shadow-inner flex items-center justify-between`}>
+                            <div>
+                              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{m.label}</p>
+                              <p className="text-2xl font-extrabold text-gray-900 mt-1">{m.value}</p>
+                            </div>
+                            <div className={`h-12 w-12 rounded-2xl ${m.soft} ${m.text} flex items-center justify-center shadow-inner border border-white/60`}>
+                              <m.icon size={22} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </TiltCard>
+
+                    {/* Visual Doughnut-like Breakdown */}
+                    <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6">
+                      <h3 className="text-lg font-extrabold text-gray-900 mb-4">Revenue Distribution</h3>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="flex flex-col gap-4">
+                          {(() => {
+                            const gross = paymentsMetrics.totalGross;
+                            const commission = paymentsMetrics.totalCommission;
+                            const net = paymentsMetrics.totalNet;
+                            const commissionPct = gross > 0 ? (commission / gross) * 100 : 0;
+                            const netPct = gross > 0 ? (net / gross) * 100 : 0;
+                            return [
+                              { label: 'Platform Commission', value: commission, pct: commissionPct, color: 'bg-rose-500' },
+                              { label: 'Net Earnings', value: net, pct: netPct, color: 'bg-emerald-500' },
+                            ].map((seg) => (
+                              <div key={seg.label} className="space-y-1">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-semibold text-gray-700">{seg.label}</span>
+                                  <span className="text-sm font-extrabold text-gray-900">${seg.value.toFixed(2)} ({seg.pct.toFixed(1)}%)</span>
+                                </div>
+                                <div className="w-full bg-gray-200/60 rounded-full h-4 overflow-hidden">
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${seg.pct}%` }}
+                                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                                    className={`h-full rounded-full ${seg.color} shadow-lg`}
+                                  />
+                                </div>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+
+                        <div className="space-y-4">
+                          <h4 className="text-sm font-extrabold text-gray-500 uppercase tracking-wider">Commission Rate Rules</h4>
+                          <div className="space-y-3">
+                            <div className="border border-gray-200/60 rounded-xl p-3 bg-gray-50/60">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs font-bold text-gray-500 uppercase">Food Delivery</span>
+                                <span className="text-sm font-extrabold text-[#b93815]">12%</span>
+                              </div>
+                              <p className="text-[10px] text-gray-500">Standard commission for all food delivery orders.</p>
+                            </div>
+                            <div className="border border-gray-200/60 rounded-xl p-3 bg-gray-50/60">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs font-bold text-gray-500 uppercase">High-Ticket Orders</span>
+                                <span className="text-sm font-extrabold text-[#b93815]">15%</span>
+                              </div>
+                              <p className="text-[10px] text-gray-500">Orders over $50 incur a slightly higher rate.</p>
+                            </div>
+                            <div className="border border-gray-200/60 rounded-xl p-3 bg-gray-50/60">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs font-bold text-gray-500 uppercase">Premium Placement</span>
+                                <span className="text-sm font-extrabold text-[#b93815]">10%</span>
+                              </div>
+                              <p className="text-[10px] text-gray-500">Featured menu spots receive a discounted rate.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </TiltCard>
+
+                    {/* Commission Table */}
+                    <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6">
+                      <h3 className="text-lg font-extrabold text-gray-900 mb-4">Commission by Order</h3>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                          <thead>
+                            <tr className="bg-gray-50/80 border-b border-gray-200/60">
+                              <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Order ID</th>
+                              <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Gross</th>
+                              <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider text-right">Rate</th>
+                              <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider text-right">Commission</th>
+                              <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider text-right">Net</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredEarnings.map((oe) => (
+                              <tr key={oe.orderId} className="border-b border-gray-100/60">
+                                <td className="px-4 py-3 font-extrabold text-gray-900">{oe.orderId}</td>
+                                <td className="px-4 py-3 text-gray-600">${oe.grossAmount.toFixed(2)}</td>
+                                <td className="px-4 py-3 text-right text-gray-600">{oe.commissionRate}%</td>
+                                <td className="px-4 py-3 text-right font-bold text-rose-600">-${oe.commissionAmount.toFixed(2)}</td>
+                                <td className="px-4 py-3 text-right font-bold text-emerald-600">${oe.netEarning.toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </TiltCard>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {activeTab === 'delivery' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                  <div>
+                    <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">Delivery Management</h2>
+                    <p className="mt-1 text-base text-gray-500">Monitor active deliveries, rider status, and delivery history.</p>
+                  </div>
+                </div>
+
+                {/* Sub-Module Tabs */}
+                <div className="flex gap-1.5 bg-gray-100/80 rounded-2xl p-1.5 border border-white/60 shadow-inner overflow-x-auto">
+                  {[
+                    { id: 'active', label: 'Active Deliveries' },
+                    { id: 'riders', label: 'Rider Status' },
+                    { id: 'history', label: 'Delivery History' },
+                  ].map((s) => (
+                    <motion.button
+                      key={s.id}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => { setDeliverySubTab(s.id as typeof deliverySubTab); setSelectedDelivery(null); }}
+                      className={`relative shrink-0 px-5 py-2.5 rounded-xl text-sm font-bold transition-colors ${deliverySubTab === s.id ? 'text-white' : 'text-gray-600'}`}
+                    >
+                      {deliverySubTab === s.id && (
+                        <motion.div layoutId="delivery-sub-pill" className="absolute inset-0 bg-gradient-to-b from-[#b93815] to-[#9a3412] rounded-xl shadow-lg shadow-[#b93815]/40" transition={{ type: 'spring', stiffness: 380, damping: 28 }} />
+                      )}
+                      <span className="relative z-10">{s.label}</span>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {/* Summary Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  {[
+                    { label: 'In Transit', value: activeDeliveries.filter((d) => d.stage === 'In Transit').length.toString(), icon: Truck, soft: 'bg-blue-50', text: 'text-blue-600' },
+                    { label: 'Arriving Soon', value: activeDeliveries.filter((d) => d.stage === 'Arriving Soon').length.toString(), icon: MapPin, soft: 'bg-emerald-50', text: 'text-emerald-600' },
+                    { label: 'Delivered Today', value: deliveryHistory.length.toString(), icon: CheckCircle2, soft: 'bg-teal-50', text: 'text-teal-600' },
+                  ].map((m) => (
+                    <TiltCard key={m.label} className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-5 flex items-center gap-3">
+                      <div className={`h-12 w-12 rounded-2xl ${m.soft} ${m.text} flex items-center justify-center shadow-inner border border-white/60`}>
+                        <m.icon size={22} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide">{m.label}</p>
+                        <p className="text-2xl font-extrabold text-gray-900 leading-none mt-1">{m.value}</p>
+                      </div>
+                    </TiltCard>
+                  ))}
+                </div>
+
+                {/* Sub-Module: Active Deliveries */}
+                {deliverySubTab === 'active' && (
+                  <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="bg-gray-50/80 border-b border-gray-200/60">
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Order ID</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Customer</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Rider</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Stage</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Pickup</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Est. Delivery</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider text-center">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {activeDeliveries.length === 0 ? (
+                            <tr><td colSpan={7} className="py-8 text-center text-sm text-gray-500 italic">No active deliveries at the moment.</td></tr>
+                          ) : (
+                            activeDeliveries.map((d) => (
+                              <tr key={d.orderId} className="border-b border-gray-100/60 hover:bg-gray-50/80 transition-colors">
+                                <td className="px-4 py-3 font-extrabold text-gray-900">{d.orderId}</td>
+                                <td className="px-4 py-3 text-gray-600 font-medium">{d.customerName}</td>
+                                <td className="px-4 py-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-8 w-8 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200">
+                                      {d.rider.avatarUrl ? (
+                                        <Image src={d.rider.avatarUrl} alt={d.rider.name} width={32} height={32} className="object-cover rounded-full" />
+                                      ) : (
+                                        <span className="text-xs font-bold text-[#b93815]">{d.rider.name.charAt(0)}</span>
+                                      )}
+                                    </div>
+                                    <span className="text-sm font-semibold text-gray-900">{d.rider.name}</span>
+                                    <span className={`inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold rounded-full ${riderStatusBadge(d.rider.status)}`}>
+                                      {d.rider.status}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${deliveryStageBadge(d.stage)}`}>
+                                    {d.stage}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-gray-600">{d.pickupTime}</td>
+                                <td className="px-4 py-3 text-gray-600">{d.estimatedDelivery}</td>
+                                <td className="px-4 py-3 text-center">
+                                  <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setSelectedDelivery(d)}
+                                    className="inline-flex items-center justify-center gap-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm"
+                                  >
+                                    <Eye size={12} /> View
+                                  </motion.button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </TiltCard>
+                )}
+
+                {/* Sub-Module: Rider Status */}
+                {deliverySubTab === 'riders' && (
+                  <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {ridersSeed.map((r) => (
+                        <div key={r.id} className="p-5 rounded-2xl bg-white border border-gray-200/60 shadow-sm hover:shadow-md transition-shadow">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="h-12 w-12 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+                              {r.avatarUrl ? (
+                                <Image src={r.avatarUrl} alt={r.name} fill className="object-cover" />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center text-sm font-bold text-[#b93815]">
+                                  {r.name.charAt(0)}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <h3 className="font-extrabold text-gray-900">{r.name}</h3>
+                              <p className="text-xs text-gray-500">{r.vehicle}</p>
+                            </div>
+                          </div>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between"><span className="text-gray-500">Phone:</span><span className="font-semibold text-gray-900">{r.phone}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">Rating:</span><span className="font-semibold text-gray-900">⭐ {r.rating}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500">ETA:</span><span className="font-semibold text-gray-900">{r.eta}</span></div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-500">Status:</span>
+                              <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full ${riderStatusBadge(r.status)}`}>
+                                {r.status}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TiltCard>
+                )}
+
+                {/* Sub-Module: Delivery History */}
+                {deliverySubTab === 'history' && (
+                  <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="bg-gray-50/80 border-b border-gray-200/60">
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Order ID</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Customer</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Rider</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Stage</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Picked Up</th>
+                            <th className="px-4 py-2.5 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Delivered</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {deliveryHistory.length === 0 ? (
+                            <tr><td colSpan={6} className="py-8 text-center text-sm text-gray-500 italic">No delivery history available.</td></tr>
+                          ) : (
+                            deliveryHistory.map((d) => (
+                              <tr key={d.orderId} className="border-b border-gray-100/60 hover:bg-gray-50/80 transition-colors">
+                                <td className="px-4 py-3 font-extrabold text-gray-900">{d.orderId}</td>
+                                <td className="px-4 py-3 text-gray-600 font-medium">{d.customerName}</td>
+                                <td className="px-4 py-3 text-gray-600">{d.rider.name}</td>
+                                <td className="px-4 py-3">
+                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold ${deliveryStageBadge(d.stage)}`}>
+                                    {d.stage}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-gray-600">{d.pickupTime}</td>
+                                <td className="px-4 py-3 text-gray-600">{d.actualDelivery ?? '—'}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </TiltCard>
+                )}
+
+                {/* Delivery Detail Modal */}
+                <AnimatePresence>
+                  {selectedDelivery && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-[110] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+                      onClick={() => setSelectedDelivery(null)}
+                    >
+                      <motion.div
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.9, y: 20 }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white rounded-3xl shadow-2xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-xl font-extrabold text-gray-900">Order {selectedDelivery.orderId}</h3>
+                          <motion.button whileTap={{ scale: 0.9 }} onClick={() => setSelectedDelivery(null)} className="h-8 w-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200">
+                            <X size={16} />
+                          </motion.button>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {/* Customer Info */}
+                          <div className="space-y-3">
+                            <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Customer</h4>
+                            <div className="space-y-1 text-sm">
+                              <div className="flex justify-between"><span className="text-gray-500">Name:</span><span className="font-semibold text-gray-900">{selectedDelivery.customerName}</span></div>
+                              <div className="flex justify-between"><span className="text-gray-500">Phone:</span><span className="font-semibold text-gray-900">{selectedDelivery.customerPhone}</span></div>
+                              <div className="flex justify-between"><span className="text-gray-500">Address:</span><span className="font-semibold text-gray-900 text-right">{selectedDelivery.customerAddress}</span></div>
+                            </div>
+                          </div>
+
+                          {/* Rider Info */}
+                          <div className="space-y-3">
+                            <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Assigned Rider</h4>
+                            <div className="flex items-center gap-4">
+                              <div className="h-14 w-14 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+                                {selectedDelivery.rider.avatarUrl ? (
+                                  <Image src={selectedDelivery.rider.avatarUrl} alt={selectedDelivery.rider.name} fill className="object-cover" />
+                                ) : (
+                                  <div className="h-full w-full flex items-center justify-center text-sm font-bold text-[#b93815]">
+                                    {selectedDelivery.rider.name.charAt(0)}
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-bold text-gray-900">{selectedDelivery.rider.name}</p>
+                                <p className="text-xs text-gray-500">{selectedDelivery.rider.vehicle} · ⭐ {selectedDelivery.rider.rating}</p>
+                                <span className={`inline-block px-2 py-0.5 text-[10px] font-bold rounded-full ${riderStatusBadge(selectedDelivery.rider.status)}`}>
+                                  {selectedDelivery.rider.status}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="pt-2 space-y-1 text-sm">
+                              <div className="flex justify-between"><span className="text-gray-500">Pickup Time:</span><span className="font-semibold text-gray-900">{selectedDelivery.pickupTime}</span></div>
+                              <div className="flex justify-between"><span className="text-gray-500">Est. Delivery:</span><span className="font-semibold text-gray-900">{selectedDelivery.estimatedDelivery}</span></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Order Items */}
+                        <div className="mt-4">
+                          <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider mb-2">Order Items</h4>
+                          <div className="space-y-2">
+                            {selectedDelivery.orderItems.map((item, idx) => (
+                              <div key={idx} className="flex justify-between text-sm">
+                                <span className="text-gray-600">{item.qty}× {item.name}</span>
+                                <span className="font-semibold text-gray-900">${(item.qty * item.price).toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Delivery Progress */}
+                        <div className="mt-4">
+                          <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider mb-2">Delivery Progress</h4>
+                          <div className="flex items-center justify-between text-xs text-gray-500 font-bold uppercase">
+                            {(['Picked Up', 'In Transit', 'Arriving Soon', 'Delivered'] as const).map((stage, i) => {
+                              const stages = ['Picked Up', 'In Transit', 'Arriving Soon', 'Delivered'];
+                              const currentIndex = stages.indexOf(selectedDelivery.stage);
+                              const stageIndex = stages.indexOf(stage);
+                              const isPassed = stageIndex <= currentIndex;
+                              const isCurrent = selectedDelivery.stage === stage;
+                              return (
+                                <div key={stage} className="flex items-center gap-1">
+                                  <div className={`h-5 w-5 rounded-full flex items-center justify-center text-[8px] ${isPassed ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                                    {i + 1}
+                                  </div>
+                                  <span className={isCurrent ? 'text-emerald-600' : isPassed ? 'text-gray-900' : 'text-gray-400'}>
+                                    {stage}
+                                  </span>
+                                  {i < 3 && <div className={`h-0.5 w-8 ${isPassed ? 'bg-emerald-500' : 'bg-gray-200'}`} />}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </main>
+          </>
+        )}
       </div>
     </div>
   );
