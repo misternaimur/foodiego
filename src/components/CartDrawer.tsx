@@ -170,7 +170,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
             </div>
 
             <Link
-              href="/checkout"
+              href="/client/checkout"
               onClick={onClose}
               className="w-full bg-[#F6A429] hover:bg-[#e0931f] text-gray-900 font-extrabold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors text-xs uppercase tracking-wider shadow-md cursor-pointer"
             >

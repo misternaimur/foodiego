@@ -133,7 +133,7 @@ const AdminSidebar = () => {
       {/* Logout Footer Section */}
       <div className="p-4 border-t border-[#2e3132]">
         <Link 
-          href="/logout" 
+          href="/auth/login" 
           className="flex items-center gap-3 px-4 py-3 text-[#f87171] hover:bg-red-500/10 rounded-xl transition-colors font-medium text-sm"
         >
           <LogOut size={18} /> Logout
