@@ -135,9 +135,9 @@ export default function MerchantProfile({
               View Profile
             </Link>
             <Link
-              href="/dashboard/restaurant"
+              href="/vendor"
               className={`inline-flex items-center justify-center gap-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-2.5 px-4 rounded-xl transition-all ${
-                pathname === '/dashboard/restaurant' ? 'ring-2 ring-[#b93815] ring-offset-2' : ''
+                pathname === '/vendor' ? 'ring-2 ring-[#b93815] ring-offset-2' : ''
               }`}
             >
               <LayoutDashboard size={16} />

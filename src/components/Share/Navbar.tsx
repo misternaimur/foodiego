@@ -65,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       ? '/vendor'
       : role === 'rider'
       ? '/rider'
-      : '/client/dashboard';
+      : '/client/orders';
 
   const handleLogout = async () => {
     if (onLogout) {
@@ -90,7 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     pathname?.startsWith('/admin') ||
     pathname?.startsWith('/vendor') ||
     pathname?.startsWith('/rider') ||
-    pathname?.startsWith('/client/dashboard')
+    pathname?.startsWith('/client/orders')
   ) {
     return null;
   }
@@ -100,7 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (onSearch) {
       onSearch(searchQuery);
     } else if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`/restaurants?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 

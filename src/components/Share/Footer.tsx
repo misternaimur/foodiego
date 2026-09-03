@@ -33,9 +33,9 @@ const defaultColumns: FooterColumn[] = [
   {
     title: 'FOR PARTNERS',
     links: [
-      { label: 'Add your restaurant', href: '/partner/restaurant' },
-      { label: 'Sign up to deliver', href: '/partner/rider' },
-      { label: 'Business Account', href: '/partner/business' },
+      { label: 'Add your restaurant', href: '/auth/register/restaurant' },
+      { label: 'Sign up to deliver', href: '/auth/register/rider' },
+      { label: 'Business Account', href: '/auth/register' },
     ],
   },
   {
@@ -66,7 +66,7 @@ export const Footer: React.FC<FooterProps> = ({
     pathname?.startsWith('/admin') ||
     pathname?.startsWith('/vendor') ||
     pathname?.startsWith('/rider') ||
-    pathname?.startsWith('/client/dashboard')
+    pathname?.startsWith('/client/orders')
   ) {
     return null;
   }

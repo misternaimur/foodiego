@@ -1842,9 +1842,9 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
             <span>Merchant Profile</span>
           </Link>
           <Link
-            href="/dashboard/restaurant/create"
+            href="/vendor/create-menu"
             className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-              pathname === '/dashboard/restaurant/create'
+              pathname === '/vendor/create-menu'
                 ? 'bg-[#fff1ec] text-[#b93815] border-l-4 border-[#b93815] pl-3'
                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
@@ -1852,7 +1852,7 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
             <Sparkles
               size={18}
               className={
-                pathname === '/dashboard/restaurant/create'
+                pathname === '/vendor/create-menu'
                   ? 'text-[#b93815]'
                   : 'text-gray-400'
               }
