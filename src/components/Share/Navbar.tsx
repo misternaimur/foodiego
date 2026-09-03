@@ -61,7 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const dashboardHref =
     role === 'admin'
       ? '/admin'
-      : role === 'restaurant'
+      : role === 'vendor'
       ? '/vendor'
       : role === 'rider'
       ? '/rider'
