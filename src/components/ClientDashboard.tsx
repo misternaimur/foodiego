@@ -751,8 +751,10 @@ export default function ClientDashboard({
           )}
         </AnimatePresence>
 
-        {/* Top Header */}
-        <header className="w-full px-4 sm:px-8 lg:px-12 mt-6">
+        {activeTab === 'dashboard' && (
+          <>
+            {/* Top Header */}
+            <header className="w-full px-4 sm:px-8 lg:px-12 mt-6">
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -857,10 +859,10 @@ export default function ClientDashboard({
             </div>
           </div>
         </motion.div>
-      </header>
+        </header>
 
-      {/* HERO BANNER */}
-      <div className="w-full px-4 sm:px-8 lg:px-12 mt-6">
+        {/* HERO BANNER */}
+        <div className="w-full px-4 sm:px-8 lg:px-12 mt-6">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }} className="relative bg-gradient-to-r from-[#ea580c] to-[#9a3412] rounded-3xl overflow-hidden border border-white/40 shadow-2xl shadow-orange-500/20">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.25),transparent_55%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(246,164,41,0.4),transparent_55%)]" />
@@ -873,10 +875,10 @@ export default function ClientDashboard({
             <p className="mt-1 text-white/80 text-sm max-w-xl">Here&apos;s what&apos;s happening with your restaurant today.</p>
           </div>
         </motion.div>
-      </div>
+        </div>
 
-      {/* OVERLAPPING AVATAR + IDENTITY */}
-      <div className="relative -mt-14 sm:-mt-16 px-4 sm:px-8 lg:px-12">
+        {/* OVERLAPPING AVATAR + IDENTITY */}
+        <div className="relative -mt-14 sm:-mt-16 px-4 sm:px-8 lg:px-12">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.05 }} className="bg-[#fdfbf7] border border-white/60 rounded-3xl shadow-xl shadow-lg shadow-gray-300/40 p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-end gap-5">
             <div className="relative h-24 w-24 sm:h-28 sm:w-28 -mt-16 sm:-mt-20 rounded-2xl border-[5px] border-white overflow-hidden bg-gray-100 shadow-2xl shadow-gray-400/40 shrink-0">
@@ -897,7 +899,9 @@ export default function ClientDashboard({
             </motion.button>
           </div>
         </motion.div>
-      </div>
+            </div>
+          </>
+        )}
 
       {/* MERCHANT SUB-NAVIGATION PILL BAR */}
       <div className="w-full px-4 sm:px-8 lg:px-12 mt-6">
