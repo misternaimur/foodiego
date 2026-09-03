@@ -98,7 +98,7 @@ export default function RiderModerationActions({
             ) : (
               <RotateCcw size={13} />
             )}
-            Move to pending
+            Move to pending wait for review
           </motion.button>
         )}
       </div>
