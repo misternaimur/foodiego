@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useSyncExternalStore } from 'react'
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { Sparkles, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown, UtensilsCrossed, Bike } from 'lucide-react';
+import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown, UtensilsCrossed, Bike } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import LogoGreen from './LogoGreen';
 import CartDrawer from '@/components/CartDrawer';
@@ -28,7 +28,7 @@ export interface NavbarProps {
 
 const defaultNavItems: NavItem[] = [
   { label: 'Home', href: '/' },
-  { label: 'Discover Foods', href: '/restaurants' },
+  { label: 'Discover Foods', href: '/foods' },
   { label: 'Offers', href: '/offers' },
 ];
 
@@ -145,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 const isActive = pathname === item.href;
                 return (
                   <Link
-                    key={item.href}
+                    key={`${item.href}-${item.label}`}
                     href={item.href}
                     className={`relative py-6 text-sm font-semibold transition-colors ${
                       isActive
@@ -346,7 +346,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {navItems.map((item) => (
               <Link
-                key={item.href}
+                key={`${item.href}-${item.label}`}
                 href={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`block text-base font-semibold py-1.5 ${
