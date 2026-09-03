@@ -10,7 +10,7 @@ import {
   ShoppingBag, BadgeCheck, Store, LayoutDashboard, Search, Bell,
   ChevronDown, DollarSign, TrendingUp, Download, Flame, CheckCircle2,
   BarChart3, Calendar, Receipt, Camera, Loader2, Clock, X, ArrowRight,
-  CreditCard, Eye, LogOut, LayoutGrid, Settings, Truck, Ticket, Bike, Lock, Shield,
+  CreditCard, Eye, LogOut, LayoutGrid, Settings, Truck, Ticket, Lock, Shield,
 } from 'lucide-react';
 import CreateMenuItem from '@/components/CreateMenuItem';
 import { useApp } from '@/context/AppContext';
@@ -21,7 +21,7 @@ interface ClientDashboardProps {
   email?: string;
 }
 
-type TabId = 'dashboard' | 'profile' | 'orders' | 'create_menu' | 'ai-studio' | 'analytics' | 'payments' | 'delivery' | 'reviews' | 'support' | 'settings';
+type TabId = 'dashboard' | 'profile' | 'orders' | 'create_menu' | 'ai-studio' | 'analytics' | 'payments' | 'delivery' | 'reviews' | 'support' | 'notifications' | 'settings';
 
 const tabs: { id: TabId; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -34,6 +34,7 @@ const tabs: { id: TabId; label: string; icon: React.ComponentType<{ size?: numbe
   { id: 'delivery', label: 'Delivery Management', icon: Truck },
   { id: 'reviews', label: 'Reviews & Ratings', icon: Star },
   { id: 'support', label: 'Support Ticket', icon: Ticket },
+  { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -253,6 +254,28 @@ const paymentHistorySeed: PaymentHistoryEntry[] = [
 
 type DeliveryStage = 'Picked Up' | 'In Transit' | 'Arriving Soon' | 'Delivered';
 type RiderStatus = 'Available' | 'Busy' | 'Offline';
+
+type NotificationType = 'New Order' | 'Order Status' | 'Payment' | 'Review' | 'Delivery' | 'Support' | 'System';
+
+interface NotificationItem {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  time: string;
+  unread: boolean;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+}
+
+const notificationsSeed: NotificationItem[] = [
+  { id: 'notif-1', type: 'New Order', title: 'New High-Value Order', message: 'Order #A2077 has been placed for $84.20.', time: '2 min ago', unread: true, icon: ShoppingBag },
+  { id: 'notif-2', type: 'Order Status', title: 'Order Status Updated', message: 'Order #A2051 has been picked up by the rider.', time: '8 min ago', unread: true, icon: ArrowRight },
+  { id: 'notif-3', type: 'Payment', title: 'Weekly Payout Processed', message: 'Your weekly payout of $1,284.50 has been initiated.', time: '4 hr ago', unread: true, icon: DollarSign },
+  { id: 'notif-4', type: 'Review', title: 'New 5-Star Review', message: 'Priya S. left a 5-star review on Truffle Smashburger.', time: '12 min ago', unread: false, icon: Star },
+  { id: 'notif-5', type: 'Delivery', title: 'Delivery Update', message: 'Driver is 3 minutes away from the customer.', time: '18 min ago', unread: false, icon: Truck },
+  { id: 'notif-6', type: 'Support', title: 'Support Ticket Update', message: 'Your ticket #T-4821 has been marked as In Progress.', time: '2 hr ago', unread: false, icon: Ticket },
+  { id: 'notif-7', type: 'System', title: 'System Announcement', message: 'Scheduled maintenance on Sep 5th from 2 AM to 4 AM.', time: '1 day ago', unread: false, icon: Bell },
+];
 
 interface RiderInfo {
   id: string;
@@ -528,6 +551,10 @@ export default function ClientDashboard({
   const [supportSubject, setSupportSubject] = useState('');
   const [supportDescription, setSupportDescription] = useState('');
 
+  // Notifications state
+  const [notifications, setNotifications] = useState<NotificationItem[]>(notificationsSeed);
+  const [notificationsFilter, setNotificationsFilter] = useState<'all' | 'unread' | 'read'>('all');
+
   // Delivery Management state
   const [deliverySubTab, setDeliverySubTab] = useState<'active' | 'riders' | 'history'>('active');
   const [activeDeliveries, setActiveDeliveries] = useState<DeliveryRecord[]>(activeDeliveriesSeed);
@@ -611,6 +638,17 @@ export default function ClientDashboard({
       growth: dateFilter === 'Today' ? 12 : dateFilter === 'This Week' ? 18 : 24,
     };
   }, [dateFilter]);
+
+  const dashboardEarnings = useMemo(() => {
+    const all = orderEarningsSeed;
+    return {
+      totalGross: all.reduce((s, o) => s + o.grossAmount, 0),
+      totalNet: all.reduce((s, o) => s + o.netEarning, 0),
+      totalCommission: all.reduce((s, o) => s + o.commissionAmount, 0),
+      available: all.filter((o) => o.status === 'Available').reduce((s, o) => s + o.netEarning, 0),
+      pending: all.filter((o) => o.status === 'Pending').reduce((s, o) => s + o.netEarning, 0),
+    };
+  }, []);
 
   const filteredOrders = useMemo(() => {
     if (orderFilter === 'All') return orders;
@@ -811,10 +849,10 @@ export default function ClientDashboard({
                       >
                         <LogOut size={16} />
                         Logout
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                )}
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
               </AnimatePresence>
             </div>
           </div>
@@ -1010,7 +1048,7 @@ export default function ClientDashboard({
                       </div>
                     </div>
 
-                    <div className="relative h-64 flex items-end justify-between gap-2 sm:gap-3 px-2 pt-6" style={{ perspective: '1000px' }}>
+                    <div className="relative h-48 sm:h-64 flex items-end justify-between gap-2 sm:gap-3 px-2 pt-6" style={{ perspective: '1000px' }}>
                       {bars.map((v, i) => {
                         const heightPct = Math.max(8, v);
                         const value = chartMetric === 'Sales' ? Math.round(80 + v * 35) : Math.round(12 + v * 0.4);
@@ -1119,6 +1157,45 @@ export default function ClientDashboard({
                   </Tilt3DCard>
                 </div>
 
+                {/* BEST-SELLING ITEMS */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
+                      <Flame size={18} className="text-orange-500" />
+                      Best-Selling Items
+                    </h3>
+                    <Link href="#analytics" onClick={() => setActiveTab('analytics')} className="text-xs font-bold text-[#b93815] hover:text-[#9a2c0f] hover:underline">
+                      View All →
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {popularItemsSeed.slice(0, 4).map((item, i) => (
+                      <TiltCard
+                        key={item.name}
+                        className="group bg-white/90 backdrop-blur-xl border border-white/60 rounded-2xl shadow-xl shadow-gray-300/30 p-4 transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="relative h-12 w-12 rounded-xl overflow-hidden border border-white/60 shrink-0">
+                            <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-110 transition-transform" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-extrabold text-gray-900 truncate group-hover:text-[#b93815] transition-colors">{item.name}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{item.orders} orders</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-extrabold text-[#b93815]">${item.revenue.toLocaleString()}</p>
+                            <span className={`inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                              i === 0 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-gray-50 text-gray-600 border border-gray-200'
+                            }`}>
+                              #{i + 1}
+                            </span>
+                          </div>
+                        </div>
+                      </TiltCard>
+                    ))}
+                  </div>
+                </div>
+
                 {/* REVIEWS + NOTIFICATIONS */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                   <Tilt3DCard className="rounded-3xl bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-gray-300/40 p-6">
@@ -1190,6 +1267,83 @@ export default function ClientDashboard({
                           </div>
                         </motion.div>
                       ))}
+                    </div>
+                  </Tilt3DCard>
+                </div>
+
+                {/* EARNINGS OVERVIEW */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                  <Tilt3DCard className="lg:col-span-2 rounded-3xl bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-gray-300/40 p-6">
+                    <div className="absolute inset-0 rounded-[inherit] bg-gradient-to-br from-white/30 via-transparent to-white/5 pointer-events-none" />
+                    <div className="relative flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-extrabold text-gray-900 flex items-center gap-2">
+                        <DollarSign size={20} className="text-emerald-500" />
+                        Earnings Overview
+                      </h3>
+                      <span className="text-xs text-gray-500">All-time totals from order earnings</span>
+                    </div>
+                    <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <div className="text-center">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider">Total Earnings</p>
+                        <p className="text-2xl font-extrabold text-gray-900 mt-1">${dashboardEarnings.totalNet.toFixed(2)}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">Net after commission</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider">Available</p>
+                        <p className="text-2xl font-extrabold text-emerald-600 mt-1">${dashboardEarnings.available.toFixed(2)}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">Ready to withdraw</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider">Pending</p>
+                        <p className="text-2xl font-extrabold text-amber-600 mt-1">${dashboardEarnings.pending.toFixed(2)}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">In uncleared orders</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider">Commission</p>
+                        <p className="text-2xl font-extrabold text-rose-600 mt-1">-${dashboardEarnings.totalCommission.toFixed(2)}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">Platform fees</p>
+                      </div>
+                    </div>
+                  </Tilt3DCard>
+
+                  <Tilt3DCard className="rounded-3xl bg-white/85 backdrop-blur-md border border-white/70 shadow-2xl shadow-gray-300/40 p-6">
+                    <div className="absolute inset-0 rounded-[inherit] bg-gradient-to-br from-white/30 via-transparent to-white/5 pointer-events-none" />
+                    <h3 className="relative text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2">
+                      <Receipt size={18} className="text-purple-600" />
+                      Gross vs Commission
+                    </h3>
+                    <div className="relative space-y-3">
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-bold text-gray-500">Gross Revenue</span>
+                          <span className="text-sm font-extrabold text-gray-900">${dashboardEarnings.totalGross.toFixed(2)}</span>
+                        </div>
+                        <div className="w-full bg-gray-200/60 rounded-full h-2 overflow-hidden">
+                          <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 0.8 }} className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full" />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-bold text-gray-500">Commission Deducted</span>
+                          <span className="text-sm font-extrabold text-rose-600">-${dashboardEarnings.totalCommission.toFixed(2)}</span>
+                        </div>
+                        <div className="w-full bg-gray-200/60 rounded-full h-2 overflow-hidden">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${(dashboardEarnings.totalCommission / dashboardEarnings.totalGross * 100).toFixed(0)}%` }} transition={{ duration: 0.8, delay: 0.1 }} className="h-full bg-gradient-to-r from-rose-400 to-rose-600 rounded-full" />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-bold text-gray-500">Net Received</span>
+                          <span className="text-sm font-extrabold text-emerald-600">${dashboardEarnings.totalNet.toFixed(2)}</span>
+                        </div>
+                        <div className="w-full bg-gray-200/60 rounded-full h-2 overflow-hidden">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${(dashboardEarnings.totalNet / dashboardEarnings.totalGross * 100).toFixed(0)}%` }} transition={{ duration: 0.8, delay: 0.2 }} className="h-full bg-gradient-to-r from-emerald-400 to-teal-600 rounded-full" />
+                        </div>
+                      </div>
+                      <div className="pt-2 border-t border-gray-200/60 flex justify-between text-xs">
+                        <span className="text-gray-500">Commission Rate</span>
+                        <span className="font-bold text-gray-900">{(dashboardEarnings.totalCommission / dashboardEarnings.totalGross * 100).toFixed(1)}%</span>
+                      </div>
                     </div>
                   </Tilt3DCard>
                 </div>
@@ -1576,7 +1730,7 @@ export default function ClientDashboard({
                         const file = e.dataTransfer.files?.[0];
                         if (file && file.type.startsWith('image/')) handleStudioImage(file);
                       }}
-                      className={`relative flex flex-col items-center justify-center gap-3 h-72 rounded-2xl border-2 border-dashed cursor-pointer transition-colors ${
+                      className={`relative flex flex-col items-center justify-center gap-3 h-48 sm:h-72 rounded-2xl border-2 border-dashed cursor-pointer transition-colors ${
                         studioDragging ? 'border-[#b93815] bg-orange-50' : 'border-gray-300 bg-white/40 hover:border-[#b93815]/60'
                       }`}
                     >
@@ -2473,6 +2627,111 @@ export default function ClientDashboard({
               </motion.div>
             )}
 
+            {activeTab === 'notifications' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                  <div>
+                    <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">Notifications</h2>
+                    <p className="mt-1 text-base text-gray-500">Stay updated on all business and system activities.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 bg-gray-100/80 rounded-2xl p-1.5 border border-white/60 shadow-inner">
+                    {(['all', 'unread', 'read'] as const).map((f) => (
+                      <motion.button
+                        key={f}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setNotificationsFilter(f)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
+                          notificationsFilter === f
+                            ? 'bg-gradient-to-b from-[#c94118] to-[#9a2c0f] text-white border-transparent'
+                            : 'bg-white text-gray-600 border-white/60 hover:bg-gray-50'
+                        }`}
+                      >
+                        {f.charAt(0).toUpperCase() + f.slice(1)}
+                        {f === 'all' && ` (${notifications.length})`}
+                        {f === 'unread' && ` (${notifications.filter((n) => n.unread).length})`}
+                        {f === 'read' && ` (${notifications.filter((n) => !n.unread).length})`}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-gray-500">
+                    {notifications.filter((n) => n.unread).length} unread notification{notifications.filter((n) => n.unread).length !== 1 ? 's' : ''}
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                    onClick={() => {
+                      setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+                      showToast('All notifications marked as read');
+                    }}
+                    className="text-xs font-bold text-[#b93815] hover:text-[#9a2c0f] bg-[#fff1ec] hover:bg-[#ffe5d9] px-3 py-1.5 rounded-xl border border-orange-200 transition-colors"
+                  >
+                    Mark All as Read
+                  </motion.button>
+                </div>
+
+                <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 overflow-hidden">
+                  <div className="divide-y divide-gray-100/60">
+                    {notifications.filter((n) => {
+                      if (notificationsFilter === 'unread') return n.unread;
+                      if (notificationsFilter === 'read') return !n.unread;
+                      return true;
+                    }).map((n) => (
+                      <motion.div
+                        key={n.id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className={`flex items-start gap-4 p-4 hover:bg-gray-50/80 transition-colors cursor-pointer ${n.unread ? 'bg-orange-50/30' : ''}`}
+                        onClick={() => {
+                          if (n.unread) {
+                            setNotifications((prev) => prev.map((x) => x.id === n.id ? { ...x, unread: false } : x));
+                          }
+                        }}
+                      >
+                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          n.type === 'New Order' ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                          : n.type === 'Order Status' ? 'bg-indigo-50 text-indigo-600 border border-indigo-200'
+                          : n.type === 'Payment' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                          : n.type === 'Review' ? 'bg-amber-50 text-amber-600 border border-amber-200'
+                          : n.type === 'Delivery' ? 'bg-violet-50 text-violet-600 border border-violet-200'
+                          : n.type === 'Support' ? 'bg-purple-50 text-purple-600 border border-purple-200'
+                          : 'bg-gray-50 text-gray-600 border border-gray-200'
+                        }`}>
+                          <n.icon size={16} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className={`text-sm font-bold ${n.unread ? 'text-gray-900' : 'text-gray-700'}`}>{n.title}</p>
+                            {n.unread && <span className="w-2 h-2 rounded-full bg-orange-500 shadow-lg shadow-orange-200" />}
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">{n.message}</p>
+                          <p className="text-[10px] text-gray-400 mt-1">{n.time}</p>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${
+                          n.type === 'New Order' ? 'bg-blue-50 text-blue-700 border-blue-200'
+                          : n.type === 'Order Status' ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                          : n.type === 'Payment' ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : n.type === 'Review' ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : n.type === 'Delivery' ? 'bg-violet-50 text-violet-700 border-violet-200'
+                          : n.type === 'Support' ? 'bg-purple-50 text-purple-700 border-purple-200'
+                          : 'bg-gray-50 text-gray-600 border-gray-300'
+                        }`}>
+                          {n.type}
+                        </span>
+                      </motion.div>
+                    ))}
+                    {notifications.filter((n) => {
+                      if (notificationsFilter === 'unread') return n.unread;
+                      if (notificationsFilter === 'read') return !n.unread;
+                      return true;
+                    }).length === 0 && (
+                      <p className="text-center py-8 text-sm text-gray-500 italic">No {notificationsFilter} notifications.</p>
+                    )}
+                  </div>
+                </TiltCard>
+              </motion.div>
+            )}
             {activeTab === 'settings' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -2672,13 +2931,13 @@ export default function ClientDashboard({
                                     : 'bg-white text-rose-700 border-rose-200 hover:bg-rose-50'
                                 }`}
                               >
-                                {s.current ? 'Active' : 'Revoke'}
-                              </motion.button>
-                            </div>
+                              {s.current ? 'Active' : 'Revoke'}
+                            </motion.button>
                           </div>
-                        ))}
-                      </div>
-                    </TiltCard>
+                        </div>
+                      ))}
+                    </div>
+                  </TiltCard>
                   </div>
                 )}
               </motion.div>
