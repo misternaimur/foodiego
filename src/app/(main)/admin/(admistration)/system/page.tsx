@@ -3,7 +3,7 @@ import React from 'react';
 const page = () => {
     return (
         <div>
-            users
+            <h1>Hello system </h1>
         </div>
     );
 };

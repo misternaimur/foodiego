@@ -3,8 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Logo from './LogoWhite'
-
+import Logo from './LogoWhite';
 
 export interface FooterLink {
   label: string;
@@ -62,7 +61,13 @@ export const Footer: React.FC<FooterProps> = ({
 }) => {
   const pathname = usePathname();
 
-  if (pathname && pathname.startsWith('/dashboard')) {
+  // Conditionally hide the Footer on admin, vendor, rider, or client dashboard paths
+  if (
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/vendor') ||
+    pathname?.startsWith('/rider') ||
+    pathname?.startsWith('/client/dashboard')
+  ) {
     return null;
   }
 
@@ -76,7 +81,7 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Left Column: Brand Info & Quick Action Icons */}
           <div className="lg:col-span-2 space-y-5">
             <div>
-            <Logo></Logo>
+              <Logo />
             </div>
 
             <p className="text-sm leading-relaxed max-w-sm text-emerald-100/80">
