@@ -6,7 +6,6 @@ import {
   Mail,
   Phone,
   Clock,
-  UtensilsCrossed,
   Calendar,
   User,
   Inbox,

@@ -10,7 +10,7 @@ const AdminHeader = () => {
 
   const getPageTitle = () => {
     if (pathname.includes('/dashboard')) return 'Dashboard';
-    if (pathname.includes('/users')) return 'Users Management';
+    if (pathname.includes('admin/users')) return 'Users Management';
     if (pathname.includes('/vendors')) return 'Vendors Management';
     if (pathname.includes('/finance')) return 'Finance Management';
     if (pathname.includes('/operations')) return 'Operations Management';
@@ -24,12 +24,7 @@ const AdminHeader = () => {
       
       {/* Left Side: Dynamic Page Title */}
       <div className="flex flex-col">
-        <h1 className="text-lg md:text-xl font-extrabold text-gray-900 tracking-tight">
-          {getPageTitle()}
-        </h1>
-        <p className="text-[11px] text-gray-400 hidden sm:block">
-          Welcome back, manage your platform efficiently.
-        </p>
+        
       </div>
 
       {/* Right Side Actions & Profile */}
