@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
-import { dbConnect } from "@/lib/dbConnect";
-import { Rider } from "@/models/Rider";
+import { getOrCreateRiderProfile } from "@/lib/profile";
 import RiderStatusScreen from "@/components/rider/RiderStatusScreen";
 
 export default async function RiderPendingPage() {
@@ -11,14 +10,9 @@ export default async function RiderPendingPage() {
     redirect("/");
   }
 
-  await dbConnect();
-  const rider = await Rider.findOne({ userId: session.id }).lean();
+  const rider = await getOrCreateRiderProfile(session);
 
-  if (!rider) {
-    redirect("/auth/register/rider");
-  }
-
-  if (rider.status === "approved") {
+  if (!rider || rider.status === "approved") {
     redirect("/rider");
   }
 

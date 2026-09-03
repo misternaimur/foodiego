@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 // Nested layout: the root layout (src/app/layout.tsx) already renders <html>,
 // <body> and <Providers>. A nested layout must only add its own UI chrome,
 // never another <html>/<body> — doing so breaks hydration.
-export default async function PublicLayout({
+export default async function MainLayout({
   children,
 }: {
   children: React.ReactNode;
