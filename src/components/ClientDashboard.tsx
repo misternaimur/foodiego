@@ -10,7 +10,7 @@ import {
   ShoppingBag, BadgeCheck, Store, LayoutDashboard, Search, Bell,
   ChevronDown, DollarSign, TrendingUp, Download, Flame, CheckCircle2,
   BarChart3, Calendar, Receipt, Camera, Loader2, Clock, X, ArrowRight,
-  CreditCard, Eye, LogOut, LayoutGrid, Settings, Truck, Bike, ToggleLeft,
+  CreditCard, Eye, LogOut, LayoutGrid, Settings, Truck, Ticket, Bike, Lock, Shield,
 } from 'lucide-react';
 import CreateMenuItem from '@/components/CreateMenuItem';
 import { useApp } from '@/context/AppContext';
@@ -21,17 +21,20 @@ interface ClientDashboardProps {
   email?: string;
 }
 
-type TabId = 'overview' | 'profile' | 'orders' | 'menu' | 'ai-studio' | 'analytics' | 'payments' | 'delivery';
+type TabId = 'dashboard' | 'profile' | 'orders' | 'create_menu' | 'ai-studio' | 'analytics' | 'payments' | 'delivery' | 'reviews' | 'support' | 'settings';
 
 const tabs: { id: TabId; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'orders', label: 'Orders', icon: ShoppingBag },
-  { id: 'menu', label: 'Menu Management', icon: UtensilsCrossed },
+  { id: 'create_menu', label: 'Create Menu Item', icon: Sparkles },
   { id: 'ai-studio', label: 'AI Food Studio', icon: Sparkles },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'payments', label: 'Payments & Earnings', icon: CreditCard },
   { id: 'delivery', label: 'Delivery Management', icon: Truck },
+  { id: 'reviews', label: 'Reviews & Ratings', icon: Star },
+  { id: 'support', label: 'Support Ticket', icon: Ticket },
+  { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 const infoFields = [
@@ -465,7 +468,7 @@ export default function ClientDashboard({
   const router = useRouter();
   const { logoutUser } = useApp();
 
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [dateFilter, setDateFilter] = useState<'Today' | 'This Week' | 'This Month' | 'This Year'>('Today');
   const [orderFilter, setOrderFilter] = useState<'All' | 'New' | 'Active' | 'History'>('All');
   const [orders, setOrders] = useState<LiveOrder[]>(liveOrdersSeed);
@@ -484,10 +487,46 @@ export default function ClientDashboard({
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryEntry[]>(paymentHistorySeed);
   const [selectedEarningOrder, setSelectedEarningOrder] = useState<OrderEarning | null>(null);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [modeDropdownOpen, setModeDropdownOpen] = useState(false);
-  const [merchantSubTab, setMerchantSubTab] = useState<'dashboard' | 'menu'>('dashboard');
-  const [storeOpen, setStoreOpen] = useState(true);
-  const [prepMode, setPrepMode] = useState<'normal' | 'rush' | 'pause'>('normal');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Restaurant Profile state
+  const [restaurantName, setRestaurantName] = useState('Truffle House Kitchen');
+  const [restaurantDescription, setRestaurantDescription] = useState('Gourmet burgers and artisanal sides crafted with premium ingredients.');
+  const [restaurantLogo, setRestaurantLogo] = useState<string | null>(null);
+  const [restaurantCover, setRestaurantCover] = useState<string | null>(null);
+  const [businessHours, setBusinessHours] = useState('10:00 AM - 11:00 PM');
+  const operatingDaysSeed = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const [openDays, setOpenDays] = useState<string[]>(operatingDaysSeed);
+  const [restaurantStatus, setRestaurantStatus] = useState<'Open' | 'Closed'>('Open');
+  const [contactEmail, setContactEmail] = useState('hello@trufflehouse.co');
+  const [contactPhone, setContactPhone] = useState('+1 (555) 019-2834');
+  const [restaurantAddress, setRestaurantAddress] = useState('128 Savor Avenue, Foodiego City, CA 90001');
+
+  // Settings state
+  const [settingsSubTab, setSettingsSubTab] = useState<'account' | 'business' | 'notifications' | 'security'>('account');
+  const [ownerName, setOwnerName] = useState('abid');
+  const [accountEmail, setAccountEmail] = useState('abid@trufflehouse.co');
+  const [accountPhone, setAccountPhone] = useState('+1 (555) 019-2834');
+  const [taxId, setTaxId] = useState('TX-8492-5521');
+  const [payoutMethod, setPayoutMethod] = useState('Bank Transfer · Chase ****4521');
+  const [notificationFlags, setNotificationFlags] = useState({
+    newOrder: true,
+    orderStatus: true,
+    paymentEarnings: true,
+    newReview: true,
+    deliveryUpdate: true,
+    supportTicket: false,
+    systemAnnouncement: true,
+  });
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Support Ticket state
+  const [supportCategory, setSupportCategory] = useState<'Order Issue' | 'Payment Issue' | 'Menu Issue' | 'Delivery Issue' | 'Account Issue' | 'Other'>('Order Issue');
+  const [supportAttachment, setSupportAttachment] = useState<string | null>(null);
+  const [supportSubject, setSupportSubject] = useState('');
+  const [supportDescription, setSupportDescription] = useState('');
 
   // Delivery Management state
   const [deliverySubTab, setDeliverySubTab] = useState<'active' | 'riders' | 'history'>('active');
@@ -508,6 +547,13 @@ export default function ClientDashboard({
   const handleStudioImage = (file: File) => {
     const reader = new FileReader();
     reader.onload = () => setStudioImage(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageUpload = (file: File, setter: (val: string) => void) => {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => setter(reader.result as string);
     reader.readAsDataURL(file);
   };
 
@@ -544,21 +590,17 @@ export default function ClientDashboard({
   };
 
   const userDropdownRef = useRef<HTMLDivElement | null>(null);
-  const modeDropdownRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) {
         setShowUserDropdown(false);
-      }
-      if (modeDropdownRef.current && !modeDropdownRef.current.contains(e.target as Node)) {
-        setModeDropdownOpen(false);
       }
     };
     if (showUserDropdown) {
       document.addEventListener('mousedown', handleOutsideClick);
     }
     return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [showUserDropdown, modeDropdownOpen]);
+  }, [showUserDropdown]);
 
   const metrics = useMemo(() => {
     const factor = dateFilter === 'Today' ? 1 : dateFilter === 'This Week' ? 6.5 : dateFilter === 'This Month' ? 27 : 312;
@@ -661,124 +703,60 @@ export default function ClientDashboard({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#faf9f6] via-[#f4f1ea] to-[#fff7ec] font-sans">
+    <div className="min-h-screen bg-[#FAF8F5] font-sans">
       <AnimatePresence>
         {toast && (
           <motion.div initial={{ opacity: 0, y: 20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.9 }} className="fixed bottom-6 right-6 z-[100] bg-white/95 backdrop-blur-xl border border-white/60 rounded-2xl shadow-2xl shadow-orange-500/10 p-4 flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700 flex items-center justify-center"><CheckCircle2 size={18} /></div>
             <p className="text-sm font-bold text-gray-900">{toast}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* AI MERCHANT CONTROL BAR */}
-      <div className="w-full px-4 sm:px-8 lg:px-12 mt-6">
+        {/* Top Header */}
+        <header className="w-full px-4 sm:px-8 lg:px-12 mt-6">
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="w-full bg-white/80 backdrop-blur-md rounded-2xl p-3 border border-gray-100 shadow-sm flex items-center justify-between gap-4"
+          className="w-full bg-white rounded-2xl border border-gray-200/70 shadow-sm px-4 py-2.5 flex items-center justify-between relative z-50"
         >
-          {/* Left Side: Store Status Toggle */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className={`relative flex h-3 w-3 ${storeOpen ? 'animate-pulse' : ''} rounded-full ${storeOpen ? 'bg-green-500' : 'bg-gray-400'}`}>
-                <span className={`absolute inline-flex h-3 w-3 animate-ping opacity-75 rounded-full ${storeOpen ? 'bg-green-400' : 'bg-gray-400'}`} />
-              </span>
-              <button
-                onClick={() => setStoreOpen(!storeOpen)}
-                className={`text-sm font-bold transition-colors ${storeOpen ? 'text-green-700' : 'text-gray-500'}`}
-              >
-                {storeOpen ? 'Online' : 'Offline'}
-              </button>
-            </div>
-
-            {/* Mode Selector Dropdown */}
-            <div className="relative" ref={modeDropdownRef}>
-              <button
-                onClick={() => setModeDropdownOpen((prev) => !modeDropdownOpen)}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-[#b93815] bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200 transition-colors"
-              >
-                {prepMode === 'normal' ? 'Normal Prep' : prepMode === 'rush' ? 'Rush Mode' : 'Pause Orders'}
-                <ChevronDown size={14} className="text-gray-500" />
-              </button>
-              <AnimatePresence>
-                {modeDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                    transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 z-50 p-1.5"
-                  >
-                    <button
-                      onClick={() => { setPrepMode('normal'); setModeDropdownOpen(false); }}
-                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                    >
-                      Normal Prep
-                    </button>
-                    <button
-                      onClick={() => { setPrepMode('rush'); setModeDropdownOpen(false); showToast('Rush Mode enabled (+10 mins delay)'); }}
-                      className="w-full text-left px-3 py-2 text-sm text-orange-700 hover:bg-orange-50 rounded-lg transition-colors"
-                    >
-                      Rush Mode (+10 mins delay)
-                    </button>
-                    <button
-                      onClick={() => { setPrepMode('pause'); setModeDropdownOpen(false); showToast('Orders paused'); }}
-                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      Pause Orders
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+          {/* Left: Search */}
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search orders, menu items, customers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2 pl-10 text-xs w-80 text-gray-700 focus:outline-none focus:border-orange-400"
+            />
           </div>
 
-          {/* Center: AI Insight Banner */}
-          <div className="flex-1 flex items-center justify-center">
-            <div className={`inline-flex items-center gap-2 text-xs sm:text-sm font-medium rounded-full px-4 py-2 ${
-              prepMode === 'pause'
-                ? 'bg-red-50 text-red-700 border border-red-200'
-                : prepMode === 'rush'
-                ? 'bg-orange-50 text-orange-700 border border-orange-200'
-                : 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200'
-            }`}>
-              <Sparkles size={14} className="text-amber-400" />
-              <span className="truncate max-w-xs sm:max-w-sm">
-                🤖 AI Insight: Truffle Burgers are trending +35% in your area today. Consider running a promo!
-              </span>
-            </div>
-          </div>
-
-          {/* Right Side: Quick AI Shortcuts + Profile */}
+          {/* Right: Notification & Profile */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <Link
-              href="/ai-studio"
-              className="inline-flex items-center gap-1.5 bg-gradient-to-b from-[#c94118] to-[#9a2c0f] hover:from-[#b93815] hover:to-[#7a1d09] text-white text-xs font-bold py-2 px-4 rounded-xl shadow-md border border-white/20 transition-all"
+            {/* Notification Bell */}
+            <button
+              className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Notifications"
             >
-              <Camera size={14} /> AI Food Studio
-            </Link>
-            <Link
-              href="#menu-optimizer"
-              className="inline-flex items-center gap-1.5 bg-white/80 border border-gray-200 text-gray-700 hover:text-[#b93815] text-xs font-bold py-2 px-4 rounded-xl shadow-sm transition-all"
-            >
-              <Sparkles size={14} /> AI Menu Optimizer
-            </Link>
+              <Bell size={20} />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-orange-500 rounded-full" />
+            </button>
 
             {/* User Profile Dropdown */}
             <div className="relative inline-block" ref={userDropdownRef}>
               <button
                 onClick={() => setShowUserDropdown((prev) => !prev)}
                 aria-label="User menu"
-                className="flex items-center gap-2 bg-white/80 backdrop-blur-xl border border-white/60 shadow-sm px-2 py-1.5 rounded-full hover:bg-white transition-colors"
+                className="flex items-center gap-2 bg-white border border-gray-200/70 rounded-full px-3 py-1.5 text-xs font-semibold text-gray-800 hover:bg-gray-50 transition-colors"
               >
-                <span className="flex items-center justify-center h-7 w-7 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs border border-emerald-200">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 font-bold text-xs border border-emerald-200">
                   {(name || 'U').charAt(0).toUpperCase()}
                 </span>
-                <span className="hidden sm:inline-block max-w-[120px] truncate text-sm font-semibold text-gray-800">{name}</span>
+                <span className="hidden sm:inline-block max-w-[100px] truncate text-xs font-semibold text-gray-800">{name}</span>
                 <motion.span animate={{ rotate: showUserDropdown ? 180 : 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
-                  <ChevronDown size={16} className="text-gray-500" />
+                  <ChevronDown size={14} className="text-gray-500" />
                 </motion.span>
               </button>
 
@@ -790,7 +768,7 @@ export default function ClientDashboard({
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
-                    className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 p-3"
+                    className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 p-2"
                   >
                     <div className="px-3 py-2.5 border-b border-gray-100">
                       <p className="font-semibold text-gray-900">{name}</p>
@@ -841,7 +819,7 @@ export default function ClientDashboard({
             </div>
           </div>
         </motion.div>
-      </div>
+      </header>
 
       {/* HERO BANNER */}
       <div className="w-full px-4 sm:px-8 lg:px-12 mt-6">
@@ -893,16 +871,16 @@ export default function ClientDashboard({
         >
           {[
             { id: 'dashboard' as const, label: 'Merchant Dashboard', icon: LayoutDashboard },
-            { id: 'menu' as const, label: 'Create Menu Item', icon: Sparkles },
+            { id: 'create_menu' as const, label: 'Create Menu Item', icon: Sparkles },
           ].map((item) => {
-            const isActive = merchantSubTab === item.id;
+            const isActive = activeTab === item.id;
             return (
               <motion.button
                 key={item.id}
                 whileHover={{ scale: isActive ? 1 : 1.03, y: isActive ? 0 : -1 }}
                 whileTap={{ scale: 0.97, y: 2 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-                onClick={() => setMerchantSubTab(item.id)}
+                onClick={() => setActiveTab(item.id)}
                 className={`inline-flex items-center justify-center gap-2 font-semibold py-2.5 px-6 rounded-2xl transition-all text-sm ${
                   isActive
                     ? 'bg-[#c8481a] text-white shadow-lg shadow-[#b93815]/30 border border-white/30 border-b-0'
@@ -917,9 +895,9 @@ export default function ClientDashboard({
         </motion.nav>
       </div>
 
-      {/* MAIN CONTENT (driven by merchantSubTab for dashboard/menu, otherwise activeTab) */}
+      {/* MAIN CONTENT (driven by activeTab) */}
       <div className="w-full px-4 sm:px-8 lg:px-12 mt-8 pb-12">
-        {merchantSubTab === 'menu' ? (
+        {activeTab === 'create_menu' ? (
           <CreateMenuItem />
         ) : (
           <>
@@ -939,7 +917,7 @@ export default function ClientDashboard({
 
         {/* MAIN CONTENT */}
         <main className="space-y-8">
-            {activeTab === 'overview' && (
+            {activeTab === 'dashboard' && (
               <div className="space-y-8 relative">
                 {/* Floating 3D gradient spheres background */}
                 <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -1240,7 +1218,136 @@ export default function ClientDashboard({
               </div>
             )}
 
-            {activeTab === 'profile' && null}
+            {activeTab === 'profile' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                  <div>
+                    <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">Restaurant Profile</h2>
+                    <p className="mt-1 text-base text-gray-500">Manage your restaurant&apos;s business information.</p>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.97, y: 2 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                    onClick={() => showToast('Profile updated successfully')}
+                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-b from-[#c94118] to-[#9a2c0f] hover:from-[#b93815] hover:to-[#7a1d09] text-white text-xs font-bold py-2.5 px-5 rounded-2xl shadow-lg shadow-[#b93815]/30 border border-white/20 transition-all"
+                  >
+                    <CheckCircle2 size={14} /> Save Changes
+                  </motion.button>
+                </div>
+
+                <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6 sm:p-8">
+                  <div className="space-y-6">
+                    {/* Logo & Cover Image */}
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Branding</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Restaurant Logo</label>
+                          <label className="mt-2 flex flex-col items-center justify-center gap-2 h-32 rounded-2xl border-2 border-dashed border-gray-300 bg-[#F8FAFC] cursor-pointer hover:border-[#b93815]/60 transition-colors">
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, setRestaurantLogo); }} />
+                            {restaurantLogo ? <Image src={restaurantLogo} alt="Logo" width={64} height={64} className="object-cover rounded-xl" /> : <Camera size={24} className="text-gray-400" />}
+                            <span className="text-[10px] font-bold text-gray-500">Upload Logo</span>
+                          </label>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Cover Image</label>
+                          <label className="mt-2 flex flex-col items-center justify-center gap-2 h-32 rounded-2xl border-2 border-dashed border-gray-300 bg-[#F8FAFC] cursor-pointer hover:border-[#b93815]/60 transition-colors">
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, setRestaurantCover); }} />
+                            {restaurantCover ? <Image src={restaurantCover} alt="Cover" width={120} height={64} className="object-cover rounded-xl w-full h-16" /> : <Camera size={24} className="text-gray-400" />}
+                            <span className="text-[10px] font-bold text-gray-500">Upload Cover</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Basic Information */}
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Basic Information</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Restaurant Name</label>
+                          <input value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)} type="text" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Restaurant Status</label>
+                          <div className="mt-1 flex items-center gap-3">
+                            <button
+                              onClick={() => setRestaurantStatus(restaurantStatus === 'Open' ? 'Closed' : 'Open')}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${restaurantStatus === 'Open' ? 'bg-emerald-500' : 'bg-gray-400'}`}
+                            >
+                              <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${restaurantStatus === 'Open' ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                            <span className={`text-xs font-bold ${restaurantStatus === 'Open' ? 'text-emerald-700' : 'text-gray-500'}`}>{restaurantStatus}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Description</label>
+                        <textarea
+                          value={restaurantDescription}
+                          onChange={(e) => setRestaurantDescription(e.target.value)}
+                          rows={4}
+                          className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 resize-none focus:outline-none focus:border-orange-400"
+                          placeholder="Describe your restaurant..."
+                        />
+                      </div>
+                    </div>
+
+                    {/* Contact Information */}
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Contact Information</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email</label>
+                          <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} type="email" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Phone</label>
+                          <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} type="tel" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Address</label>
+                        <input
+                          value={restaurantAddress}
+                          onChange={(e) => setRestaurantAddress(e.target.value)}
+                          type="text"
+                          className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Business Hours & Operating Days */}
+                    <div className="space-y-4">
+                      <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Business Hours</h3>
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Hours</label>
+                        <input value={businessHours} onChange={(e) => setBusinessHours(e.target.value)} type="text" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Operating Days</label>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {operatingDaysSeed.map((day) => {
+                            const isOn = openDays.includes(day);
+                            return (
+                              <motion.button
+                                key={day} type="button"
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setOpenDays(isOn ? openDays.filter((d) => d !== day) : [...openDays, day])}
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${isOn ? 'bg-orange-50 text-[#b93815] border-orange-200' : 'bg-white/70 text-gray-500 border-white/60 hover:bg-white'}`}
+                              >
+                                {isOn && <CheckCircle2 size={10} className="inline mr-1" />}
+                                {day.slice(0, 3)}
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </TiltCard>
+              </motion.div>
+            )}
 
             {activeTab === 'orders' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -1364,8 +1471,6 @@ export default function ClientDashboard({
                 </AnimatePresence>
               </motion.div>
             )}
-
-            {activeTab === 'menu' && <CreateMenuItem />}
 
             {activeTab === 'analytics' && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
@@ -2018,10 +2123,10 @@ export default function ClientDashboard({
                                       {d.rider.avatarUrl ? (
                                         <Image src={d.rider.avatarUrl} alt={d.rider.name} width={32} height={32} className="object-cover rounded-full" />
                                       ) : (
-                                        <span className="text-xs font-bold text-[#b93815]">{d.rider.name.charAt(0)}</span>
+                                         <span className="text-xs font-bold text-[#b93815]">{d.rider.name.charAt(0)}</span>
                                       )}
-                                    </div>
-                                    <span className="text-sm font-semibold text-gray-900">{d.rider.name}</span>
+                                      </div>
+                                      <span className="text-sm font-semibold text-gray-900">{d.rider.name}</span>
                                     <span className={`inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold rounded-full ${riderStatusBadge(d.rider.status)}`}>
                                       {d.rider.status}
                                     </span>
@@ -2235,6 +2340,347 @@ export default function ClientDashboard({
                     </motion.div>
                   )}
                 </AnimatePresence>
+              </motion.div>
+            )}
+
+            {activeTab === 'reviews' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div>
+                  <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">Reviews & Ratings</h2>
+                  <p className="mt-1 text-base text-gray-500">See what customers are saying about your restaurant.</p>
+                </div>
+                <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6">
+                  <div className="space-y-4">
+                    {[
+                      { name: 'Priya S.', rating: 5, text: 'Truffle Smashburger is a masterpiece. The beef was perfectly seared and the smokehouse sauce is addicting.', time: '2 hours ago' },
+                      { name: 'Marco L.', rating: 4, text: 'Great burgers and fast delivery. The sweet potato fries were a nice touch. Will order again!', time: '1 day ago' },
+                      { name: 'Sofia R.', rating: 5, text: 'Amazing flavor and presentation. The staff was friendly too. Highly recommend.', time: '3 days ago' },
+                    ].map((r) => (
+                      <div key={r.name + r.time} className="flex gap-3">
+                        <div className="flex items-center gap-1 text-amber-400">
+                          {Array.from({ length: r.rating }).map((_, j) => (
+                            <Star key={j} size={14} fill="currentColor" />
+                          ))}
+                          {Array.from({ length: 5 - r.rating }).map((_, j) => (
+                            <Star key={`e-${j}`} size={14} className="text-gray-300" />
+                          ))}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-gray-900">{r.name}</p>
+                            <span className="text-xs text-gray-400">· {r.time}</span>
+                          </div>
+                          <p className="text-sm text-gray-600 mt-0.5">{r.text}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </TiltCard>
+              </motion.div>
+            )}
+
+            {activeTab === 'support' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div>
+                  <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">Support Ticket</h2>
+                  <p className="mt-1 text-base text-gray-500">Open a ticket and our support team will get back to you shortly.</p>
+                </div>
+                <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Subject</label>
+                      <input
+                        value={supportSubject}
+                        onChange={(e) => setSupportSubject(e.target.value)}
+                        className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2 text-xs text-gray-700 focus:outline-none focus:border-orange-400"
+                        placeholder="Brief summary of your issue"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Problem Category</label>
+                      <select
+                        value={supportCategory}
+                        onChange={(e) => setSupportCategory(e.target.value as typeof supportCategory)}
+                        className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2 text-xs text-gray-700 focus:outline-none focus:border-orange-400"
+                      >
+                        <option>Order Issue</option>
+                        <option>Payment Issue</option>
+                        <option>Menu Issue</option>
+                        <option>Delivery Issue</option>
+                        <option>Account Issue</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Description</label>
+                    <textarea
+                      value={supportDescription}
+                      onChange={(e) => setSupportDescription(e.target.value)}
+                      rows={4}
+                      className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2 text-xs text-gray-700 resize-none focus:outline-none focus:border-orange-400"
+                      placeholder="How can we help you? Please provide as much detail as possible."
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Attachment (evidence)</label>
+                    <label className="mt-2 flex flex-col items-center justify-center gap-2 h-24 rounded-2xl border-2 border-dashed border-gray-300 bg-[#F8FAFC] cursor-pointer hover:border-[#b93815]/60 transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleImageUpload(f, setSupportAttachment);
+                        }}
+                      />
+                      <Camera size={20} className="text-gray-400" />
+                      <span className="text-[10px] font-bold text-gray-500">Click to upload or drag & drop (PNG, JPG, PDF up to 10MB)</span>
+                    </label>
+                    {supportAttachment && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <Image src={supportAttachment} alt="Attachment preview" width={40} height={40} className="object-cover rounded-lg border border-gray-200" />
+                        <button
+                          type="button"
+                          onClick={() => setSupportAttachment(null)}
+                          className="text-[10px] text-rose-600 hover:text-rose-700 font-bold"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => {
+                      if (!supportSubject.trim() || !supportDescription.trim()) {
+                        showToast('Please enter a subject and description');
+                        return;
+                      }
+                      showToast(`Ticket submitted (${supportCategory})`);
+                      setSupportSubject('');
+                      setSupportDescription('');
+                      setSupportCategory('Order Issue');
+                      setSupportAttachment(null);
+                    }}
+                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-b from-[#c94118] to-[#9a2c0f] hover:from-[#b93815] hover:to-[#7a1d09] text-white text-xs font-bold py-2 px-4 rounded-xl shadow-md border border-white/20 transition-all"
+                  >
+                    <Ticket size={14} />
+                    Submit Ticket
+                  </motion.button>
+                  <p className="text-[10px] text-gray-400 mt-2">Ticket Status Flow: Open → In Progress → Waiting for Vendor → Resolved → Closed</p>
+                </TiltCard>
+              </motion.div>
+            )}
+
+            {activeTab === 'settings' && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                  <div>
+                    <h2 className="text-3xl font-extrabold tracking-tight text-gray-900">Settings</h2>
+                    <p className="mt-1 text-base text-gray-500">Manage your account, business, notification, and security settings.</p>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.97, y: 2 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                    onClick={() => showToast('Settings saved successfully')}
+                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-b from-[#c94118] to-[#9a2c0f] hover:from-[#b93815] hover:to-[#7a1d09] text-white text-xs font-bold py-2.5 px-5 rounded-2xl shadow-lg shadow-[#b93815]/30 border border-white/20 transition-all"
+                  >
+                    <CheckCircle2 size={14} /> Save Changes
+                  </motion.button>
+                </div>
+
+                {/* Settings Sub-Tab Navigation */}
+                <div className="flex gap-1.5 bg-gray-100/80 rounded-2xl p-1.5 border border-white/60 shadow-inner overflow-x-auto">
+                {(['account', 'business', 'notifications', 'security'] as const).map((key) => {
+                    const labelMap = { account: 'Account Settings', business: 'Business Settings', notifications: 'Notification Settings', security: 'Security Settings' };
+                    const iconMap = { account: User, business: Store, notifications: Bell, security: Lock };
+                    const Icon = iconMap[key];
+                    const label = labelMap[key];
+                    return (
+                      <motion.button
+                        key={key}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setSettingsSubTab(key)}
+                        className={`relative shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition-colors ${
+                          settingsSubTab === key
+                            ? 'bg-gradient-to-b from-[#c94118] to-[#9a2c0f] text-white border-transparent shadow-md shadow-[#b93815]/30'
+                            : 'bg-white text-gray-600 border-white/60 hover:bg-gray-50'
+                        }`}
+                      >
+                        {settingsSubTab === key && (
+                          <motion.div layoutId="settings-pill" className="absolute inset-0 bg-gradient-to-b from-[#c94118] to-[#9a2c0f] rounded-xl" transition={{ type: 'spring', stiffness: 380, damping: 28 }} />
+                        )}
+                        <Icon size={13} className="relative z-10" />
+                        <span className="relative z-10">{label}</span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Account Settings */}
+                {settingsSubTab === 'account' && (
+                  <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6 sm:p-8">
+                    <h3 className="text-lg font-extrabold text-gray-900 mb-5 flex items-center gap-2"><User size={18} className="text-orange-500" /> Account Settings</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Owner Name</label>
+                        <input value={ownerName} onChange={(e) => setOwnerName(e.target.value)} type="text" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Email Address</label>
+                        <input value={accountEmail} onChange={(e) => setAccountEmail(e.target.value)} type="email" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Phone Number</label>
+                        <input value={accountPhone} onChange={(e) => setAccountPhone(e.target.value)} type="tel" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                      </div>
+                    </div>
+                  </TiltCard>
+                )}
+
+                {/* Business Settings */}
+                {settingsSubTab === 'business' && (
+                  <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6 sm:p-8">
+                    <h3 className="text-lg font-extrabold text-gray-900 mb-5 flex items-center gap-2"><Store size={18} className="text-orange-500" /> Business Settings</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tax ID</label>
+                        <input value={taxId} onChange={(e) => setTaxId(e.target.value)} type="text" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Payout Method</label>
+                        <input value={payoutMethod} onChange={(e) => setPayoutMethod(e.target.value)} type="text" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Currency</label>
+                        <select className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400">
+                          <option>USD - US Dollar</option>
+                          <option>EUR - Euro</option>
+                          <option>GBP - British Pound</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Commission Plan</label>
+                        <select className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400">
+                          <option>Standard (12%)</option>
+                          <option>Premium (15%)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </TiltCard>
+                )}
+
+                {/* Notification Settings */}
+                {settingsSubTab === 'notifications' && (
+                  <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6 sm:p-8">
+                    <h3 className="text-lg font-extrabold text-gray-900 mb-5 flex items-center gap-2"><Bell size={18} className="text-orange-500" /> Notification Settings</h3>
+                    <div className="space-y-3">
+                      {Object.entries(notificationFlags).map(([key, val]) => {
+                        const labels: Record<string, string> = {
+                          newOrder: 'New Order',
+                          orderStatus: 'Order Status Update',
+                          paymentEarnings: 'Payment / Earnings Update',
+                          newReview: 'New Review',
+                          deliveryUpdate: 'Delivery Update',
+                          supportTicket: 'Support Ticket Update',
+                          systemAnnouncement: 'System Announcement',
+                        };
+                        return (
+                          <div key={key} className="flex items-center justify-between py-3 border-b border-gray-100/60 last:border-0">
+                            <span className="text-sm font-medium text-gray-700">{labels[key]}</span>
+                            <button
+                              onClick={() => setNotificationFlags((prev) => ({ ...prev, [key]: !prev[key as keyof typeof notificationFlags] }))}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                val ? 'bg-[#b93815]' : 'bg-gray-300'
+                              }`}
+                            >
+                              <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                                val ? 'translate-x-6' : 'translate-x-1'
+                              }`} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </TiltCard>
+                )}
+
+                {/* Security Settings */}
+                {settingsSubTab === 'security' && (
+                  <div className="space-y-6">
+                    {/* Password Management */}
+                    <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6 sm:p-8">
+                      <h3 className="text-lg font-extrabold text-gray-900 mb-5 flex items-center gap-2"><Eye size={18} className="text-orange-500" /> Password Management</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Current Password</label>
+                          <input value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} type="password" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">New Password</label>
+                          <input value={newPassword} onChange={(e) => setNewPassword(e.target.value)} type="password" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Confirm Password</label>
+                          <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type="password" className="mt-1 w-full bg-[#F8FAFC] border border-gray-200/80 rounded-xl px-3.5 py-2.5 text-xs text-gray-700 focus:outline-none focus:border-orange-400" />
+                        </div>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                        onClick={() => {
+                          if (!currentPassword || !newPassword) {
+                            showToast('Please fill in all password fields');
+                            return;
+                          }
+                          if (newPassword !== confirmPassword) {
+                            showToast('Passwords do not match');
+                            return;
+                          }
+                          showToast('Password changed successfully');
+                          setCurrentPassword(''); setNewPassword(''); setConfirmPassword('');
+                        }}
+                        className="mt-4 inline-flex items-center justify-center gap-2 bg-gradient-to-b from-emerald-500 to-emerald-700 text-white text-xs font-bold py-2 px-5 rounded-xl shadow-md border border-white/20 transition-all"
+                      >
+                        Update Password
+                      </motion.button>
+                    </TiltCard>
+
+                    {/* Session / Account Security */}
+                    <TiltCard className="bg-white/90 backdrop-blur-xl border border-white/60 rounded-3xl shadow-xl shadow-gray-300/40 p-6 sm:p-8">
+                      <h3 className="text-lg font-extrabold text-gray-900 mb-5 flex items-center gap-2"><Shield size={18} className="text-orange-500" /> Session / Account Security</h3>
+                      <div className="space-y-3">
+                        {[
+                          { id: 'sess-1', device: 'MacBook Pro · Chrome', location: 'San Francisco, CA', current: true },
+                          { id: 'sess-2', device: 'iPhone 15 · Safari', location: 'Foodiego City, CA', current: false },
+                          { id: 'sess-3', device: 'Windows 11 · Firefox', location: 'Foodiego City, CA', current: false },
+                        ].map((s) => (
+                          <div key={s.id} className="flex items-center justify-between py-3 border-b border-gray-100/60 last:border-0">
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">{s.device}</p>
+                              <p className="text-xs text-gray-500">{s.location}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {s.current && <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Current</span>}
+                              <motion.button
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => showToast(`Session ${s.current ? 'cannot be revoked (current)' : 'revoked'}`)}
+                                disabled={s.current}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
+                                  s.current
+                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                                    : 'bg-white text-rose-700 border-rose-200 hover:bg-rose-50'
+                                }`}
+                              >
+                                {s.current ? 'Active' : 'Revoke'}
+                              </motion.button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </TiltCard>
+                  </div>
+                )}
               </motion.div>
             )}
           </main>
