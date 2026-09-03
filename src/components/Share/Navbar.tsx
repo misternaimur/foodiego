@@ -40,6 +40,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const pathname = usePathname();
   const router = useRouter();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -83,6 +84,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Conditionally hide the Navbar on admin, vendor, rider, or client dashboard paths
+  if (
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/vendor') ||
+    pathname?.startsWith('/rider') ||
+    pathname?.startsWith('/client/dashboard')
+  ) {
+    return null;
+  }
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
