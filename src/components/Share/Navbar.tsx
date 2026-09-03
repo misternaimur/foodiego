@@ -28,7 +28,7 @@ export interface NavbarProps {
 
 const defaultNavItems: NavItem[] = [
   { label: 'Home', href: '/' },
-  { label: 'Discover Foods', href: '/restaurants' },
+  { label: 'Discover Foods', href: '/foods' },
   { label: 'Offers', href: '/offers' },
 ];
 
@@ -104,6 +104,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
+  if (pathname?.includes('/dashboard')) {
+    return null;
+  }
+
   return (
     <>
       {/* Restaurant / Rider Partner Sign-up strip — hidden once any role is logged in */}
@@ -141,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 const isActive = pathname === item.href;
                 return (
                   <Link
-                    key={item.href}
+                    key={`${item.href}-${item.label}`}
                     href={item.href}
                     className={`relative py-6 text-sm font-semibold transition-colors ${
                       isActive
@@ -239,26 +243,24 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <p className="text-xs text-gray-500 truncate">{user.email || 'user@example.com'}</p>
                     </div>
 
-                    <div className="py-1">
-                      <Link
-                        href="/account"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
-                      >
-                        <User size={16} className="text-[#15462D]" />
-                        <span>Profile</span>
-                      </Link>
+                  <div className="py-1">
+                    <Link
+                      href="/account"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
+                    >
+                      <User size={16} className="text-[#15462D]" />
+                      <span>Profile</span>
+                    </Link>
 
-                      <button
-                        onClick={() => {
-                          setIsDropdownOpen(false);
-                          setIsCartOpen(true);
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors text-left"
-                      >
-                        <ShoppingBag size={16} className="text-[#15462D]" />
-                        <span>My Cart</span>
-                      </button>
+                    <Link
+                      href="/client/cart"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
+                    >
+                      <ShoppingBag size={16} className="text-[#15462D]" />
+                      <span>My Cart</span>
+                    </Link>
 
                       <Link
                         href={dashboardHref}
@@ -344,7 +346,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {navItems.map((item) => (
               <Link
-                key={item.href}
+                key={`${item.href}-${item.label}`}
                 href={item.href}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`block text-base font-semibold py-1.5 ${
@@ -374,41 +376,33 @@ export const Navbar: React.FC<NavbarProps> = ({
                   Order Now
                 </Link>
 
-                <div className="pt-2 flex gap-3 border-[#E8E2D5]">
-                  <Link
-                    href="/auth/login"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex-1 text-center py-2 text-sm font-semibold text-white bg-[#15462D] rounded-full"
-                  >
-                    Sign in 
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <div className="pt-3 border-t border-[#E8E2D5] space-y-1">
-                <Link href="/account" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Profile</Link>
-                <button 
-                  onClick={() => { setIsMobileMenuOpen(false); setIsCartOpen(true); }} 
-                  className="block w-full text-left py-2 text-sm text-gray-700 font-medium"
+              <div className="pt-2 flex gap-3 border-[#E8E2D5]">
+                <Link
+                  href="/auth/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex-1 text-center py-2 text-sm font-semibold text-white bg-[#15462D] rounded-full"
                 >
-                  My Cart
-                </button>
-                <Link href={dashboardHref} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Dashboard</Link>
-                <Link href="/account" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Settings</Link>
-                <button 
-                  onClick={async () => { setIsMobileMenuOpen(false); await handleLogout(); }} 
-                  className="block w-full text-left py-2 text-sm text-red-600 font-medium cursor-pointer"
-                >
-                  Logout
-                </button>
+                  Sign in 
+                </Link>
               </div>
-            )}
-          </div>
-        )}
-      </header>
-
-      {/* Slide-over Cart Drawer Component */}
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+            </>
+          ) : (
+            <div className="pt-3 border-t border-[#E8E2D5] space-y-1">
+              <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Profile</Link>
+              <Link href="/client/cart" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">My Cart</Link>
+              <Link href={dashboardHref} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Dashboard</Link>
+              <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Settings</Link>
+              <button 
+                onClick={async () => { setIsMobileMenuOpen(false); await handleLogout(); }} 
+                className="block w-full text-left py-2 text-sm text-red-600 font-medium"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </header>
     </>
   );
 };
