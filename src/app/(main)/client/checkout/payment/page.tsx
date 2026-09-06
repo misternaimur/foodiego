@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import OnlinePaymentModal from '@/components/checkout/OnlinePaymentModal';
+import OnlinePaymentModal from '@/components/client/checkout/OnlinePaymentModal';
 
 export default function OnlinePaymentPage() {
   const router = useRouter();

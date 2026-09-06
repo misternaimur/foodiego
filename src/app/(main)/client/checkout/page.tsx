@@ -16,7 +16,7 @@ import {
   User,
 } from 'lucide-react';
 import Link from 'next/link';
-import OnlinePaymentModal from '@/components/checkout/OnlinePaymentModal';
+import OnlinePaymentModal from '@/components/client/checkout/OnlinePaymentModal';
 
 interface CheckoutForm {
   fullName: string;

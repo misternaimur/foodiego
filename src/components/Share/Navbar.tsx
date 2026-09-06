@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown, UtensilsCrossed, Bike } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import LogoGreen from './LogoGreen';
-import CartDrawer from '@/components/CartDrawer';
+import CartDrawer from '@/components/client/CartDrawer';
 
 export interface NavItem {
   label: string;

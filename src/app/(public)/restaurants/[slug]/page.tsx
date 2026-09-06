@@ -88,7 +88,7 @@ export default function RestaurantDetailPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
             <div>
               <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-                {restaurant.cuisines.join(' • ')}
+                {restaurant.cuisines?.join(' • ') || 'Various Cuisines'}
               </span>
               <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
                 {restaurant.name}

@@ -52,6 +52,10 @@ export default function RestaurantsPage() {
   const [minRating, setMinRating] = useState<number>(0);
   const [selectedCuisine, setSelectedCuisine] = useState<string>('All');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  useEffect(() =>{
+
+  }
+  );
 
   // Auto-slide effect every 5 seconds
   useEffect(() => {
@@ -154,7 +158,7 @@ export default function RestaurantsPage() {
                       type="radio"
                       name="sort"
                       checked={selectedSort === sort.id}
-                      onChange={() => setSelectedSort(sort.id as any)}
+                      onChange={() => setSelectedSort(sort.id as 'relevance' | 'fastest' | 'rating')}
                       className="w-4 h-4 text-[#15462D] focus:ring-[#15462D] accent-[#15462D]"
                     />
                     <span className="text-sm font-medium text-gray-700 group-hover:text-slate-900">
@@ -227,7 +231,7 @@ export default function RestaurantsPage() {
                 {PROMO_SLIDES.map((slide) => (
                   <div
                     key={slide.id}
-                    className={`w-full shrink-0 bg-gradient-to-r ${slide.bgGradient} p-5 sm:p-6 text-white relative flex items-center justify-between min-h-[140px] sm:min-h-[160px]`}
+                    className={`w-full shrink-0 bg-linear-to-r ${slide.bgGradient} p-5 sm:p-6 text-white relative flex items-center justify-between min-h-[140px] sm:min-h-[160px]`}
                   >
                     <div className="relative z-10 max-w-lg">
                       <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full mb-2 ${slide.badgeColor}`}>
@@ -345,7 +349,7 @@ export default function RestaurantsPage() {
                           </div>
 
                           <p className="text-xs text-gray-500 font-medium truncate mb-3">
-                            {restaurant.cuisines.join(' • ')}
+                            {restaurant.cuisines?.join(' • ') || 'Various Cuisines'}
                           </p>
 
                           <div className="flex items-center gap-4 text-xs font-bold text-gray-600 pt-3 border-t border-gray-100">

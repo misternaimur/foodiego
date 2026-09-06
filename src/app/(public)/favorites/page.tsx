@@ -24,7 +24,7 @@
 
         {favoriteFoods.length === 0 ? (
             <div className="text-center py-16">
-            <p className="text-gray-500 mb-6">You haven't saved any favorites yet.</p>
+            <p className="text-gray-500 mb-6">You haven&apos;t saved any favorites yet.</p>
             <Link
                 href="/"
                 className="inline-block bg-[#c83214] text-white font-semibold px-6 py-3 rounded-xl hover:bg-[#a6280f] transition-colors"
