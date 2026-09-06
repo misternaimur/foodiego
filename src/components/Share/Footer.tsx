@@ -66,7 +66,8 @@ export const Footer: React.FC<FooterProps> = ({
     pathname?.startsWith('/admin') ||
     pathname?.startsWith('/vendor') ||
     pathname?.startsWith('/rider') ||
-    pathname?.startsWith('/client/orders')
+    pathname?.startsWith('/client/orders') ||
+    pathname?.startsWith('/client/checkout')
   ) {
     return null;
   }

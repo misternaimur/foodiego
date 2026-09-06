@@ -1,13 +1,36 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Star, Clock, ArrowLeft, Heart } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import FoodCard from '@/components/FoodCard';
+import FoodCard, { FoodItem } from '@/components/FoodCard';
 import { RestaurantReviews } from '@/components/RestaurantReviews';
 import { FoodDetailsModal } from '@/components/FoodDetailsModal';
+
+type MenuItemData = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  rating?: number;
+  deliveryTime?: string;
+  deliveryFee?: string;
+  restaurantName?: string;
+  cuisine?: string;
+  dietary?: string;
+  matchPercentage?: number | null;
+  imageUrl?: string;
+  sizes?: FoodItem['sizes'];
+  addons?: FoodItem['addons'];
+};
+
+type MenuCategoryData = {
+  category: string;
+  items: MenuItemData[];
+};
 
 export default function RestaurantDetailPage() {
   const { slug } = useParams();
@@ -15,21 +38,13 @@ export default function RestaurantDetailPage() {
   const { getRestaurantBySlug, addToCart, favorites, toggleFavorite } = useApp();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedFoodForModal, setSelectedFoodForModal] = useState<any>(null);
+  const [selectedFoodForModal, setSelectedFoodForModal] = useState<FoodItem | null>(null);
 
   const restaurant = getRestaurantBySlug(slug as string);
 
   // Dynamic ratings synced directly with the review list
   const [dynamicRating, setDynamicRating] = useState<number>(4.5);
   const [dynamicReviewCount, setDynamicReviewCount] = useState<number>(1);
-
-  // Set initial fallback values when restaurant loads
-  useEffect(() => {
-    if (restaurant) {
-      setDynamicRating(4.5);
-      setDynamicReviewCount(1);
-    }
-  }, [restaurant]);
 
   if (!restaurant) {
     return (
@@ -65,7 +80,7 @@ export default function RestaurantDetailPage() {
           <ArrowLeft size={18} />
         </button>
       </div>
-
+      
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative z-10">
         {/* Restaurant Header Card */}
@@ -114,7 +129,7 @@ export default function RestaurantDetailPage() {
 
         {/* Category Navigation Bar */}
         <div className="sticky top-20 bg-[#FAF7EE]/95 backdrop-blur-md py-4 z-20 border-b border-[#E8E2D5] mb-8 overflow-x-auto flex gap-2 scrollbar-none">
-          {restaurant.menuCategories.map((cat: any) => (
+          {restaurant.menuCategories.map((cat: MenuCategoryData) => (
             <button
               key={cat.category}
               onClick={() => setSelectedCategory(cat.category)}
@@ -132,13 +147,13 @@ export default function RestaurantDetailPage() {
         {/* Menu Section Rendered via FoodCard */}
         <div className="space-y-12">
           {restaurant.menuCategories
-            .filter((cat: any) => !selectedCategory || cat.category === selectedCategory)
-            .map((cat: any) => (
+            .filter((cat: MenuCategoryData) => !selectedCategory || cat.category === selectedCategory)
+            .map((cat: MenuCategoryData) => (
               <div key={cat.category}>
                 <h3 className="text-xl font-black text-slate-900 mb-6">{cat.category}</h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {cat.items.map((item: any) => (
+                  {cat.items.map((item: MenuItemData) => (
                     <FoodCard
                       key={item.id}
                       food={{
