@@ -34,42 +34,63 @@ export interface AuthUser {
 export interface RestaurantOffer {
     id: string;
     title: string;
-    description: string;
+    description?: string;
+    discountPercent?: number;
+    code?: string;
 }
 
 // Structure for individual restaurant menu items
-export interface RestaurantMenuItem {
+export interface MenuItem {
     id: string;
     name: string;
-    price: number;
     description: string;
+    price: number;
     image: string;
+    isAvailable: boolean;
     popular?: boolean;
 }
 
 // Structure for grouped menu categories in a restaurant
 export interface RestaurantMenuCategory {
-    category: string;
-    items: RestaurantMenuItem[];
-}
-
-// Complete restaurant entity structure
-export interface Restaurant {
     id: string;
     name: string;
+    items: MenuItem[];
+}
+
+// Complete Restaurant Entity Structure aligned with Backend
+export interface Restaurant {
+    id: string;                    // (MongoDB _id)
+    userId: string;
+    restaurantName: string;
     slug: string;
+    ownerName: string;
+    email: string;
+    phone?: string;
+    address: string;
+    description?: string;
     logo: string;
     image: string;
+    cuisineType?: string;
+    cuisines: string[];
+    openingTime?: string;
+    closingTime?: string;
+    isOpen: boolean;
+    status: 'pending' | 'approved' | 'rejected';
     rating: number;
     reviewCount: number;
     deliveryTime: string;
     deliveryFee: number;
     minOrder: number;
-    cuisines: string[];
     badge?: string;
     offers: RestaurantOffer[];
     menuCategories: RestaurantMenuCategory[];
 }
+
+type RawRestaurant = Partial<Restaurant> & {
+    _id?: string;
+    logoUrl?: string;
+    imageUrl?: string;
+};
 
 // Payload options structure when adding items to cart
 interface CustomizationOptions {
@@ -160,12 +181,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return () => unsubscribe();
     }, []);
 
-    // Effect to fetch restaurants from the backend API
+    // Effect to fetch restaurants from the backend API and map fields correctly
     useEffect(() => {
         const fetchRestaurants = async () => {
             setIsRestaurantsLoading(true);
             try {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:000';
                 const res = await fetch(`${API_URL}/api/restaurants`);
 
                 if (!res.ok) {
@@ -173,10 +194,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 }
 
                 const data = await res.json();
-                
-                // আপনার ব্যাকএন্ড রেসপন্স যদি সরাসরি অ্যারে হয় তবে data দিন, 
-                // আর যদি { success: true, data: [...] } হয় তবে data.data দিন
-                setRestaurants(Array.isArray(data) ? data : data.data || []);
+                const rawList = Array.isArray(data) ? data : data.data || [];
+
+                // ব্যাকএন্ড ফিল্ডগুলোর সাথে ফ্রন্টএন্ডের প্রপার্টির ম্যাপিং নিশ্চিত করা
+                const formattedRestaurants: Restaurant[] = rawList.map((item: RawRestaurant) => ({
+                    id: item._id || item.id || '',
+                    userId: item.userId,
+                    restaurantName: item.restaurantName || 'Unnamed restaurant',
+                    slug: item.slug || item.restaurantName?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                    ownerName: item.ownerName || '',
+                    email: item.email || '',
+                    phone: item.phone,
+                    address: item.address || '',
+                    description: item.description,
+                    logo: item.logoUrl || item.logo || '/default-logo.png',
+                    image: item.imageUrl || item.image || '/default-banner.png',
+                    cuisineType: item.cuisineType,
+                    cuisines: item.cuisines || (item.cuisineType ? [item.cuisineType] : []),
+                    openingTime: item.openingTime,
+                    closingTime: item.closingTime,
+                    isOpen: item.isOpen ?? true,
+                    status: item.status || 'pending',
+                    rating: item.rating || 0,
+                    reviewCount: item.reviewCount || 0,
+                    deliveryTime: item.deliveryTime || '30-40 min',
+                    deliveryFee: item.deliveryFee || 0,
+                    minOrder: item.minOrder || 0,
+                    badge: item.badge,
+                    offers: item.offers || [],
+                    menuCategories: item.menuCategories || [],
+                }));
+
+                setRestaurants(formattedRestaurants);
             } catch (err) {
                 console.error('Failed to load restaurants:', err);
             } finally {

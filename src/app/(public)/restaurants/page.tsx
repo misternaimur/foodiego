@@ -52,10 +52,6 @@ export default function RestaurantsPage() {
   const [minRating, setMinRating] = useState<number>(0);
   const [selectedCuisine, setSelectedCuisine] = useState<string>('All');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-  useEffect(() =>{
-
-  }
-  );
 
   // Auto-slide effect every 5 seconds
   useEffect(() => {
@@ -312,11 +308,11 @@ export default function RestaurantsPage() {
                         <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
                           <Image
                             src={restaurant.image}
-                            alt={restaurant.name}
+                            alt={restaurant.restaurantName}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                          <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent" />
                           
                           {restaurant.badge && (
                             <span className="absolute top-3 left-3 bg-[#15462D] text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full shadow-xs">
@@ -339,7 +335,7 @@ export default function RestaurantsPage() {
                         <div className="p-5">
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <h3 className="text-lg font-black text-slate-900 group-hover:text-[#15462D] transition-colors truncate">
-                              {restaurant.name}
+                              {restaurant.restaurantName}
                             </h3>
                             <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/50 shrink-0">
                               <Star size={13} className="fill-amber-400 text-amber-400" />

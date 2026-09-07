@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { verifySessionCookie } from "@/lib/session";
 import { dbConnect } from "@/lib/dbConnect";
 import { User } from "@/models/User";
+import type { Role } from "@/lib/definitions";
 
 export const getOptionalSession = cache(async () => {
   const cookieStore = await cookies();
@@ -37,7 +38,7 @@ export const verifySession = cache(async () => {
   return session;
 });
 
-export const verifyRole = cache(async (...roles: string[]) => {
+export const verifyRole = cache(async (...roles: Role[]) => {
   const session = await verifySession();
 
   if (!roles.includes(session.role)) {

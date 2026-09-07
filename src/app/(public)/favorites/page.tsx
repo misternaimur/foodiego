@@ -10,7 +10,7 @@
     const [foods, setFoods] = useState<FoodItem[]>([]);
 
     useEffect(() => {
-        fetch('/data/foods.json')
+        fetch('/api/foods.json')
         .then((res) => res.json())
         .then((data: FoodItem[]) => setFoods(data));
     }, []);
@@ -18,7 +18,7 @@
     const favoriteFoods = foods.filter((food) => favorites.includes(food.id));
 
     return (
-        <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-12 py-10">
+        <main className="flex-1 max-w-350 w-full mx-auto px-4 sm:px-6 lg:px-12 py-10">
         <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Your Favorites ❤️</h1>
         <p className="text-gray-500 mb-8">Quickly order your saved dishes.</p>
 
