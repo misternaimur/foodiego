@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
@@ -18,6 +18,7 @@ import {
   Plus,
   X,
   Check,
+  CheckCircle2,
   Loader2,
   Star,
   Leaf,
@@ -25,6 +26,7 @@ import {
   Image as ImageIcon,
   DollarSign,
   Clock,
+  Calendar,
   TrendingUp,
   Download,
   ChevronDown,
@@ -32,6 +34,14 @@ import {
   Receipt,
   Bike,
   Pencil,
+  Trash2,
+  Tag,
+  FolderTree,
+  ToggleRight,
+  ToggleLeft,
+  Upload,
+  EyeOff,
+  Eye,
 } from 'lucide-react';
 
 interface NavItem {
@@ -134,8 +144,17 @@ interface MenuItem {
   description: string;
   image: string;
   alt: string;
-  status: 'Available' | 'Sold Out';
+  status: 'Available' | 'Sold Out' | 'Hidden';
   tags: string[];
+  orders: number;
+  revenue: number;
+  createdAt: number;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  count: number;
 }
 
 const menuItems: MenuItem[] = [
@@ -149,6 +168,9 @@ const menuItems: MenuItem[] = [
     alt: 'Truffle Smashburger',
     status: 'Available',
     tags: ['Best Seller'],
+    orders: 142,
+    revenue: 1844,
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 30,
   },
   {
     id: 'tacos',
@@ -160,6 +182,9 @@ const menuItems: MenuItem[] = [
     alt: 'Street Tacos',
     status: 'Available',
     tags: ['Best Seller', 'Vegetarian'],
+    orders: 98,
+    revenue: 931,
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 22,
   },
   {
     id: 'pasta',
@@ -171,6 +196,9 @@ const menuItems: MenuItem[] = [
     alt: 'Creamy Pasta',
     status: 'Sold Out',
     tags: ['Vegetarian'],
+    orders: 19,
+    revenue: 266,
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 18,
   },
   {
     id: 'cake',
@@ -182,6 +210,9 @@ const menuItems: MenuItem[] = [
     alt: 'Berry Cake',
     status: 'Available',
     tags: ['Best Seller'],
+    orders: 54,
+    revenue: 431,
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 14,
   },
   {
     id: 'pizza',
@@ -193,6 +224,9 @@ const menuItems: MenuItem[] = [
     alt: 'Margherita Pizza',
     status: 'Available',
     tags: ['Vegetarian'],
+    orders: 76,
+    revenue: 911,
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 10,
   },
   {
     id: 'soda',
@@ -204,10 +238,33 @@ const menuItems: MenuItem[] = [
     alt: 'Citrus Soda',
     status: 'Available',
     tags: [],
+    orders: 38,
+    revenue: 171,
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 6,
+  },
+  {
+    id: 'wings',
+    name: 'Spicy Chicken Wings',
+    category: 'Sides',
+    price: 8.99,
+    description: 'Crispy wings tossed in buffalo sauce.',
+    image: 'https://images.unsplash.com/photo-1608039755401-742074f0548d?auto=format&fit=crop&q=80&w=600',
+    alt: 'Spicy Chicken Wings',
+    status: 'Hidden',
+    tags: ['Spicy'],
+    orders: 12,
+    revenue: 107,
+    createdAt: Date.now() - 1000 * 60 * 60 * 24 * 3,
   },
 ];
 
-const categories = ['All Items', 'Burgers', 'Pizza', 'Drinks', 'Sides'];
+const defaultCategories: Category[] = [
+  { id: 'all', name: 'All Items', count: menuItems.length },
+  { id: 'burgers', name: 'Burgers', count: menuItems.filter((i) => i.category === 'Burgers').length },
+  { id: 'pizza', name: 'Pizza', count: menuItems.filter((i) => i.category === 'Pizza').length },
+  { id: 'drinks', name: 'Drinks', count: menuItems.filter((i) => i.category === 'Drinks').length },
+  { id: 'sides', name: 'Sides', count: menuItems.filter((i) => i.category === 'Sides').length },
+];
 
 export default function CreateMenuItem() {
   const [activeTab, setActiveTab] = useState('Overview');
@@ -238,6 +295,242 @@ export default function CreateMenuItem() {
 
   // Menu Management state
   const [menuCategory, setMenuCategory] = useState('All Items');
+  const [menuSubTab, setMenuSubTab] = useState<'All Items' | 'Add New Item' | 'Categories' | 'Item Availability'>('All Items');
+  const [items, setItems] = useState<MenuItem[]>(menuItems);
+  const [categories, setCategories] = useState<Category[]>(defaultCategories);
+  const [menuSearch, setMenuSearch] = useState('');
+  const [availabilityFilter, setAvailabilityFilter] = useState<'All' | 'Available' | 'Sold Out' | 'Hidden'>('All');
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+
+  const [formName, setFormName] = useState('');
+  const [formDescription, setFormDescription] = useState('');
+  const [formPrice, setFormPrice] = useState('');
+  const [formCategory, setFormCategory] = useState('Burgers');
+  const [formImage, setFormImage] = useState('');
+  const [formTags, setFormTags] = useState<string[]>([]);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const openAddForm = () => {
+    setFormName('');
+    setFormDescription('');
+    setFormPrice('');
+    setFormCategory(categories[1]?.name ?? 'Burgers');
+    setFormImage('');
+    setFormTags([]);
+    setFormError(null);
+    setEditingItem(null);
+    setMenuSubTab('Add New Item');
+  };
+
+  const openEditForm = (item: MenuItem) => {
+    setEditingItem(item);
+    setFormName(item.name);
+    setFormDescription(item.description);
+    setFormPrice(String(item.price));
+    setFormCategory(item.category);
+    setFormImage(item.image);
+    setFormTags(item.tags);
+    setFormError(null);
+  };
+
+  const handleSaveItem = () => {
+    if (!formName.trim()) {
+      setFormError('Item name is required');
+      return;
+    }
+    if (!formPrice || isNaN(Number(formPrice)) || Number(formPrice) <= 0) {
+      setFormError('Valid price is required');
+      return;
+    }
+    if (!editingItem && !formImage.trim()) {
+      setFormError('Image URL is required');
+      return;
+    }
+
+    if (editingItem) {
+      setItems((prev) =>
+        prev.map((it) =>
+          it.id === editingItem.id
+            ? {
+                ...it,
+                name: formName.trim(),
+                description: formDescription.trim(),
+                price: Number(formPrice),
+                category: formCategory,
+                image: formImage.trim() || it.image,
+                tags: formTags,
+              }
+            : it
+        )
+      );
+    } else {
+      const newItem: MenuItem = {
+        id: `item-${Date.now()}`,
+        name: formName.trim(),
+        description: formDescription.trim(),
+        price: Number(formPrice),
+        category: formCategory,
+        image: formImage.trim() || 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=600',
+        alt: formName.trim(),
+        status: 'Available',
+        tags: formTags,
+        orders: 0,
+        revenue: 0,
+        createdAt: Date.now(),
+      };
+      setItems((prev) => [newItem, ...prev]);
+    }
+
+    setMenuSubTab('All Items');
+    setEditingItem(null);
+  };
+
+  const handleDeleteItem = (id: string) => {
+    setItems((prev) => prev.filter((it) => it.id !== id));
+    setDeleteConfirm(null);
+  };
+
+  const toggleAvailability = (id: string) => {
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== id) return it;
+        if (it.status === 'Available') return { ...it, status: 'Sold Out' };
+        if (it.status === 'Sold Out') return { ...it, status: 'Hidden' };
+        return { ...it, status: 'Available' };
+      })
+    );
+  };
+
+  const addCategory = () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    if (categories.some((c) => c.name.toLowerCase() === name.toLowerCase())) return;
+    setCategories((prev) => [
+      ...prev,
+      { id: name.toLowerCase().replace(/\s+/g, '-'), name, count: 0 },
+    ]);
+    setNewCategoryName('');
+  };
+
+  const removeCategory = (id: string) => {
+    if (id === 'all') return;
+    setCategories((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const filteredItems = useMemo(() => {
+    let result = items;
+    if (menuCategory !== 'All Items') {
+      result = result.filter((i) => i.category === menuCategory);
+    }
+    if (availabilityFilter !== 'All') {
+      result = result.filter((i) => i.status === availabilityFilter);
+    }
+    if (menuSearch.trim()) {
+      const q = menuSearch.toLowerCase();
+      result = result.filter(
+        (i) =>
+          i.name.toLowerCase().includes(q) ||
+          i.description.toLowerCase().includes(q) ||
+          i.category.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [items, menuCategory, availabilityFilter, menuSearch]);
+
+  const sortedByPopularity = useMemo(
+    () => [...items].sort((a, b) => b.orders - a.orders),
+    [items]
+  );
+
+  const popularIds = useMemo(() => new Set(sortedByPopularity.slice(0, 3).map((i) => i.id)), [sortedByPopularity]);
+
+  // Sales & Analytics state
+  const [analyticsTimeframe, setAnalyticsTimeframe] = useState<'Today' | 'This Week' | 'This Month' | 'This Year'>('This Week');
+  const [analyticsSubTab, setAnalyticsSubTab] = useState<'Today Sales' | 'Revenue' | 'Orders Analytics' | 'Best-Selling Items'>('Today Sales');
+  const [analyticsMetric, setAnalyticsMetric] = useState<'Sales' | 'Orders'>('Sales');
+
+  const timeframeFactor: Record<typeof analyticsTimeframe, number> = {
+    'Today': 1,
+    'This Week': 6.5,
+    'This Month': 27,
+    'This Year': 312,
+  };
+  const factor = timeframeFactor[analyticsTimeframe];
+
+  const analyticsDaily = useMemo(() => {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const seed = [420, 380, 520, 490, 680, 820, 750];
+    return days.map((d, i) => ({ day: d, value: Math.round(seed[i] * factor) }));
+  }, [factor]);
+
+  const analyticsMonthly = useMemo(() => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const seed = [12, 14, 18, 22, 19, 26, 30, 28, 33, 35, 31, 38];
+    return months.map((m, i) => ({ day: m, value: Math.round(seed[i] * factor * 5) }));
+  }, [factor]);
+
+  const analyticsHourly = useMemo(() => {
+    const seed = [
+      { time: '8 AM', orders: 4 },
+      { time: '10 AM', orders: 9 },
+      { time: '12 PM', orders: 28 },
+      { time: '2 PM', orders: 15 },
+      { time: '4 PM', orders: 12 },
+      { time: '6 PM', orders: 32 },
+      { time: '8 PM', orders: 24 },
+      { time: '10 PM', orders: 11 },
+    ];
+    return seed.map((h) => ({ ...h, orders: Math.round(h.orders * factor) }));
+  }, [factor]);
+
+  const totalRevenue = useMemo(() => Math.round(1240 * factor), [factor]);
+  const totalOrders = useMemo(() => Math.round(38 * factor), [factor]);
+  const avgOrderValue = useMemo(
+    () => (totalOrders > 0 ? totalRevenue / totalOrders : 0),
+    [totalRevenue, totalOrders]
+  );
+  const todaySales = useMemo(() => Math.round(1240 * (factor / 6.5)), [factor]);
+
+  const bestSelling = useMemo(
+    () => [...items].sort((a, b) => b.orders - a.orders).slice(0, 8),
+    [items]
+  );
+
+  const categoryShare = useMemo(() => {
+    const tally: Record<string, number> = {};
+    items.forEach((it) => {
+      tally[it.category] = (tally[it.category] || 0) + it.orders;
+    });
+    const total = Object.values(tally).reduce((s, v) => s + v, 0) || 1;
+    const palette: Record<string, string> = {
+      Burgers: 'bg-[#b93815]',
+      Pizza: 'bg-blue-500',
+      Drinks: 'bg-amber-500',
+      Sides: 'bg-emerald-500',
+    };
+    return Object.entries(tally)
+      .map(([name, count]) => ({
+        name,
+        percentage: Math.round((count / total) * 100),
+        color: palette[name] || 'bg-gray-500',
+      }))
+      .sort((a, b) => b.percentage - a.percentage);
+  }, [items]);
+
+  const orderStatusBreakdown = useMemo(() => {
+    const counts = { Preparing: 0, Ready: 0, Delivered: 0 };
+    initialOrders.forEach((o) => {
+      if (o.status in counts) counts[o.status]++;
+    });
+    const total = counts.Preparing + counts.Ready + counts.Delivered || 1;
+    return [
+      { status: 'Preparing', count: counts.Preparing, percentage: Math.round((counts.Preparing / total) * 100), color: 'from-amber-400 to-amber-600' },
+      { status: 'Ready', count: counts.Ready, percentage: Math.round((counts.Ready / total) * 100), color: 'from-emerald-400 to-emerald-600' },
+      { status: 'Delivered', count: counts.Delivered, percentage: Math.round((counts.Delivered / total) * 100), color: 'from-gray-400 to-gray-500' },
+    ];
+  }, []);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -823,7 +1116,7 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
                         {order.status}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 truncate">{order.customer} · {order.items}</p>
+                    <p className="text-xs text-gray-500 truncate">{order.customer} Â· {order.items}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-extrabold text-gray-900">${order.total.toFixed(2)}</p>
@@ -839,10 +1132,489 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
   };
 
   const renderMenuManagement = () => {
-    const totalItems = menuItems.length;
-    const availableItems = menuItems.filter((i) => i.status === 'Available').length;
-    const soldOutItems = menuItems.filter((i) => i.status === 'Sold Out').length;
-    const avgPrice = (menuItems.reduce((sum, i) => sum + i.price, 0) / totalItems).toFixed(2);
+    const totalItems = items.length;
+    const availableItems = items.filter((i) => i.status === 'Available').length;
+    const soldOutItems = items.filter((i) => i.status === 'Sold Out').length;
+    const hiddenItems = items.filter((i) => i.status === 'Hidden').length;
+    const avgPrice =
+      totalItems > 0 ? (items.reduce((sum, i) => sum + i.price, 0) / totalItems).toFixed(2) : '0.00';
+
+    const subTabs: { id: typeof menuSubTab; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
+      { id: 'All Items', label: 'All Items', icon: UtensilsCrossed },
+      { id: 'Add New Item', label: 'Add New Item', icon: Plus },
+      { id: 'Categories', label: 'Categories', icon: FolderTree },
+      { id: 'Item Availability', label: 'Item Availability', icon: ToggleRight },
+    ];
+
+    const statusStyles: Record<MenuItem['status'], { bg: string; text: string; border: string; dot: string }> = {
+      Available: { bg: 'bg-emerald-50/90', text: 'text-emerald-700', border: 'border-emerald-200', dot: 'bg-emerald-500' },
+      'Sold Out': { bg: 'bg-red-50/90', text: 'text-red-700', border: 'border-red-200', dot: 'bg-red-500' },
+      Hidden: { bg: 'bg-gray-100/90', text: 'text-gray-600', border: 'border-gray-200', dot: 'bg-gray-400' },
+    };
+
+    const renderItemCard = (item: MenuItem) => {
+      const styles = statusStyles[item.status];
+      const isPopular = popularIds.has(item.id);
+      return (
+        <div
+          key={item.id}
+          className="relative group"
+          style={{ perspective: '1200px' }}
+        >
+          <div
+            className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2 hover:scale-[1.02] overflow-hidden"
+            style={{ transformStyle: 'preserve-3d' }}
+          >
+            <div
+              className={`absolute -top-px left-8 right-8 h-1 rounded-full ${
+                item.status === 'Available' ? 'bg-gradient-to-r from-emerald-300 to-teal-300' : item.status === 'Sold Out' ? 'bg-gradient-to-r from-red-300 to-pink-300' : 'bg-gradient-to-r from-gray-300 to-gray-400'
+              } opacity-60 group-hover:opacity-100 transition-opacity`}
+            />
+
+            <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+              <Image
+                src={item.image}
+                alt={item.alt}
+                fill
+                className="object-cover group-hover:scale-110 transition-transform duration-700"
+                unoptimized
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+              <div className="absolute top-4 left-4 flex flex-col gap-1.5">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-sm ${styles.bg} ${styles.text} ${styles.border}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${styles.dot} ${item.status === 'Available' ? 'animate-pulse' : ''}`} />
+                  {item.status}
+                </span>
+                {isPopular && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 backdrop-blur-sm uppercase tracking-wide">
+                    <Flame size={10} /> Popular
+                  </span>
+                )}
+              </div>
+
+              <div className="absolute top-4 right-4">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-white/90 text-gray-700 border border-white/60 backdrop-blur-sm uppercase tracking-wide">
+                  {item.category}
+                </span>
+              </div>
+
+              <div className="absolute bottom-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                <button
+                  type="button"
+                  onClick={() => openEditForm(item)}
+                  className="h-9 w-9 rounded-xl bg-white/90 backdrop-blur-sm text-gray-700 hover:text-[#b93815] flex items-center justify-center border border-gray-200 shadow-lg hover:scale-110 transition-all"
+                  aria-label={`Edit ${item.name}`}
+                >
+                  <Pencil size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleAvailability(item.id)}
+                  className="h-9 w-9 rounded-xl bg-white/90 backdrop-blur-sm text-gray-700 hover:text-emerald-600 flex items-center justify-center border border-gray-200 shadow-lg hover:scale-110 transition-all"
+                  aria-label={`Toggle availability for ${item.name}`}
+                >
+                  {item.status === 'Available' ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(item.id)}
+                  className="h-9 w-9 rounded-xl bg-white/90 backdrop-blur-sm text-gray-700 hover:text-red-600 flex items-center justify-center border border-gray-200 shadow-lg hover:scale-110 transition-all"
+                  aria-label={`Delete ${item.name}`}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-5 flex-1 flex flex-col relative">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-[#b93815] transition-colors">{item.name}</h3>
+                <p className="text-base font-extrabold text-[#b93815] whitespace-nowrap">${item.price.toFixed(2)}</p>
+              </div>
+              <p className="text-sm text-gray-500 mb-3 line-clamp-2 leading-relaxed">{item.description}</p>
+
+              <div className="flex items-center justify-between text-[10px] text-gray-400 font-semibold mb-3">
+                <span className="inline-flex items-center gap-1"><ShoppingBag size={11} /> {item.orders} sold</span>
+                <span className="inline-flex items-center gap-1 text-emerald-600"><DollarSign size={11} /> {item.revenue.toLocaleString()}</span>
+              </div>
+
+              <div className="mt-auto flex flex-wrap gap-2">
+                {item.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${
+                      tag === 'Best Seller'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
+                    {tag === 'Best Seller' ? <Star size={12} /> : <Leaf size={12} />}
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const renderAllItems = () => (
+      <div className="space-y-6">
+        {/* Toolbar: search + add */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={menuSearch}
+              onChange={(e) => setMenuSearch(e.target.value)}
+              type="text"
+              placeholder="Search menu items by name, description, or category..."
+              className="w-full bg-white border border-gray-200 text-sm text-gray-800 placeholder-gray-400 rounded-2xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 focus:border-[#b93815]"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={openAddForm}
+            className="inline-flex items-center justify-center gap-2 bg-gradient-to-b from-[#b93815] to-[#9a2c0f] hover:from-[#a1320f] hover:to-[#7c1f08] text-white font-bold py-2.5 px-5 rounded-2xl shadow-lg shadow-orange-200 border border-white/20 border-b-4 border-b-[#7c1f08] active:border-b-0 active:translate-y-1 active:shadow-md transition-all text-sm"
+          >
+            <Plus size={16} /> Add New Item
+          </button>
+        </div>
+
+        {/* Category filter pills */}
+        <div className="flex flex-wrap gap-2">
+          {categories.map((cat) => {
+            const liveCount = items.filter((i) => i.category === cat.name).length;
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setMenuCategory(cat.name)}
+                className={`relative px-4 py-2 rounded-2xl text-sm font-bold transition-all duration-300 border ${
+                  menuCategory === cat.name
+                    ? 'bg-[#b93815] text-white border-[#b93815] shadow-lg shadow-orange-200 scale-105'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:scale-105'
+                }`}
+              >
+                <span className="relative z-10">{cat.name}</span>
+                <span className={`ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-extrabold ${menuCategory === cat.name ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                  {liveCount}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Items grid */}
+        {filteredItems.length === 0 ? (
+          <div className="bg-white rounded-3xl border-2 border-dashed border-gray-200 p-12 text-center">
+            <UtensilsCrossed size={32} className="mx-auto text-gray-300 mb-3" />
+            <p className="text-base font-bold text-gray-700">No items match your filters</p>
+            <p className="text-xs text-gray-400 mt-1">Try adjusting the search or category.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredItems.map(renderItemCard)}
+            <button
+              type="button"
+              onClick={openAddForm}
+              className="relative group"
+              style={{ perspective: '1200px' }}
+            >
+              <div
+                className="relative bg-white rounded-3xl border-2 border-dashed border-gray-300 hover:border-[#b93815] bg-gray-50/50 hover:bg-[#fff1ec] transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2 hover:scale-[1.02] flex flex-col items-center justify-center aspect-[4/3] min-h-[280px]"
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <div className="h-16 w-16 rounded-2xl bg-white border-2 border-gray-200 group-hover:border-[#b93815] flex items-center justify-center text-gray-400 group-hover:text-[#b93815] mb-4 shadow-lg group-hover:shadow-xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <Plus size={28} strokeWidth={2.5} />
+                </div>
+                <p className="text-base font-bold text-gray-700 group-hover:text-[#b93815] transition-colors">Add New Item</p>
+                <p className="text-sm text-gray-400 group-hover:text-[#b93815]/70 transition-colors mt-1">Create a new menu entry</p>
+                <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-gray-300 group-hover:bg-[#b93815] group-hover:animate-ping transition-all" />
+              </div>
+            </button>
+          </div>
+        )}
+      </div>
+    );
+
+    const renderAddNewItem = () => (
+      <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8 max-w-3xl">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#b93815] to-[#9a2c0f] text-white flex items-center justify-center shadow-lg shadow-orange-200">
+            {editingItem ? <Pencil size={20} /> : <Plus size={20} />}
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">{editingItem ? 'Edit Food Item' : 'Add New Food Item'}</h2>
+            <p className="text-xs text-gray-500">{editingItem ? 'Update the details for this menu item' : 'Create a new entry for your menu'}</p>
+          </div>
+        </div>
+
+        {formError && (
+          <div className="mb-5 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 font-semibold">{formError}</div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Item Name *</label>
+            <input
+              type="text"
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              placeholder="e.g. Truffle Smashburger"
+              className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Price ($) *</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={formPrice}
+              onChange={(e) => setFormPrice(e.target.value)}
+              placeholder="0.00"
+              className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20"
+            />
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Description</label>
+          <textarea
+            rows={3}
+            value={formDescription}
+            onChange={(e) => setFormDescription(e.target.value)}
+            placeholder="Describe ingredients, taste, story..."
+            className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Category *</label>
+            <select
+              value={formCategory}
+              onChange={(e) => setFormCategory(e.target.value)}
+              className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-gray-700 bg-white focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20"
+            >
+              {categories.filter((c) => c.id !== 'all').map((c) => (
+                <option key={c.id} value={c.name}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Image URL {editingItem ? '' : '*'}</label>
+            <input
+              type="url"
+              value={formImage}
+              onChange={(e) => setFormImage(e.target.value)}
+              placeholder="https://..."
+              className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20"
+            />
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Tags</label>
+          <div className="flex flex-wrap gap-2">
+            {['Best Seller', 'Vegetarian', 'Spicy', 'New', 'Gluten-Free'].map((tag) => {
+              const active = formTags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() =>
+                    setFormTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
+                  }
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                    active
+                      ? 'bg-[#fff1ec] text-[#b93815] border-[#f3c9ba]'
+                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {formImage && (
+          <div className="mt-5">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Preview</p>
+            <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100">
+              <Image src={formImage} alt="Preview" fill className="object-cover" unoptimized />
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              setMenuSubTab('All Items');
+              setEditingItem(null);
+            }}
+            className="px-5 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-900 rounded-xl hover:bg-gray-100 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveItem}
+            className="px-6 py-2.5 text-sm font-bold text-white bg-[#b93815] hover:bg-[#9a2c0f] rounded-xl shadow-sm hover:shadow transition-all"
+          >
+            {editingItem ? 'Save Changes' : 'Publish Item'}
+          </button>
+        </div>
+      </div>
+    );
+
+    const renderCategories = () => (
+      <div className="space-y-6">
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-blue-200">
+              <FolderTree size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Food Categories</h2>
+              <p className="text-xs text-gray-500">Organize your menu into categories</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 mb-6">
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addCategory()}
+              placeholder="New category name (e.g. Desserts)"
+              className="flex-1 rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20"
+            />
+            <button
+              type="button"
+              onClick={addCategory}
+              disabled={!newCategoryName.trim()}
+              className="inline-flex items-center justify-center gap-2 bg-[#b93815] hover:bg-[#9a2c0f] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 px-5 rounded-xl shadow-sm transition-all text-sm"
+            >
+              <Plus size={16} /> Add Category
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {categories.map((cat) => {
+              const liveCount = items.filter((i) => i.category === cat.name).length;
+              return (
+                <div
+                  key={cat.id}
+                  className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all"
+                >
+                  <div className="h-10 w-10 rounded-xl bg-orange-50 text-[#b93815] flex items-center justify-center border border-white">
+                    <Tag size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-900">{cat.name}</p>
+                    <p className="text-xs text-gray-500">{liveCount} item{liveCount !== 1 ? 's' : ''}</p>
+                  </div>
+                  {cat.id !== 'all' && (
+                    <button
+                      type="button"
+                      onClick={() => removeCategory(cat.id)}
+                      className="h-9 w-9 rounded-xl bg-white text-gray-500 hover:text-red-600 border border-gray-200 hover:border-red-200 flex items-center justify-center transition-all hover:scale-110"
+                      aria-label={`Remove ${cat.name}`}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+
+    const renderAvailability = () => {
+      const availabilityGroups: { status: MenuItem['status']; items: MenuItem[]; accent: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
+        { status: 'Available', items: items.filter((i) => i.status === 'Available'), accent: 'from-emerald-300 to-teal-300', icon: Eye },
+        { status: 'Sold Out', items: items.filter((i) => i.status === 'Sold Out'), accent: 'from-red-300 to-pink-300', icon: EyeOff },
+        { status: 'Hidden', items: items.filter((i) => i.status === 'Hidden'), accent: 'from-gray-300 to-gray-400', icon: ToggleLeft },
+      ];
+
+      return (
+        <div className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            {(['All', 'Available', 'Sold Out', 'Hidden'] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setAvailabilityFilter(s)}
+                className={`px-4 py-2 rounded-2xl text-sm font-bold transition-all border ${
+                  availabilityFilter === s
+                    ? 'bg-[#b93815] text-white border-[#b93815] shadow-lg shadow-orange-200 scale-105'
+                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:scale-105'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          {availabilityGroups.map((group) => {
+            if (group.status === 'Hidden' && availabilityFilter === 'All') {
+              return null;
+            }
+            if (availabilityFilter !== 'All' && availabilityFilter !== group.status) return null;
+            return (
+              <div key={group.status} className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-gray-50 text-gray-700 flex items-center justify-center border border-white">
+                      <group.icon size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">{group.status} Items</h3>
+                      <p className="text-xs text-gray-500">{group.items.length} item{group.items.length !== 1 ? 's' : ''}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className={`h-1 rounded-full bg-gradient-to-r ${group.accent} opacity-60 mb-5`} />
+                {group.items.length === 0 ? (
+                  <p className="text-sm text-gray-400 italic text-center py-6">No items in this status.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {group.items.map((item) => (
+                      <div key={item.id} className="flex items-center gap-4 p-3 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
+                        <div className="relative h-12 w-12 rounded-xl overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
+                          <Image src={item.image} alt={item.alt} fill className="object-cover" unoptimized />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
+                          <p className="text-[11px] text-gray-500">{item.category} Â· ${item.price.toFixed(2)}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => toggleAvailability(item.id)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-gray-200 hover:border-[#b93815] text-gray-700 hover:text-[#b93815] text-xs font-bold transition-all hover:scale-105"
+                        >
+                          <ToggleRight size={14} /> Change
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    };
 
     return (
       <div className="space-y-8">
@@ -856,357 +1628,235 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
               Organize your menu items, categories, and pricing.
             </p>
           </div>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 bg-[#b93815] text-white hover:bg-[#9a2c0f] font-bold py-2.5 px-5 rounded-xl shadow-lg hover:shadow-xl transition-all text-sm hover:scale-105 active:scale-95"
-          >
-            <Plus size={18} />
-            Add New Item
-          </button>
+          <div className="text-xs font-bold text-gray-500 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm">
+            {items.length} item{items.length !== 1 ? 's' : ''} Â· {categories.length - 1} categor{categories.length - 1 !== 1 ? 'ies' : 'y'}
+          </div>
         </div>
 
-        {/* 3D Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: 'Total Items', value: totalItems, icon: UtensilsCrossed, color: 'from-blue-400 to-blue-600', bg: 'bg-blue-50', text: 'text-blue-600' },
-            { label: 'Available', value: availableItems, icon: Check, color: 'from-emerald-400 to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
-            { label: 'Sold Out', value: soldOutItems, icon: X, color: 'from-red-400 to-red-600', bg: 'bg-red-50', text: 'text-red-600' },
-            { label: 'Avg Price', value: `$${avgPrice}`, icon: DollarSign, color: 'from-amber-400 to-amber-600', bg: 'bg-amber-50', text: 'text-amber-600' },
-          ].map((stat, index) => (
-            <div
-              key={stat.label}
-              className="relative group"
-              style={{ perspective: '1000px' }}
-            >
-              <div
-                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu hover:rotate-y-6 hover:-translate-y-1"
-                style={{ transformStyle: 'preserve-3d' }}
-              >
-                <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
-                <div className={`absolute -top-px left-6 right-6 h-1 rounded-full bg-gradient-to-r ${stat.color} opacity-60 group-hover:opacity-100 transition-opacity`} />
-
-                <div className="p-5 relative">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className={`h-11 w-11 rounded-2xl ${stat.bg} ${stat.text} flex items-center justify-center border border-gray-100 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                      <stat.icon size={20} />
-                    </div>
-                    <div className={`h-2.5 w-2.5 rounded-full bg-gradient-to-r ${stat.color} animate-pulse shadow-lg`} />
-                  </div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{stat.label}</p>
-                  <p className="text-2xl font-extrabold text-gray-900 tracking-tight group-hover:tracking-normal transition-all">{stat.value}</p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Category Filters - 3D Pills */}
-        <div className="flex flex-wrap gap-3">
-          {categories.map((cat, index) => (
+        {/* Sub-module Tabs */}
+        <div className="flex flex-wrap gap-2 bg-white/70 border border-gray-200 rounded-2xl p-1.5 shadow-sm">
+          {subTabs.map((tab) => (
             <button
-              key={cat}
+              key={tab.id}
               type="button"
-              onClick={() => setMenuCategory(cat)}
-              className={`relative px-5 py-2.5 rounded-2xl text-sm font-bold transition-all duration-300 border ${
-                menuCategory === cat
-                  ? 'bg-[#b93815] text-white border-[#b93815] shadow-lg shadow-orange-200 scale-105'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:scale-105'
+              onClick={() => {
+                if (tab.id === 'Add New Item') {
+                  openAddForm();
+                } else {
+                  setMenuSubTab(tab.id);
+                  setEditingItem(null);
+                }
+              }}
+              className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                menuSubTab === tab.id
+                  ? 'bg-gradient-to-b from-[#b93815] to-[#9a2c0f] text-white shadow-lg shadow-orange-200'
+                  : 'text-gray-600 hover:bg-white hover:text-[#b93815]'
               }`}
-              style={{ animation: `fadeSlideIn 0.4s ease-out ${index * 0.05}s both` }}
             >
-              {menuCategory === cat && (
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#b93815]/20 to-[#9a2c0f]/20 animate-pulse" />
-              )}
-              <span className="relative z-10">{cat}</span>
+              <tab.icon size={16} />
+              {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Menu Grid - 3D Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMenuItems.map((item, index) => (
-            <div
-              key={item.id}
-              className="relative group"
-              style={{ perspective: '1200px' }}
-            >
-              <div
-                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2 hover:scale-[1.02] overflow-hidden"
-                style={{ transformStyle: 'preserve-3d' }}
-              >
-                {/* Animated top glow */}
-                <div className={`absolute -top-px left-8 right-8 h-1 rounded-full bg-gradient-to-r ${item.status === 'Available' ? 'from-emerald-300 to-teal-300' : 'from-red-300 to-pink-300'} opacity-60 group-hover:opacity-100 transition-opacity`} />
+        {menuSubTab === 'All Items' && renderAllItems()}
+        {menuSubTab === 'Add New Item' && renderAddNewItem()}
+        {menuSubTab === 'Categories' && renderCategories()}
+        {menuSubTab === 'Item Availability' && renderAvailability()}
 
-                {/* Image Section */}
-                <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                  <Image
-                    src={item.image}
-                    alt={item.alt}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  {/* 3D overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                  {/* Status Badge */}
-                  <div className="absolute top-4 left-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border backdrop-blur-sm ${
-                        item.status === 'Available'
-                          ? 'bg-emerald-50/90 text-emerald-700 border-emerald-200'
-                          : 'bg-red-50/90 text-red-700 border-red-200'
-                      }`}
-                    >
-                      <span className={`h-1.5 w-1.5 rounded-full ${item.status === 'Available' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-                      {item.status}
-                    </span>
-                  </div>
-
-                  {/* Quick Actions on hover */}
-                  <div className="absolute bottom-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                    <button
-                      type="button"
-                      className="h-9 w-9 rounded-xl bg-white/90 backdrop-blur-sm text-gray-700 hover:text-[#b93815] flex items-center justify-center border border-gray-200 shadow-lg hover:scale-110 transition-all"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      className="h-9 w-9 rounded-xl bg-white/90 backdrop-blur-sm text-gray-700 hover:text-red-600 flex items-center justify-center border border-gray-200 shadow-lg hover:scale-110 transition-all"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Content Section */}
-                <div className="p-5 flex-1 flex flex-col relative">
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-[#b93815] transition-colors">{item.name}</h3>
-                    <p className="text-base font-extrabold text-[#b93815] whitespace-nowrap">${item.price.toFixed(2)}</p>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-4 line-clamp-2 leading-relaxed">{item.description}</p>
-
-                  {/* Tags */}
-                  <div className="mt-auto flex flex-wrap gap-2">
-                    {item.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${
-                          tag === 'Best Seller'
-                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                        }`}
-                      >
-                        {tag === 'Best Seller' ? <Star size={12} /> : <Leaf size={12} />}
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* 3D shine effect */}
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {/* Add New Item Card - 3D */}
-          <button
-            type="button"
-            className="relative group"
-            style={{ perspective: '1200px' }}
+        {/* Delete confirmation modal */}
+        {deleteConfirm && (
+          <div
+            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setDeleteConfirm(null)}
           >
             <div
-              className="relative bg-white rounded-3xl border-2 border-dashed border-gray-300 hover:border-[#b93815] bg-gray-50/50 hover:bg-[#fff1ec] transition-all duration-500 ease-out transform-gpu preserve-3d hover:rotate-y-2 hover:-translate-y-2 hover:scale-[1.02] flex flex-col items-center justify-center aspect-[4/3] min-h-[280px]"
-              style={{ transformStyle: 'preserve-3d' }}
+              className="bg-white rounded-3xl shadow-2xl p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Animated border glow */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#b93815]/0 to-[#9a2c0f]/0 group-hover:from-[#b93815]/5 group-hover:to-[#9a2c0f]/5 transition-all duration-500" />
-
-              <div className="h-16 w-16 rounded-2xl bg-white border-2 border-gray-200 group-hover:border-[#b93815] flex items-center justify-center text-gray-400 group-hover:text-[#b93815] mb-4 shadow-lg group-hover:shadow-xl group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                <Plus size={28} strokeWidth={2.5} />
+              <h3 className="text-xl font-extrabold text-gray-900">Delete this item?</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                This will permanently remove the item from your menu. This action cannot be undone.
+              </p>
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirm(null)}
+                  className="px-4 py-2 rounded-xl bg-gray-100 text-gray-700 font-semibold text-sm hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteItem(deleteConfirm)}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-b from-red-500 to-red-700 text-white font-semibold text-sm shadow-md hover:scale-105 active:scale-95 transition-all"
+                >
+                  Delete Item
+                </button>
               </div>
-              <p className="text-base font-bold text-gray-700 group-hover:text-[#b93815] transition-colors">Add New Item</p>
-              <p className="text-sm text-gray-400 group-hover:text-[#b93815]/70 transition-colors mt-1">Create a new menu entry</p>
-
-              {/* Corner accent */}
-              <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-gray-300 group-hover:bg-[#b93815] group-hover:animate-ping transition-all" />
             </div>
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     );
   };
 
   const renderAnalytics = () => {
-    const revenueData = [
-      { day: 'Mon', value: 420 },
-      { day: 'Tue', value: 380 },
-      { day: 'Wed', value: 520 },
-      { day: 'Thu', value: 490 },
-      { day: 'Fri', value: 680 },
-      { day: 'Sat', value: 820 },
-      { day: 'Sun', value: 750 },
-    ];
-    const maxRevenue = Math.max(...revenueData.map((d) => d.value));
-
-    const categoryData = [
-      { name: 'Burgers', percentage: 45, color: 'bg-[#b93815]' },
-      { name: 'Pizza', percentage: 25, color: 'bg-blue-500' },
-      { name: 'Drinks', percentage: 18, color: 'bg-amber-500' },
-      { name: 'Sides', percentage: 12, color: 'bg-emerald-500' },
+    const subTabs: { id: typeof analyticsSubTab; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
+      { id: 'Today Sales', label: "Today's Sales", icon: DollarSign },
+      { id: 'Revenue', label: 'Revenue', icon: TrendingUp },
+      { id: 'Orders Analytics', label: 'Orders Analytics', icon: ShoppingBag },
+      { id: 'Best-Selling Items', label: 'Best-Selling Items', icon: Star },
     ];
 
-    const peakHours = [
-      { time: '11:00 AM', orders: 12 },
-      { time: '12:30 PM', orders: 28 },
-      { time: '2:00 PM', orders: 15 },
-      { time: '6:00 PM', orders: 32 },
-      { time: '8:00 PM', orders: 24 },
-    ];
+    const dayChart = analyticsTimeframe === 'This Year' ? analyticsMonthly : analyticsDaily;
+    const maxChart = Math.max(...dayChart.map((d) => d.value), 1);
 
-    return (
-      <div className="space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">
-              Analytics
-            </h1>
-            <p className="mt-1 text-base text-gray-500">
-              View detailed reports and insights about your business.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <select
-                defaultValue="week"
-                className="appearance-none bg-white border border-gray-200 text-sm font-semibold text-gray-700 rounded-xl pl-4 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 focus:border-[#b93815] transition-all"
-              >
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
-              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+    const renderMetricCard = (label: string, value: string, icon: React.ComponentType<{ size?: number; className?: string }>, color: string, change: string, bg: string, text: string) => (
+      <div className="relative group" style={{ perspective: '1000px' }}>
+        <div
+          className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu hover:rotate-y-6 hover:-translate-y-1"
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+          <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+          <div className={`absolute -top-px left-6 right-6 h-1 rounded-full bg-gradient-to-r ${color} opacity-60 group-hover:opacity-100 transition-opacity`} />
+          <div className="p-5 relative">
+            <div className="flex items-center justify-between mb-3">
+              <div className={`h-12 w-12 rounded-2xl ${bg} ${text} flex items-center justify-center border border-gray-100 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                {React.createElement(icon, { size: 22 })}
+              </div>
+              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">{change}</span>
             </div>
-            <button
-              type="button"
-              onClick={downloadReport}
-              className="inline-flex items-center gap-2 bg-[#b93815] text-white hover:bg-[#9a2c0f] font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all text-sm"
-            >
-              <Download size={16} />
-              Export
-            </button>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+            <p className="text-2xl font-extrabold text-gray-900">{value}</p>
           </div>
         </div>
+      </div>
+    );
 
-        {/* 3D Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {[
-            { label: 'Total Revenue', value: '$3,940', change: '+18%', icon: DollarSign, color: 'from-emerald-400 to-emerald-600', bg: 'bg-emerald-50', text: 'text-emerald-600' },
-            { label: 'Total Orders', value: '156', change: '+12%', icon: ShoppingBag, color: 'from-blue-400 to-blue-600', bg: 'bg-blue-50', text: 'text-blue-600' },
-            { label: 'Avg Order Value', value: '$25.26', change: '+5%', icon: TrendingUp, color: 'from-amber-400 to-amber-600', bg: 'bg-amber-50', text: 'text-amber-600' },
-            { label: 'Customers', value: '89', change: '+8%', icon: User, color: 'from-purple-400 to-purple-600', bg: 'bg-purple-50', text: 'text-purple-600' },
-          ].map((stat, index) => (
-            <div
-              key={stat.label}
-              className="relative group"
-              style={{ perspective: '1000px' }}
-            >
-              <div
-                className="relative bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out transform-gpu hover:rotate-y-6 hover:-translate-y-1"
-                style={{ transformStyle: 'preserve-3d' }}
-              >
-                <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
-                <div className={`absolute -top-px left-6 right-6 h-1 rounded-full bg-gradient-to-r ${stat.color} opacity-60 group-hover:opacity-100 transition-opacity`} />
-
-                <div className="p-5 relative">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`h-12 w-12 rounded-2xl ${stat.bg} ${stat.text} flex items-center justify-center border border-gray-100 shadow-sm group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                      <stat.icon size={22} />
-                    </div>
-                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">
-                      {stat.change}
-                    </span>
-                  </div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{stat.label}</p>
-                  <p className="text-2xl font-extrabold text-gray-900 tracking-tight group-hover:tracking-normal transition-all">{stat.value}</p>
-                </div>
-              </div>
+    const renderSalesBarChart = () => {
+      const data = analyticsMetric === 'Sales' ? dayChart : dayChart.map((d) => ({ day: d.day, value: Math.round(d.value / 22) }));
+      const max = Math.max(...data.map((d) => d.value), 1);
+      return (
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">{analyticsMetric} Overview</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {analyticsTimeframe === 'This Year' ? 'Monthly' : 'Daily'} data Â· {analyticsTimeframe}
+              </p>
             </div>
-          ))}
-        </div>
-
-        {/* Main Grid: Revenue Chart + Category Distribution */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Revenue Chart - 3D Bar Chart */}
-          <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Revenue Overview</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Daily revenue for this week</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-gradient-to-r from-[#b93815] to-[#9a2c0f]" />
-                <span className="text-xs font-semibold text-gray-600">Revenue</span>
-              </div>
+            <div className="flex gap-1.5 bg-gray-100 rounded-2xl p-1 border border-white/60 shadow-inner self-start sm:self-auto">
+              {(['Sales', 'Orders'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setAnalyticsMetric(m)}
+                  className={`relative px-4 py-1.5 text-xs font-bold rounded-xl transition-colors ${analyticsMetric === m ? 'text-white' : 'text-gray-600'}`}
+                >
+                  {analyticsMetric === m && (
+                    <span className="absolute inset-0 bg-gradient-to-b from-[#b93815] to-[#9a2c0f] rounded-xl shadow-md" />
+                  )}
+                  <span className="relative z-10">{m}</span>
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div className="relative h-72 flex items-end gap-3 sm:gap-4">
-              {revenueData.map((item, index) => {
-                const height = (item.value / maxRevenue) * 100;
-                return (
-                  <div
-                    key={item.day}
-                    className="flex-1 flex flex-col items-center gap-3"
-                    style={{ animation: `fadeSlideIn 0.5s ease-out ${index * 0.08}s both` }}
-                  >
-                    <div className="relative w-full flex justify-center" style={{ perspective: '800px' }}>
-                      <div
-                        className="relative w-full max-w-[60px] rounded-t-2xl bg-gradient-to-t from-[#b93815] to-[#9a2c0f] shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group/bar"
-                        style={{
-                          height: `${height}%`,
-                          minHeight: '20px',
-                          transformStyle: 'preserve-3d',
-                          transform: 'rotateX(0deg)',
-                        }}
-                      >
-                        {/* 3D top surface */}
-                        <div className="absolute inset-x-0 top-0 h-3 rounded-t-2xl bg-gradient-to-r from-[#b93815]/80 to-[#9a2c0f]/80 group-hover/bar:from-[#b93815] group-hover/bar:to-[#9a2c0f] transition-all" />
-                        {/* Glow effect */}
-                        <div className="absolute inset-0 rounded-t-2xl bg-gradient-to-t from-transparent to-white/20 opacity-0 group-hover/bar:opacity-100 transition-opacity" />
-                        {/* Value tooltip */}
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded-lg opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap">
-                          ${item.value}
-                        </div>
+          <div className="relative h-64 flex items-end gap-2 sm:gap-3 px-2">
+            {data.map((item, index) => {
+              const heightPct = Math.max(8, (item.value / max) * 100);
+              return (
+                <div key={item.day + index} className="flex-1 flex flex-col items-center justify-end gap-2 group">
+                  <div className="relative w-full" style={{ height: '180px' }}>
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                      <div className="bg-gray-900 text-white text-[10px] font-bold rounded-lg px-2 py-1 shadow-xl whitespace-nowrap">
+                        {analyticsMetric === 'Sales' ? `$${item.value.toLocaleString()}` : `${item.value} orders`}
                       </div>
                     </div>
-                    <span className="text-xs font-semibold text-gray-500">{item.day}</span>
+                    <div
+                      className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[70%] rounded-t-xl"
+                      style={{
+                        height: `${heightPct}%`,
+                        background: 'linear-gradient(180deg, #fb923c 0%, #ea580c 50%, #9a3412 100%)',
+                        transform: 'rotateX(-10deg) rotateY(6deg) translateZ(6px)',
+                        transformStyle: 'preserve-3d',
+                        boxShadow: '0 10px 20px -6px rgba(234,88,12,0.5), inset 0 2px 4px rgba(255,255,255,0.4)',
+                      }}
+                    >
+                      <div className="absolute top-0 left-0 right-0 h-1.5 bg-white/50 rounded-t-xl" />
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase">{item.day}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    };
+
+    const renderTodaySales = () => (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {renderMetricCard("Today's Sales", `$${todaySales.toLocaleString()}`, DollarSign, 'from-emerald-400 to-emerald-600', '+12.5%', 'bg-emerald-50', 'text-emerald-600')}
+          {renderMetricCard('Orders Today', totalOrders.toLocaleString(), ShoppingBag, 'from-blue-400 to-blue-600', '+8.2%', 'bg-blue-50', 'text-blue-600')}
+          {renderMetricCard('Avg. Order Value', `$${avgOrderValue.toFixed(2)}`, TrendingUp, 'from-amber-400 to-amber-600', '+5.4%', 'bg-amber-50', 'text-amber-600')}
+          {renderMetricCard('Completion Rate', '92%', CheckCircle2, 'from-teal-400 to-teal-600', '+3.1%', 'bg-teal-50', 'text-teal-600')}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">{renderSalesBarChart()}</div>
+
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+            <div className="mb-5">
+              <h2 className="text-lg font-bold text-gray-900">Hourly Breakdown</h2>
+              <p className="text-xs text-gray-500">Orders by hour Â· {analyticsTimeframe}</p>
+            </div>
+            <div className="space-y-3">
+              {analyticsHourly.map((h) => {
+                const max = Math.max(...analyticsHourly.map((x) => x.orders), 1);
+                const w = (h.orders / max) * 100;
+                const isPeak = h.orders === max;
+                return (
+                  <div key={h.time} className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-gray-500 w-14 shrink-0">{h.time}</span>
+                    <div className="flex-1 bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                      <div className={`h-2.5 rounded-full transition-all duration-700 ${isPeak ? 'bg-gradient-to-r from-amber-400 to-orange-500' : 'bg-gradient-to-r from-[#fcd34d] to-[#f59e0b]'}`} style={{ width: `${w}%` }} />
+                    </div>
+                    <span className="text-xs font-extrabold text-gray-900 w-10 text-right">{h.orders}</span>
                   </div>
                 );
               })}
             </div>
           </div>
+        </div>
+      </div>
+    );
 
-          {/* Category Distribution - 3D Pie */}
+    const renderRevenue = () => (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {renderMetricCard('Total Revenue', `$${totalRevenue.toLocaleString()}`, DollarSign, 'from-emerald-400 to-emerald-600', '+18.4%', 'bg-emerald-50', 'text-emerald-600')}
+          {renderMetricCard('Gross Profit', `$${Math.round(totalRevenue * 0.38).toLocaleString()}`, TrendingUp, 'from-violet-400 to-purple-600', '+12.0%', 'bg-violet-50', 'text-violet-600')}
+          {renderMetricCard('Avg. Daily', `$${Math.round(totalRevenue / (factor || 1)).toLocaleString()}`, Calendar, 'from-blue-400 to-blue-600', '+6.2%', 'bg-blue-50', 'text-blue-600')}
+          {renderMetricCard('Payouts', `$${Math.round(totalRevenue * 0.92).toLocaleString()}`, Receipt, 'from-amber-400 to-amber-600', '+2.8%', 'bg-amber-50', 'text-amber-600')}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">{renderSalesBarChart()}</div>
+
           <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
-            <div className="mb-6">
+            <div className="mb-5">
               <h2 className="text-lg font-bold text-gray-900">Sales by Category</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Distribution of orders</p>
+              <p className="text-xs text-gray-500">Distribution of revenue</p>
             </div>
-
-            {/* 3D Donut Chart */}
-            <div className="relative w-48 h-48 mx-auto mb-6" style={{ perspective: '1000px' }}>
-              <div
-                className="relative w-full h-full rounded-full transition-transform duration-500 hover:rotate-y-12"
-                style={{ transformStyle: 'preserve-3d' }}
-              >
+            <div className="relative w-44 h-44 mx-auto mb-5" style={{ perspective: '1000px' }}>
+              <div className="relative w-full h-full rounded-full hover:rotate-y-12 transition-transform duration-500" style={{ transformStyle: 'preserve-3d' }}>
                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                  {categoryData.map((item, index) => {
+                  {categoryShare.map((item, i) => {
                     const circumference = 2 * Math.PI * 15.9155;
-                    const offset = categoryData.slice(0, index).reduce((sum, d) => sum + (d.percentage / 100) * circumference, 0);
-                    const strokeDasharray = `${(item.percentage / 100) * circumference} ${circumference}`;
+                    const offset = categoryShare.slice(0, i).reduce((s, d) => s + (d.percentage / 100) * circumference, 0);
                     return (
                       <circle
                         key={item.name}
@@ -1214,157 +1864,214 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
                         cy="50"
                         r="15.9155"
                         fill="none"
-                        strokeWidth="8"
-                        strokeDasharray={strokeDasharray}
+                        strokeWidth="9"
+                        strokeDasharray={`${(item.percentage / 100) * circumference} ${circumference}`}
                         strokeDashoffset={-offset}
                         className={item.color.replace('bg-', 'stroke-')}
-                        style={{ transition: 'all 0.5s ease-out' }}
+                        style={{ transition: 'all 0.6s ease-out' }}
                       />
                     );
                   })}
                 </svg>
-                {/* Center content */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <p className="text-2xl font-extrabold text-gray-900">100%</p>
                   <p className="text-[10px] text-gray-500 font-medium">Total</p>
                 </div>
               </div>
             </div>
-
-            {/* Legend */}
-            <div className="space-y-3">
-              {categoryData.map((item, index) => (
-                <div
-                  key={item.name}
-                  className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group/legend"
-                  style={{ animation: `fadeSlideIn 0.4s ease-out ${index * 0.1}s both` }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`h-3 w-3 rounded-full ${item.color} shadow-sm group-hover/legend:scale-125 transition-transform`} />
-                    <span className="text-sm font-semibold text-gray-700">{item.name}</span>
+            <div className="space-y-2">
+              {categoryShare.map((c) => (
+                <div key={c.name} className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <div className={`h-3 w-3 rounded-full ${c.color} shadow-sm`} />
+                    <span className="text-sm font-semibold text-gray-700">{c.name}</span>
                   </div>
-                  <span className="text-sm font-extrabold text-gray-900">{item.percentage}%</span>
+                  <span className="text-sm font-extrabold text-gray-900">{c.percentage}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    const renderOrdersAnalytics = () => (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {renderMetricCard('Total Orders', totalOrders.toLocaleString(), ShoppingBag, 'from-blue-400 to-blue-600', '+12.0%', 'bg-blue-50', 'text-blue-600')}
+          {renderMetricCard('Preparing', '3', Clock, 'from-amber-400 to-amber-600', 'Live', 'bg-amber-50', 'text-amber-600')}
+          {renderMetricCard('Ready', '1', CheckCircle2, 'from-emerald-400 to-emerald-600', 'Live', 'bg-emerald-50', 'text-emerald-600')}
+          {renderMetricCard('Delivered', '38', Receipt, 'from-teal-400 to-cyan-600', '+8%', 'bg-teal-50', 'text-teal-600')}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 text-white flex items-center justify-center shadow-lg">
+                <BarChart3 size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Order Status Breakdown</h2>
+                <p className="text-xs text-gray-500">Performance of recent orders</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {orderStatusBreakdown.map((s) => (
+                <div key={s.status}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-bold text-gray-700">{s.status}</span>
+                    <span className="text-sm font-extrabold text-gray-900">{s.count} orders Â· {s.percentage}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                    <div className={`h-3 rounded-full bg-gradient-to-r ${s.color} transition-all duration-1000`} style={{ width: `${s.percentage}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg">
+                <TrendingUp size={20} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Order Performance</h2>
+                <p className="text-xs text-gray-500">Speed and efficiency</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: 'Avg Prep Time', value: '12 min', icon: Clock, color: 'from-amber-400 to-amber-600' },
+                { label: 'On-time Rate', value: '94%', icon: CheckCircle2, color: 'from-emerald-400 to-emerald-600' },
+                { label: 'Cancel Rate', value: '2.4%', icon: X, color: 'from-rose-400 to-red-600' },
+                { label: 'Repeat Buyers', value: '38%', icon: User, color: 'from-violet-400 to-purple-600' },
+              ].map((m) => (
+                <div key={m.label} className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                  <div className={`h-9 w-9 rounded-xl bg-gradient-to-br ${m.color} text-white flex items-center justify-center shadow-md mb-2`}>
+                    <m.icon size={16} />
+                  </div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{m.label}</p>
+                  <p className="text-xl font-extrabold text-gray-900 mt-0.5">{m.value}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Peak Hours + Top Items */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Peak Hours */}
-          <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-amber-200">
-                <TrendingUp size={20} />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Peak Hours</h2>
-                <p className="text-xs text-gray-500">Busiest times today</p>
-              </div>
-            </div>
+        {renderSalesBarChart()}
+      </div>
+    );
 
-            <div className="space-y-4">
-              {peakHours.map((hour, index) => {
-                const maxOrders = Math.max(...peakHours.map((h) => h.orders));
-                const width = (hour.orders / maxOrders) * 100;
-                return (
-                  <div
-                    key={hour.time}
-                    className="flex items-center gap-4"
-                    style={{ animation: `fadeSlideIn 0.4s ease-out ${index * 0.08}s both` }}
-                  >
-                    <span className="text-xs font-bold text-gray-500 w-20 shrink-0">{hour.time}</span>
-                    <div className="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
-                      <div
-                        className="h-3 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-1000 ease-out hover:from-amber-500 hover:to-orange-600"
-                        style={{ width: `${width}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-extrabold text-gray-900 w-10 text-right">{hour.orders}</span>
-                  </div>
-                );
-              })}
-            </div>
+    const renderBestSelling = () => {
+      const max = bestSelling[0]?.orders || 1;
+      const totalItemRevenue = bestSelling.reduce((s, i) => s + i.revenue, 0);
+      return (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {renderMetricCard('Top Items', bestSelling.length.toString(), Star, 'from-amber-400 to-orange-600', 'Live', 'bg-amber-50', 'text-amber-600')}
+            {renderMetricCard('Top Item Revenue', `$${totalItemRevenue.toLocaleString()}`, DollarSign, 'from-emerald-400 to-emerald-600', '+18%', 'bg-emerald-50', 'text-emerald-600')}
+            {renderMetricCard('Avg per Top Item', `$${Math.round(totalItemRevenue / Math.max(bestSelling.length, 1)).toLocaleString()}`, TrendingUp, 'from-violet-400 to-purple-600', '+6%', 'bg-violet-50', 'text-violet-600')}
           </div>
 
-          {/* Top Performing Items */}
           <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#b93815] to-[#9a2c0f] text-white flex items-center justify-center shadow-lg shadow-orange-200">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#b93815] to-[#9a2c0f] text-white flex items-center justify-center shadow-lg">
                 <Star size={20} />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Top Performing Items</h2>
-                <p className="text-xs text-gray-500">Best sellers this week</p>
+                <p className="text-xs text-gray-500">Best sellers Â· {analyticsTimeframe}</p>
               </div>
             </div>
-
-            <div className="space-y-4">
-              {[
-                { name: 'Truffle Smashburger', orders: 142, revenue: '$1,840', trend: '+23%' },
-                { name: 'Street Tacos', orders: 98, revenue: '$1,180', trend: '+15%' },
-                { name: 'Margherita Pizza', orders: 76, revenue: '$920', trend: '+8%' },
-                { name: 'Berry Cake', orders: 54, revenue: '$650', trend: '+5%' },
-              ].map((item, index) => (
-                <div
-                  key={item.name}
-                  className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 group/item"
-                  style={{ animation: `fadeSlideIn 0.4s ease-out ${index * 0.08}s both` }}
-                >
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#b93815] to-[#9a2c0f] text-white flex items-center justify-center font-bold text-sm shadow-lg group-hover/item:scale-110 group-hover/item:rotate-3 transition-all">
-                    {index + 1}
+            <div className="space-y-3">
+              {bestSelling.map((item, i) => {
+                const w = (item.orders / max) * 100;
+                return (
+                  <div key={item.id} className="flex items-center gap-4 p-3 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
+                    <div className={`h-9 w-9 shrink-0 rounded-xl flex items-center justify-center font-extrabold text-sm text-white shadow-md ${i === 0 ? 'bg-gradient-to-br from-amber-400 to-orange-500' : i === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400' : i === 2 ? 'bg-gradient-to-br from-orange-300 to-amber-500' : 'bg-gradient-to-br from-gray-200 to-gray-300 text-gray-600'}`}>
+                      {i + 1}
+                    </div>
+                    <div className="relative h-12 w-12 rounded-xl overflow-hidden border border-gray-200 shrink-0 bg-gray-100">
+                      <Image src={item.image} alt={item.alt} fill className="object-cover" unoptimized />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
+                      <div className="mt-1 w-full bg-white rounded-full h-1.5 overflow-hidden">
+                        <div className="h-1.5 rounded-full bg-gradient-to-r from-[#fcd34d] to-[#b93815]" style={{ width: `${w}%` }} />
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-extrabold text-gray-900">{item.orders} sold</p>
+                      <p className="text-[11px] font-bold text-emerald-600">${item.revenue.toLocaleString()}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
-                    <p className="text-xs text-gray-500">{item.orders} orders · {item.revenue}</p>
-                  </div>
-                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-200">
-                    {item.trend}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
+              {bestSelling.length === 0 && (
+                <p className="text-sm text-gray-400 italic text-center py-8">No items yet â€” add menu items to see top performers.</p>
+              )}
             </div>
           </div>
         </div>
+      );
+    };
 
-        {/* Customer Insights */}
-        <div className="bg-white rounded-3xl border border-gray-200 shadow-lg p-6 sm:p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center shadow-lg shadow-purple-200">
-              <User size={20} />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Customer Insights</h2>
-              <p className="text-xs text-gray-500">Demographics and behavior</p>
-            </div>
+    return (
+      <div className="space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900">Sales & Analytics</h1>
+            <p className="mt-1 text-base text-gray-500">Track your restaurant's performance and make data-driven decisions.</p>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { label: 'New Customers', value: '23', change: '+15%', icon: User, color: 'from-blue-400 to-blue-600' },
-              { label: 'Returning Customers', value: '66', change: '+8%', icon: Star, color: 'from-amber-400 to-amber-600' },
-              { label: 'Customer Retention', value: '74%', change: '+3%', icon: TrendingUp, color: 'from-emerald-400 to-emerald-600' },
-            ].map((item, index) => (
-              <div
-                key={item.label}
-                className="relative p-5 rounded-2xl bg-gray-50 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 group/insight"
-                style={{ animation: `fadeSlideIn 0.4s ease-out ${index * 0.1}s both` }}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative">
+              <select
+                value={analyticsTimeframe}
+                onChange={(e) => setAnalyticsTimeframe(e.target.value as typeof analyticsTimeframe)}
+                className="appearance-none bg-white border border-gray-200 text-sm font-semibold text-gray-700 rounded-xl pl-4 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#b93815]/20 focus:border-[#b93815]"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${item.color} text-white flex items-center justify-center shadow-md group-hover/insight:scale-110 group-hover/insight:rotate-3 transition-all`}>
-                    <item.icon size={18} />
-                  </div>
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">{item.label}</span>
-                </div>
-                <div className="flex items-end justify-between">
-                  <p className="text-2xl font-extrabold text-gray-900">{item.value}</p>
-                  <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">{item.change}</span>
-                </div>
-              </div>
-            ))}
+                <option>Today</option>
+                <option>This Week</option>
+                <option>This Month</option>
+                <option>This Year</option>
+              </select>
+              <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+            <button
+              type="button"
+              onClick={downloadReport}
+              className="inline-flex items-center gap-2 bg-gradient-to-b from-[#b93815] to-[#9a2c0f] hover:from-[#a1320f] hover:to-[#7c1f08] text-white font-bold py-2.5 px-5 rounded-2xl shadow-lg shadow-orange-200 border border-white/20 border-b-4 border-b-[#7c1f08] active:border-b-0 active:translate-y-1 active:shadow-md transition-all text-sm"
+            >
+              <Download size={16} /> Export
+            </button>
           </div>
         </div>
+
+        {/* Sub-module Tabs */}
+        <div className="flex flex-wrap gap-2 bg-white/70 border border-gray-200 rounded-2xl p-1.5 shadow-sm">
+          {subTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setAnalyticsSubTab(tab.id)}
+              className={`flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                analyticsSubTab === tab.id
+                  ? 'bg-gradient-to-b from-[#b93815] to-[#9a2c0f] text-white shadow-lg shadow-orange-200'
+                  : 'text-gray-600 hover:bg-white hover:text-[#b93815]'
+              }`}
+            >
+              <tab.icon size={16} />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {analyticsSubTab === 'Today Sales' && renderTodaySales()}
+        {analyticsSubTab === 'Revenue' && renderRevenue()}
+        {analyticsSubTab === 'Orders Analytics' && renderOrdersAnalytics()}
+        {analyticsSubTab === 'Best-Selling Items' && renderBestSelling()}
       </div>
     );
   };
