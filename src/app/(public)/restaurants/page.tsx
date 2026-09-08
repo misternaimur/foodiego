@@ -79,7 +79,7 @@ export default function RestaurantsPage() {
     return restaurants
       .filter((r) => {
         const matchesRating = r.rating >= minRating;
-        const matchesCuisine = selectedCuisine === 'All' || r.cuisines.includes(selectedCuisine);
+        const matchesCuisine = selectedCuisine === 'All' || r.cuisines?.includes(selectedCuisine);
         return matchesRating && matchesCuisine;
       })
       .sort((a, b) => {
@@ -299,6 +299,10 @@ export default function RestaurantsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {filteredRestaurants.map((restaurant) => {
                   const isFav = favorites.includes(restaurant.id);
+                  const validImage = restaurant.image && restaurant.image.trim() !== '' 
+                    ? restaurant.image 
+                    : '/default-banner.png';
+
                   return (
                     <div
                       key={restaurant.id}
@@ -307,9 +311,10 @@ export default function RestaurantsPage() {
                       <Link href={`/restaurants/${restaurant.slug}`} className="block relative">
                         <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
                           <Image
-                            src={restaurant.image}
+                            src={validImage}
                             alt={restaurant.restaurantName}
                             fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                           <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent" />

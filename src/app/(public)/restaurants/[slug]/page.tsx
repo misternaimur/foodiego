@@ -26,7 +26,22 @@ type MenuItemData = {
   sizes?: FoodItem['sizes'];
   addons?: FoodItem['addons'];
 };
-
+type RestaurantData = {
+  id: string;
+  restaurantName: string;
+  slug: string;
+  image?: string;
+  logo?: string;
+  cuisines?: string[];
+  cuisineType?: string;
+  rating?: number;
+  reviewCount?: number;
+  deliveryTime?: string;
+  deliveryFee?: number | string;
+  minOrder?: number;
+  menuCategories: MenuCategoryData[];
+  offers?: { title: string }[];
+};
 type MenuCategoryData = {
   id: string;
   name: string;
@@ -46,13 +61,13 @@ export default function RestaurantDetailPage() {
   // Dynamic ratings synced directly with the review list
   const [dynamicRating, setDynamicRating] = useState<number>(restaurant?.rating || 4.5);
   const [dynamicReviewCount, setDynamicReviewCount] = useState<number>(restaurant?.reviewCount || 1);
-
+  const restaurantinfo = getRestaurantBySlug(slug as string) as RestaurantData | undefined;
   if (!restaurant) {
     return (
       <div className="min-h-screen bg-[#FAF7EE] flex items-center justify-center p-4">
         <button
           onClick={() => router.push('/restaurants')}
-          className="bg-[#15462D] text-white text-xs font-bold px-5 py-2.5 rounded-full"
+          className="bg-[#15462D] text-white text-xs font-bold px-5 py-2.5 rounded-full cursor-pointer"
         >
           Back to Restaurants
         </button>
@@ -63,12 +78,22 @@ export default function RestaurantDetailPage() {
   const isFav = favorites.includes(restaurant.id);
   const activeCategory = selectedCategory || restaurant.menuCategories[0]?.name;
 
+  // Safe banner image check
+  const validBannerImage = restaurant.image && restaurant.image.trim() !== '' 
+    ? restaurant.image 
+    : '/default-banner.png';
+
+  // Safe logo image check (supports restaurant.logo or falls back if needed)
+   const validLogoImage = restaurantinfo?.logo && restaurant.logo.trim() !== ''
+    ? restaurantinfo.logo
+    : '/default-logo.png';
+
   return (
     <div className="min-h-screen bg-[#FAF7EE] pb-20">
       {/* Banner */}
       <div className="relative w-full h-64 sm:h-80 bg-slate-900">
         <Image
-          src={restaurant.image}
+          src={validBannerImage}
           alt={restaurant.restaurantName}
           fill
           priority
@@ -76,7 +101,7 @@ export default function RestaurantDetailPage() {
         />
         <button
           onClick={() => router.back()}
-          className="absolute top-6 left-6 p-3 rounded-full bg-white/80 backdrop-blur-md text-gray-900 hover:bg-white transition-all"
+          className="absolute top-6 left-6 p-3 rounded-full bg-white/80 backdrop-blur-md text-gray-900 hover:bg-white transition-all cursor-pointer"
         >
           <ArrowLeft size={18} />
         </button>
@@ -84,21 +109,34 @@ export default function RestaurantDetailPage() {
       
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative z-10">
-        {/* Restaurant Header Card */}
+        {/* Restaurant Header Card with Logo */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-[#E8E2D5] shadow-xs mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
-            <div>
-              <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-                {restaurant.cuisines?.join(' • ') || restaurant.cuisineType || 'Various Cuisines'}
-              </span>
-              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                {restaurant.restaurantName}
-              </h1>
+            
+            <div className="flex items-center gap-4">
+              {/* Restaurant Logo Avatar */}
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-[#E8E2D5] shadow-md bg-gray-50 shrink-0">
+                <Image
+                  src={validLogoImage}
+                  alt={restaurant.restaurantName}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+
+              <div>
+                <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+                  {restaurant.cuisines?.join(' • ') || restaurant.cuisineType || 'Various Cuisines'}
+                </span>
+                <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                  {restaurant.restaurantName}
+                </h1>
+              </div>
             </div>
 
             <button
               onClick={() => toggleFavorite(restaurant.id)}
-              className="inline-flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-full text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all"
+              className="inline-flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-full text-xs font-bold text-gray-700 hover:bg-gray-50 transition-all cursor-pointer shrink-0"
             >
               <Heart size={15} className={isFav ? 'fill-red-500 text-red-500' : ''} />
               <span>{isFav ? 'Favorited' : 'Add to favorites'}</span>
@@ -134,7 +172,7 @@ export default function RestaurantDetailPage() {
             <button
               key={cat.id || cat.name}
               onClick={() => setSelectedCategory(cat.name)}
-              className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+              className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 activeCategory === cat.name
                   ? 'bg-[#15462D] text-white shadow-xs'
                   : 'bg-white text-gray-700 border border-[#E8E2D5] hover:bg-gray-50'
@@ -166,7 +204,7 @@ export default function RestaurantDetailPage() {
                         deliveryTime: item.deliveryTime || restaurant.deliveryTime,
                         deliveryFee: item.deliveryFee || `Tk ${restaurant.deliveryFee}`,
                         restaurantName: item.restaurantName || restaurant.restaurantName,
-                        cuisine: item.cuisine || restaurant.cuisines[0] || 'General',
+                        cuisine: item.cuisine || restaurant.cuisines?.[0] || 'General',
                         dietary: item.dietary,
                         matchPercentage: item.matchPercentage,
                         imageUrl: item.imageUrl || item.image,

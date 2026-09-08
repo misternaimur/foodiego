@@ -20,7 +20,7 @@ export default async function PublicLayout({
 
   return (
     <>
-      <Navbar user={session ? { name: session.name, role: session.role } : null} />
+      <Navbar  user={session ? { name: session.name, role: session.role } : null} />
       {children}
       <Footer />
     </>

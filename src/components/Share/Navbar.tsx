@@ -28,7 +28,7 @@ export interface NavbarProps {
 
 const defaultNavItems: NavItem[] = [
   { label: 'Home', href: '/' },
-  { label: 'Discover Foods', href: '/foods' },
+  { label: 'Discover restaurants', href: '/restaurants' },
   { label: 'Offers', href: '/offers' },
 ];
 
@@ -65,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     ? '/vendor'
     : role === 'rider'
     ? '/rider'
-    : '/client/order';
+    : '/client';
 
   const handleLogout = async () => {
     if (onLogout) {
@@ -402,7 +402,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
       )}
-    </header>
+    </header>{/* Slide-over Cart Drawer Component */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
     </>
   );
 };

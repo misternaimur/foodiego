@@ -165,6 +165,7 @@ export default function SinglePageDashboard() {
           })}
         </div>
 
+        
         {/* ================= SALES CHART & RECENT ACTIVITY ================= */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
