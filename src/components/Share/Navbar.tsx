@@ -59,13 +59,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const role = propUser?.role;
   const dashboardHref =
-    role === 'admin'
-      ? '/admin'
-      : role === 'vendor'
-      ? '/vendor'
-      : role === 'rider'
-      ? '/rider'
-      : '/client/orders';
+  role === 'admin'
+    ? '/admin'
+    : role === 'restaurant'
+    ? '/vendor'
+    : role === 'rider'
+    ? '/rider'
+    : '/client/order';
 
   const handleLogout = async () => {
     if (onLogout) {
@@ -87,14 +87,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Conditionally hide the Navbar on admin, vendor, rider, or client dashboard paths
   if (
-    pathname?.startsWith('/admin') ||
-    pathname?.startsWith('/vendor') ||
-    pathname?.startsWith('/rider') ||
-    pathname?.startsWith('/client/orders') ||
-    pathname?.startsWith('/client/checkout')
-  ) {
-    return null;
-  }
+  pathname?.startsWith('/admin') ||
+  pathname?.startsWith('/vendor') ||
+  pathname?.startsWith('/rider') ||
+  pathname?.startsWith('/client')
+) {
+  return null;
+}
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

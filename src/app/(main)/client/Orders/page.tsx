@@ -1,11 +1,5 @@
-import React from 'react'
+import { redirect } from "next/navigation";
 
-function OrderPage() {
-  return (
-    <div>
-      <h1>hello</h1>
-    </div>
-  )
+export default function LegacyOrdersRedirect() {
+  redirect("/client/orders");
 }
-
-export default OrderPage
