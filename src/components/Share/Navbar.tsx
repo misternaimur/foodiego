@@ -65,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     ? '/vendor'
     : role === 'rider'
     ? '/rider'
-    : '/client/order';
+    : '/client';
 
   const handleLogout = async () => {
     if (onLogout) {
@@ -402,7 +402,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
       )}
-    </header>
+    </header>{/* Slide-over Cart Drawer Component */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
     </>
   );
 };
