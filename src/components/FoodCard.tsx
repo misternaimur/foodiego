@@ -53,7 +53,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({
     >
       <div>
         {/* Top Image Container */}
-        <div className="relative w-full aspect-[4/3] bg-gray-100 overflow-hidden">
+        <div className="relative w-full aspect-4/3 bg-gray-100 overflow-hidden">
           <Image
             src={food.imageUrl}
             alt={food.name}
@@ -63,7 +63,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({
           />
 
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
           {/* AI Match Badge */}
           {food.matchPercentage && (
@@ -143,7 +143,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({
               e.stopPropagation();
               onAddToCart(food);
             }}
-            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
+            className="bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 active:scale-95"
           >
             Add to Cart
           </button>

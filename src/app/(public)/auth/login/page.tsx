@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense, useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, LoaderCircle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, LoaderCircle, ArrowLeft } from "lucide-react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 import { establishSession } from "@/app/(public)/actions/auth";
@@ -84,13 +84,24 @@ function LoginForm() {
   const redirectTo = searchParams.get("redirect") ?? "";
 
   return (
-    <main className="flex flex-1 items-center justify-center bg-white px-4 py-12 sm:py-16">
+    <div className="flex flex-1 items-center justify-center bg-white px-4 py-12 sm:py-16">
       <motion.div
         initial="hidden"
         animate="visible"
         variants={containerVariants}
         className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-[0_2px_40px_-12px_rgba(0,0,0,0.12)] sm:p-10"
       >
+        {/* Back Button */}
+        <motion.div variants={itemVariants} className="mb-5">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
+          >
+            <ArrowLeft size={16} />
+            <span>Back</span>
+          </Link>
+        </motion.div>
+
         {/* Header */}
         <motion.div
           variants={itemVariants}
@@ -290,7 +301,7 @@ function LoginForm() {
           </Link>
         </motion.p>
       </motion.div>
-    </main>
+    </div>
   );
 }
 
@@ -298,12 +309,12 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen items-center justify-center bg-white">
+        <div className="flex min-h-screen items-center justify-center bg-white">
           <LoaderCircle
             className="animate-spin text-[#c83214]"
             size={24}
           />
-        </main>
+        </div>
       }
     >
       <LoginForm />

@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Navbar } from "@/components/Share/Navbar";
-import Footer from "@/components/Share/Footer";
 import Providers from "@/components/Providers";
-import { getOptionalSession } from "@/lib/dal";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,7 +23,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getOptionalSession();
 
   return (
     <html
@@ -36,9 +32,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <Providers>
-          <Navbar user={session ? { name: session.name } : null} />
           {children}
-          <Footer />
         </Providers>
       </body>
     </html>

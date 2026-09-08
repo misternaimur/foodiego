@@ -5,26 +5,20 @@ import Image from "next/image";
 
 interface LogoProps {
   className?: string;
-  width?: number;
-  height?: number;
 }
 
-export default function Logo({
-  className = "",
-  width = 130,
-  height = 40,
-}: LogoProps) {
+export default function Logo({ className = "" }: LogoProps) {
   return (
     <Link
       href="/"
-      className={`flex items-center group py-1 ${className}`}
+      className={`flex items-center group py-1 relative w-[170px] h-10 ${className}`}
     >
       <Image
         src="/assets/images/logo/LogoGreen.png"
         alt="Foodiego Logo"
-        width={width}
-        height={height}
-        className="w-[170px] h-auto object-contain"
+        fill
+        sizes="(max-width: 768px) 170px, 170px"
+        className="object-contain"
         priority
       />
     </Link>

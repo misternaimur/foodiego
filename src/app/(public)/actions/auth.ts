@@ -20,15 +20,25 @@ function roleHome(role: Role) {
   }
 }
 
-function getSafeRedirectPath(value?: string, fallback?: string) {
-  if (!value) return fallback ?? "/";
+function getSafeRedirectPath(value: string | undefined, role: Role) {
+  if (!value) return roleHome(role);
 
   const candidate = value.trim();
   if (!candidate.startsWith("/") || candidate.startsWith("//")) {
-    return fallback ?? "/";
+    return roleHome(role);
   }
 
-  return candidate;
+  const allowedPrefix = role === "admin"
+    ? "/admin"
+    : role === "restaurant"
+      ? "/vendor"
+      : role === "rider"
+        ? "/rider"
+        : null;
+
+  return allowedPrefix && (candidate === allowedPrefix || candidate.startsWith(`${allowedPrefix}/`))
+    ? candidate
+    : roleHome(role);
 }
 
 export async function establishSession(
@@ -79,7 +89,7 @@ export async function establishSession(
 
   await createSession(idToken);
 
-  const destination = getSafeRedirectPath(redirectTo, roleHome(user.role));
+  const destination = getSafeRedirectPath(redirectTo, user.role);
   redirect(destination);
 }
 

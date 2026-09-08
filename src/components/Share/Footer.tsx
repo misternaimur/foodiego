@@ -3,8 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Logo from './LogoWhite'
-
+import Logo from './LogoWhite';
 
 export interface FooterLink {
   label: string;
@@ -34,9 +33,9 @@ const defaultColumns: FooterColumn[] = [
   {
     title: 'FOR PARTNERS',
     links: [
-      { label: 'Add your restaurant', href: '/partner/restaurant' },
-      { label: 'Sign up to deliver', href: '/partner/rider' },
-      { label: 'Business Account', href: '/partner/business' },
+      { label: 'Add your restaurant', href: '/auth/register/restaurant' },
+      { label: 'Sign up to deliver', href: '/auth/register/rider' },
+      { label: 'Business Account', href: '/auth/register' },
     ],
   },
   {
@@ -62,9 +61,15 @@ export const Footer: React.FC<FooterProps> = ({
 }) => {
   const pathname = usePathname();
 
-  if (pathname && pathname.startsWith('/dashboard')) {
-    return null;
-  }
+  // Conditionally hide the Footer on admin, vendor, rider, or client dashboard paths
+  if (
+  pathname?.startsWith('/admin') ||
+  pathname?.startsWith('/vendor') ||
+  pathname?.startsWith('/rider') ||
+  pathname?.startsWith('/client')
+) {
+  return null;
+}
 
   return (
     <footer className="w-full bg-[#113220] text-emerald-100/70">
@@ -76,7 +81,7 @@ export const Footer: React.FC<FooterProps> = ({
           {/* Left Column: Brand Info & Quick Action Icons */}
           <div className="lg:col-span-2 space-y-5">
             <div>
-            <Logo></Logo>
+              <Logo />
             </div>
 
             <p className="text-sm leading-relaxed max-w-sm text-emerald-100/80">
