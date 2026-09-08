@@ -233,7 +233,7 @@ export default function SinglePageDashboard() {
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="p-6 flex items-center justify-between border-b border-slate-100">
             <h3 className="text-lg font-bold text-slate-900">Recent Orders</h3>
-            <Link href="/dashboard/orders" className="text-xs font-semibold text-emerald-700 hover:underline">
+            <Link href="/admin/orders" className="text-xs font-semibold text-emerald-700 hover:underline">
               View All
             </Link>
           </div>

@@ -14,7 +14,7 @@ export const PickedForYouSection: React.FC = () => {
   const { addToCart, toggleFavorite, favorites } = useApp();
 
   useEffect(() => {
-    fetch('/data/foods.json')
+    fetch('/api/foods.json')
       .then((res) => {
         if (!res.ok) {
           throw new Error('Failed to fetch food items');
@@ -66,7 +66,7 @@ export const PickedForYouSection: React.FC = () => {
             {[1, 2, 3].map((n) => (
               <div 
                 key={n} 
-                className="w-full h-[420px] bg-white/60 rounded-3xl animate-pulse" 
+                className="w-full h-105 bg-white/60 rounded-3xl animate-pulse" 
               />
             ))}
           </div>

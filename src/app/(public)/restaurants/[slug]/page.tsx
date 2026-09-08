@@ -1,13 +1,37 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Star, Clock, ArrowLeft, Heart } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
-import FoodCard from '@/components/FoodCard';
+import FoodCard, { FoodItem } from '@/components/FoodCard';
 import { RestaurantReviews } from '@/components/RestaurantReviews';
 import { FoodDetailsModal } from '@/components/FoodDetailsModal';
+
+type MenuItemData = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  rating?: number;
+  deliveryTime?: string;
+  deliveryFee?: string;
+  restaurantName?: string;
+  cuisine?: string;
+  dietary?: string;
+  matchPercentage?: number | null;
+  imageUrl?: string;
+  sizes?: FoodItem['sizes'];
+  addons?: FoodItem['addons'];
+};
+
+type MenuCategoryData = {
+  id: string;
+  name: string;
+  items: MenuItemData[];
+};
 
 export default function RestaurantDetailPage() {
   const { slug } = useParams();
@@ -15,21 +39,13 @@ export default function RestaurantDetailPage() {
   const { getRestaurantBySlug, addToCart, favorites, toggleFavorite } = useApp();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedFoodForModal, setSelectedFoodForModal] = useState<any>(null);
+  const [selectedFoodForModal, setSelectedFoodForModal] = useState<FoodItem | null>(null);
 
   const restaurant = getRestaurantBySlug(slug as string);
 
   // Dynamic ratings synced directly with the review list
-  const [dynamicRating, setDynamicRating] = useState<number>(4.5);
-  const [dynamicReviewCount, setDynamicReviewCount] = useState<number>(1);
-
-  // Set initial fallback values when restaurant loads
-  useEffect(() => {
-    if (restaurant) {
-      setDynamicRating(4.5);
-      setDynamicReviewCount(1);
-    }
-  }, [restaurant]);
+  const [dynamicRating, setDynamicRating] = useState<number>(restaurant?.rating || 4.5);
+  const [dynamicReviewCount, setDynamicReviewCount] = useState<number>(restaurant?.reviewCount || 1);
 
   if (!restaurant) {
     return (
@@ -45,7 +61,7 @@ export default function RestaurantDetailPage() {
   }
 
   const isFav = favorites.includes(restaurant.id);
-  const activeCategory = selectedCategory || restaurant.menuCategories[0]?.category;
+  const activeCategory = selectedCategory || restaurant.menuCategories[0]?.name;
 
   return (
     <div className="min-h-screen bg-[#FAF7EE] pb-20">
@@ -53,7 +69,7 @@ export default function RestaurantDetailPage() {
       <div className="relative w-full h-64 sm:h-80 bg-slate-900">
         <Image
           src={restaurant.image}
-          alt={restaurant.name}
+          alt={restaurant.restaurantName}
           fill
           priority
           className="object-cover opacity-60"
@@ -65,7 +81,7 @@ export default function RestaurantDetailPage() {
           <ArrowLeft size={18} />
         </button>
       </div>
-
+      
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative z-10">
         {/* Restaurant Header Card */}
@@ -73,10 +89,10 @@ export default function RestaurantDetailPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-gray-100">
             <div>
               <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
-                {restaurant.cuisines.join(' • ')}
+                {restaurant.cuisines?.join(' • ') || restaurant.cuisineType || 'Various Cuisines'}
               </span>
               <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                {restaurant.name}
+                {restaurant.restaurantName}
               </h1>
             </div>
 
@@ -114,17 +130,17 @@ export default function RestaurantDetailPage() {
 
         {/* Category Navigation Bar */}
         <div className="sticky top-20 bg-[#FAF7EE]/95 backdrop-blur-md py-4 z-20 border-b border-[#E8E2D5] mb-8 overflow-x-auto flex gap-2 scrollbar-none">
-          {restaurant.menuCategories.map((cat: any) => (
+          {restaurant.menuCategories.map((cat: MenuCategoryData) => (
             <button
-              key={cat.category}
-              onClick={() => setSelectedCategory(cat.category)}
+              key={cat.id || cat.name}
+              onClick={() => setSelectedCategory(cat.name)}
               className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
-                activeCategory === cat.category
+                activeCategory === cat.name
                   ? 'bg-[#15462D] text-white shadow-xs'
                   : 'bg-white text-gray-700 border border-[#E8E2D5] hover:bg-gray-50'
               }`}
             >
-              {cat.category} ({cat.items.length})
+              {cat.name} ({cat.items.length})
             </button>
           ))}
         </div>
@@ -132,13 +148,13 @@ export default function RestaurantDetailPage() {
         {/* Menu Section Rendered via FoodCard */}
         <div className="space-y-12">
           {restaurant.menuCategories
-            .filter((cat: any) => !selectedCategory || cat.category === selectedCategory)
-            .map((cat: any) => (
-              <div key={cat.category}>
-                <h3 className="text-xl font-black text-slate-900 mb-6">{cat.category}</h3>
+            .filter((cat: MenuCategoryData) => !selectedCategory || cat.name === selectedCategory)
+            .map((cat: MenuCategoryData) => (
+              <div key={cat.id || cat.name}>
+                <h3 className="text-xl font-black text-slate-900 mb-6">{cat.name}</h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {cat.items.map((item: any) => (
+                  {cat.items.map((item: MenuItemData) => (
                     <FoodCard
                       key={item.id}
                       food={{
@@ -149,11 +165,10 @@ export default function RestaurantDetailPage() {
                         rating: item.rating || 4.5,
                         deliveryTime: item.deliveryTime || restaurant.deliveryTime,
                         deliveryFee: item.deliveryFee || `Tk ${restaurant.deliveryFee}`,
-                        restaurantName: item.restaurantName || restaurant.name,
-                        cuisine: item.cuisine || restaurant.cuisines[0],
+                        restaurantName: item.restaurantName || restaurant.restaurantName,
+                        cuisine: item.cuisine || restaurant.cuisines[0] || 'General',
                         dietary: item.dietary,
                         matchPercentage: item.matchPercentage,
-                        // FIX: Ensure FoodCard gets imageUrl even if JSON uses image
                         imageUrl: item.imageUrl || item.image,
                         sizes: item.sizes,
                         addons: item.addons,
