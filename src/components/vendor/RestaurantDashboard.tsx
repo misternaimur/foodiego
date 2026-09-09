@@ -25,12 +25,12 @@ import {
   LogOut,
 } from 'lucide-react';
 import SupportTicketsPage from './SupportTicketsPage';
-import VendorDashboardHome from './VendorDashboardHome';
-import OrdersDashboard from './OrdersDashboard';
+import RestaurantCommandCenter from './RestaurantCommandCenter';
 import MenuPortfolio from './MenuPortfolio';
+import OrdersDashboard from './OrdersDashboard';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type DashboardTab = 'Dashboard' | 'Orders' | 'Menu Management' | 'Sales & Analytics' | 'Payments & Earnings' | 'Delivery Management' | 'Reviews & Ratings' | 'Support Tickets' | 'Analytics' | 'AI Food Studio' | 'Review';
+type DashboardTab = 'Dashboard' | 'Orders' | 'Menu Management' | 'Sales & Analytics' | 'Payments & Earnings' | 'Delivery Management' | 'Reviews & Ratings' | 'Support Tickets' | 'Analytics' | 'Review';
 
 export default function RestaurantDashboard() {
   const router = useRouter();
@@ -45,7 +45,6 @@ export default function RestaurantDashboard() {
     { name: 'Dashboard', icon: LayoutDashboard, href: '#' },
     { name: 'Orders', icon: ShoppingBag, href: '#' },
     { name: 'Menu Management', icon: UtensilsCrossed, href: '#' },
-    { name: 'AI Food Studio', icon: Sparkles, href: '#' },
     { name: 'Sales & Analytics', icon: BarChart3, href: '#' },
     { name: 'Payments & Earnings', icon: CreditCard, href: '#' },
     { name: 'Delivery Management', icon: Truck, href: '#' },
@@ -342,7 +341,7 @@ export default function RestaurantDashboard() {
         {/* -------------------- MAIN CONTENT -------------------- */}
         <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 max-w-7xl w-full mx-auto">
           {activeTab === 'Dashboard' ? (
-            <VendorDashboardHome />
+            <RestaurantCommandCenter />
           ) : activeTab === 'Orders' ? (
             <OrdersDashboard />
           ) : activeTab === 'Menu Management' ? (
