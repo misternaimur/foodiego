@@ -19,7 +19,10 @@ export async function fetchVendorOrdersAction() {
   if (!user) return null;
 
   const token = getApiToken(user._id.toString(), user.role);
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  let apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl || apiUrl === "..." || apiUrl === "") {
+    apiUrl = "http://localhost:8000";
+  }
 
   try {
     // First fetch the restaurant profile to get restaurantId
@@ -56,7 +59,10 @@ export async function updateOrderStatusAction(orderId: string, status: string) {
   if (!user) return { success: false };
 
   const token = getApiToken(user._id.toString(), user.role);
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  let apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl || apiUrl === "..." || apiUrl === "") {
+    apiUrl = "http://localhost:8000";
+  }
 
   try {
     const res = await fetch(`${apiUrl}/api/orders/${orderId}/status`, {

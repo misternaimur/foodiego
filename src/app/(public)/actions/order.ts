@@ -18,7 +18,10 @@ export async function createOrderAction(orderData: any) {
     return { success: false, message: "User not found." };
   }
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  let apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl || apiUrl === "..." || apiUrl === "") {
+    apiUrl = "http://localhost:8000";
+  }
   
   try {
     const response = await fetch(`${apiUrl}/api/orders`, {

@@ -20,7 +20,10 @@ async function getRecentOrders() {
   if (!user) return [];
 
   const token = getApiToken(user._id.toString(), user.role);
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  let apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!apiUrl || apiUrl === "..." || apiUrl === "") {
+    apiUrl = "http://localhost:8000";
+  }
 
   try {
     const res = await fetch(`${apiUrl}/api/orders/recent`, {
