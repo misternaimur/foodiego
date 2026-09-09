@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { FoodCard, FoodItem } from '@/components/FoodCard';
+import FoodCard, { FoodItem } from '@/components/FoodCard';
 import { useApp } from '@/context/AppContext';
 
 export default function FavoritesPage() {
@@ -71,12 +71,9 @@ export default function FavoritesPage() {
             {favoriteFoods.map((food) => (
               <FoodCard
                 key={food.id}
-                food={{
-                  ...food,
-                  isFavorite: true,
-                }}
-                onAddToCart={() => addToCart(food)}
-                onToggleFavorite={() => toggleFavorite(food.id)}
+                food={food}
+                onAddToCart={(f) => addToCart(f)}
+                onToggleFavorite={(id) => toggleFavorite(id)}
               />
             ))}
           </div>
