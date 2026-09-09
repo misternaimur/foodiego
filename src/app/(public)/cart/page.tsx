@@ -3,12 +3,21 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
-import { ArrowLeft, ShoppingBag, ShieldCheck, Sparkles, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, ShieldCheck, Sparkles, Plus, Minus, CheckCircle, Loader2 } from 'lucide-react';
+import { createOrderAction } from '../actions/order';
 
 export default function CartPage() {
-  const { cart, addToCart, removeFromCart } = useApp();
+  const { cart, addToCart, removeFromCart, clearCart, user } = useApp();
   const [isMounted, setIsMounted] = useState(false);
+  
+  // Checkout states
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderConfirmed, setOrderConfirmed] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -29,6 +38,79 @@ export default function CartPage() {
   );
   const deliveryFee = cart.length > 0 ? 2.99 : 0;
   const total = subtotal + deliveryFee;
+
+  const handleCheckout = async () => {
+    if (!user) {
+      alert("Please log in to place an order.");
+      router.push("/auth/login");
+      return;
+    }
+
+    if (!deliveryAddress.trim()) {
+      alert("Please enter a delivery address.");
+      return;
+    }
+
+    if (cart.length === 0) return;
+
+    setIsSubmitting(true);
+    
+    // Group all cart items by restaurantId because an order belongs to one restaurant
+    // For simplicity, we assume all items in the cart are from the same restaurant (common in food delivery)
+    // We will just use the restaurantId of the first item
+    const restaurantId = cart[0].restaurantId;
+
+    const items = cart.map(item => ({
+      menuItemId: item.id,
+      name: item.name,
+      price: item.totalUnitPrice || item.price,
+      quantity: item.quantity,
+    }));
+
+    const orderData = {
+      restaurantId,
+      items,
+      totalAmount: total,
+      deliveryAddress,
+      paymentMethod,
+    };
+
+    try {
+      const res = await createOrderAction(orderData);
+      
+      if (res.success) {
+        setOrderConfirmed(true);
+        clearCart();
+      } else {
+        alert(res.message || "Failed to place order. Please try again.");
+      }
+    } catch (error) {
+      alert("An unexpected error occurred.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (orderConfirmed) {
+    return (
+      <main className="min-h-[calc(100vh-80px)] bg-[#FAF7EE] w-full px-4 py-20 text-center flex flex-col items-center justify-center">
+        <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mb-6 text-emerald-600 shadow-inner">
+          <CheckCircle className="w-12 h-12" />
+        </div>
+        <h1 className="text-3xl font-black text-gray-900 mb-2">Order Confirmed!</h1>
+        <p className="text-gray-500 max-w-sm mb-8 text-sm">
+          Your order has been placed successfully and is now awaiting restaurant confirmation.
+        </p>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 bg-[#113220] text-white font-bold px-8 py-4 rounded-2xl hover:bg-[#1a4d31] transition-all shadow-lg shadow-[#113220]/20 hover:-translate-y-0.5 cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Home
+        </Link>
+      </main>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -179,8 +261,46 @@ export default function CartPage() {
               </div>
             </div>
 
-            <button className="relative z-10 w-full bg-[#F6A429] hover:bg-[#e0931f] text-gray-900 font-extrabold py-4 rounded-2xl transition-all shadow-lg shadow-black/20 hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer uppercase text-xs tracking-wider">
-              <span>Proceed to Checkout</span>
+            <div className="border-t border-white/10 pt-4 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-emerald-200">Delivery Address</label>
+                <input
+                  type="text"
+                  placeholder="Enter your full address..."
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  className="w-full bg-emerald-900/50 border border-emerald-700/50 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-emerald-300/50 focus:outline-none focus:border-[#F6A429] transition-colors"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-emerald-200">Payment Method</label>
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-full bg-emerald-900/50 border border-emerald-700/50 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#F6A429] transition-colors appearance-none cursor-pointer"
+                >
+                  <option value="cash">Cash on Delivery</option>
+                  {/* Future payment options can easily be added here */}
+                  {/* <option value="card">Credit Card</option> */}
+                  {/* <option value="online">Online Payment</option> */}
+                </select>
+              </div>
+            </div>
+
+            <button 
+              onClick={handleCheckout}
+              disabled={isSubmitting}
+              className="relative z-10 w-full bg-[#F6A429] hover:bg-[#e0931f] disabled:bg-[#F6A429]/50 disabled:cursor-not-allowed text-gray-900 font-extrabold py-4 rounded-2xl transition-all shadow-lg shadow-black/20 hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer uppercase text-xs tracking-wider"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <span>Proceed to Checkout</span>
+              )}
             </button>
 
             <div className="relative z-10 flex items-center justify-center gap-2 text-xs text-emerald-200/60 pt-2">
