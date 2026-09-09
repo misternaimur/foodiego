@@ -79,7 +79,7 @@ export default function RestaurantsPage() {
     return restaurants
       .filter((r) => {
         const matchesRating = r.rating >= minRating;
-        const matchesCuisine = selectedCuisine === 'All' || r.cuisines.includes(selectedCuisine);
+        const matchesCuisine = selectedCuisine === 'All' || r.cuisines?.includes(selectedCuisine);
         return matchesRating && matchesCuisine;
       })
       .sort((a, b) => {
@@ -154,7 +154,7 @@ export default function RestaurantsPage() {
                       type="radio"
                       name="sort"
                       checked={selectedSort === sort.id}
-                      onChange={() => setSelectedSort(sort.id as any)}
+                      onChange={() => setSelectedSort(sort.id as 'relevance' | 'fastest' | 'rating')}
                       className="w-4 h-4 text-[#15462D] focus:ring-[#15462D] accent-[#15462D]"
                     />
                     <span className="text-sm font-medium text-gray-700 group-hover:text-slate-900">
@@ -227,7 +227,7 @@ export default function RestaurantsPage() {
                 {PROMO_SLIDES.map((slide) => (
                   <div
                     key={slide.id}
-                    className={`w-full shrink-0 bg-gradient-to-r ${slide.bgGradient} p-5 sm:p-6 text-white relative flex items-center justify-between min-h-[140px] sm:min-h-[160px]`}
+                    className={`w-full shrink-0 bg-linear-to-r ${slide.bgGradient} p-5 sm:p-6 text-white relative flex items-center justify-between min-h-[140px] sm:min-h-[160px]`}
                   >
                     <div className="relative z-10 max-w-lg">
                       <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full mb-2 ${slide.badgeColor}`}>
@@ -299,6 +299,10 @@ export default function RestaurantsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {filteredRestaurants.map((restaurant) => {
                   const isFav = favorites.includes(restaurant.id);
+                  const validImage = restaurant.image && restaurant.image.trim() !== '' 
+                    ? restaurant.image 
+                    : '/default-banner.png';
+
                   return (
                     <div
                       key={restaurant.id}
@@ -307,12 +311,13 @@ export default function RestaurantsPage() {
                       <Link href={`/restaurants/${restaurant.slug}`} className="block relative">
                         <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
                           <Image
-                            src={restaurant.image}
-                            alt={restaurant.name}
+                            src={validImage}
+                            alt={restaurant.restaurantName}
                             fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                          <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent" />
                           
                           {restaurant.badge && (
                             <span className="absolute top-3 left-3 bg-[#15462D] text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full shadow-xs">
@@ -335,7 +340,7 @@ export default function RestaurantsPage() {
                         <div className="p-5">
                           <div className="flex items-start justify-between gap-2 mb-1">
                             <h3 className="text-lg font-black text-slate-900 group-hover:text-[#15462D] transition-colors truncate">
-                              {restaurant.name}
+                              {restaurant.restaurantName}
                             </h3>
                             <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/50 shrink-0">
                               <Star size={13} className="fill-amber-400 text-amber-400" />
@@ -345,7 +350,7 @@ export default function RestaurantsPage() {
                           </div>
 
                           <p className="text-xs text-gray-500 font-medium truncate mb-3">
-                            {restaurant.cuisines.join(' • ')}
+                            {restaurant.cuisines?.join(' • ') || 'Various Cuisines'}
                           </p>
 
                           <div className="flex items-center gap-4 text-xs font-bold text-gray-600 pt-3 border-t border-gray-100">

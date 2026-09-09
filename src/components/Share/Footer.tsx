@@ -63,13 +63,13 @@ export const Footer: React.FC<FooterProps> = ({
 
   // Conditionally hide the Footer on admin, vendor, rider, or client dashboard paths
   if (
-    pathname?.startsWith('/admin') ||
-    pathname?.startsWith('/vendor') ||
-    pathname?.startsWith('/rider') ||
-    pathname?.startsWith('/client/orders')
-  ) {
-    return null;
-  }
+  pathname?.startsWith('/admin') ||
+  pathname?.startsWith('/vendor') ||
+  pathname?.startsWith('/rider') ||
+  pathname?.startsWith('/client')
+) {
+  return null;
+}
 
   return (
     <footer className="w-full bg-[#113220] text-emerald-100/70">

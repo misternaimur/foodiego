@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
@@ -13,6 +13,12 @@ interface CartDrawerProps {
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
   const { cart, addToCart, removeFromCart } = useApp();
+  // Prevent hydration mismatch without triggering a synchronous state update in an effect.
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // Prevent background layout shift caused by scrollbar hiding
   useEffect(() => {
@@ -65,7 +71,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
             <ShoppingBag size={20} className="text-[#15462D]" />
             <h2 className="text-lg font-extrabold text-gray-900">Your Cart</h2>
             <span className="bg-emerald-100 text-[#15462D] text-xs font-bold px-2.5 py-0.5 rounded-full">
-              {totalCount} items
+              {isMounted ? totalCount : 0} items
             </span>
           </div>
           <button
@@ -79,7 +85,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
 
         {/* Cart Items List */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          {cart.length === 0 ? (
+          {!isMounted || cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-12">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-4">
                 <ShoppingBag size={32} />
@@ -100,6 +106,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
                     src={item.imageUrl}
                     alt={item.name}
                     fill
+                    sizes="64px"
                     className="object-cover"
                   />
                 </div>
@@ -150,7 +157,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer Checkout Summary */}
-        {cart.length > 0 && (
+        {isMounted && cart.length > 0 && (
           <div className="p-5 border-t border-gray-100 bg-white space-y-3">
             <div className="space-y-1.5 text-xs text-gray-600 font-medium">
               <div className="flex justify-between">
