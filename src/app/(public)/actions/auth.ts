@@ -6,6 +6,7 @@ import { dbConnect } from "@/lib/dbConnect";
 import { User } from "@/models/User";
 import { createSession, deleteSession } from "@/lib/session";
 import { adminAuth } from "@/lib/firebase/admin";
+import { consumeVerifiedRegistrationOtp } from "@/lib/otp";
 
 function roleHome(role: Role) {
   switch (role) {
@@ -69,6 +70,12 @@ export async function establishSession(
       const existingByEmail = await User.findOne({ email }).lean();
       if (existingByEmail) {
         return { errors: { email: ["An account with this email already exists."] } };
+      }
+
+      // Registration is gated behind e-mail OTP verification.
+      const otpVerified = await consumeVerifiedRegistrationOtp(email ?? "");
+      if (!otpVerified) {
+        return { message: "Please verify your email with the code we sent before continuing." };
       }
 
       user = await User.create({
