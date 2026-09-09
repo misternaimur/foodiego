@@ -1,14 +1,10 @@
 import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifyRole } from "@/lib/dal";
 import { getOrCreateRestaurantProfile } from "@/lib/profile";
 import RestaurantStatusScreen from "@/components/vendor/RestaurantStatusScreen";
 
 export default async function VendorPendingPage() {
-  const session = await verifySession();
-
-  if (session.role !== "restaurant") {
-    redirect("/");
-  }
+  const session = await verifyRole("restaurant");
 
   const restaurant = await getOrCreateRestaurantProfile(session);
 

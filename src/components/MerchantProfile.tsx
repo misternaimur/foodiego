@@ -56,7 +56,7 @@ export default function MerchantProfile({
                   </span>
                 </div>
                 <p className="text-sm text-gray-500 mt-1">
-                  Vendor Admin ·{" "}
+                  Vendor Admin -{' '}
                   <span className="capitalize font-medium text-gray-700">{role}</span> account
                 </p>
               </div>

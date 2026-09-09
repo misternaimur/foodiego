@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown, UtensilsCrossed, Bike } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import LogoGreen from './LogoGreen';
-import CartDrawer from '@/components/CartDrawer';
+import CartDrawer from '@/components/client/CartDrawer';
 
 export interface NavItem {
   label: string;
@@ -28,7 +28,7 @@ export interface NavbarProps {
 
 const defaultNavItems: NavItem[] = [
   { label: 'Home', href: '/' },
-  { label: 'Discover Foods', href: '/foods' },
+  { label: 'Discover restaurants', href: '/restaurants' },
   { label: 'Offers', href: '/offers' },
 ];
 
@@ -59,13 +59,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const role = propUser?.role;
   const dashboardHref =
-    role === 'admin'
-      ? '/admin'
-      : role === 'vendor'
-      ? '/vendor'
-      : role === 'rider'
-      ? '/rider'
-      : '/client/dashboard';
+  role === 'admin'
+    ? '/admin'
+    : role === 'restaurant'
+    ? '/vendor'
+    : role === 'rider'
+    ? '/rider'
+    : '/client';
 
   const handleLogout = async () => {
     if (onLogout) {
@@ -87,20 +87,20 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Conditionally hide the Navbar on admin, vendor, rider, or client dashboard paths
   if (
-    pathname?.startsWith('/admin') ||
-    pathname?.startsWith('/vendor') ||
-    pathname?.startsWith('/rider') ||
-    pathname?.startsWith('/client/dashboard')
-  ) {
-    return null;
-  }
+  pathname?.startsWith('/admin') ||
+  pathname?.startsWith('/vendor') ||
+  pathname?.startsWith('/rider') ||
+  pathname?.startsWith('/client')
+) {
+  return null;
+}
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onSearch) {
       onSearch(searchQuery);
     } else if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`/restaurants?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -402,7 +402,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </div>
       )}
-    </header>
+    </header>{/* Slide-over Cart Drawer Component */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+
     </>
   );
 };

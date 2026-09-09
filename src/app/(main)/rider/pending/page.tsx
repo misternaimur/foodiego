@@ -1,14 +1,10 @@
 import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifyRole } from "@/lib/dal";
 import { getOrCreateRiderProfile } from "@/lib/profile";
 import RiderStatusScreen from "@/components/rider/RiderStatusScreen";
 
 export default async function RiderPendingPage() {
-  const session = await verifySession();
-
-  if (session.role !== "rider") {
-    redirect("/");
-  }
+  const session = await verifyRole("rider");
 
   const rider = await getOrCreateRiderProfile(session);
 

@@ -1,14 +1,9 @@
-import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifyRole } from "@/lib/dal";
 import { getOrCreateRestaurantProfile } from "@/lib/profile";
 import RestaurantDashboard from "@/components/vendor/RestaurantDashboard";
 
 export default async function VendorPage() {
-  const session = await verifySession();
-
-  if (session.role !== "restaurant") {
-    redirect("/");
-  }
+  const session = await verifyRole("restaurant");
 
   // Ensure a restaurant profile exists (auto-provisioned if missing) so a
   // logged-in restaurant always lands on the dashboard instead of the
