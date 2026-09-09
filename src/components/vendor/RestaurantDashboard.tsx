@@ -28,6 +28,8 @@ import SupportTicketsPage from './SupportTicketsPage';
 import RestaurantCommandCenter from './RestaurantCommandCenter';
 import MenuPortfolio from './MenuPortfolio';
 import OrdersDashboard from './OrdersDashboard';
+import ReviewsRatings from './ReviewsRatings';
+import SalesAnalytics from './SalesAnalytics';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type DashboardTab = 'Dashboard' | 'Orders' | 'Menu Management' | 'Sales & Analytics' | 'Payments & Earnings' | 'Delivery Management' | 'Reviews & Ratings' | 'Support Tickets' | 'Analytics' | 'Review';
@@ -348,6 +350,10 @@ export default function RestaurantDashboard() {
             <MenuPortfolio />
           ) : activeTab === 'Support Tickets' ? (
             <SupportTicketsPage />
+          ) : activeTab === 'Reviews & Ratings' ? (
+            <ReviewsRatings />
+          ) : activeTab === 'Sales & Analytics' ? (
+            <SalesAnalytics />
           ) : (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="bg-gray-100 rounded-full p-6 mb-6">
