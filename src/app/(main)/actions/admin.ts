@@ -43,7 +43,7 @@ async function setRestaurantStatus(
   revalidatePath("/admin");
   revalidatePath("/admin/vendors");
   revalidatePath("/vendor");
-  revalidatePath("/vendor/pending");
+  revalidatePath("/vendor/orders");
 
   return { ok: true };
 }

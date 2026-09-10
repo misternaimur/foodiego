@@ -2,7 +2,6 @@ import "server-only";
 
 import { dbConnect } from "@/lib/dbConnect";
 import { Rider, type RiderDocument } from "@/models/Rider";
-import { Restaurant, type RestaurantDocument } from "@/models/Restaurant";
 
 interface SessionLike {
   id: string;
@@ -47,27 +46,4 @@ export async function getOrCreateRiderProfile(
   return rider;
 }
 
-export async function getOrCreateRestaurantProfile(
-  session: SessionLike
-): Promise<RestaurantDocument | null> {
-  await dbConnect();
 
-  let restaurant = await Restaurant.findOne({ userId: session.id }).lean<RestaurantDocument>();
-  if (restaurant) return restaurant;
-
-  try {
-    await Restaurant.create({
-      userId: session.id,
-      restaurantName: session.name ? `${session.name}'s Kitchen` : "My Restaurant",
-      ownerName: session.name || "Owner",
-      email: session.email || `${session.userId}@foodiego.local`,
-      address: PLACEHOLDER,
-      status: "approved",
-    });
-  } catch (error) {
-    console.warn("Could not auto-provision restaurant profile:", error);
-  }
-
-  restaurant = await Restaurant.findOne({ userId: session.id }).lean<RestaurantDocument>();
-  return restaurant;
-}

@@ -23,6 +23,10 @@ const nextConfig: NextConfig = {
         hostname: 'res.cloudinary.com',
         pathname: '/ad0uzhe4/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.britannica.com',
+      },
     ],
   },
 };

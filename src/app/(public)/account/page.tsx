@@ -8,5 +8,5 @@ export default async function AccountPage() {
   if (session.role === "restaurant") redirect("/vendor");
   if (session.role === "rider") redirect("/rider");
 
-  redirect("/client/dashboard");
+  redirect("/client");
 }
