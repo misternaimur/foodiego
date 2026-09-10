@@ -1,5 +1,5 @@
 import { verifySession } from "@/lib/dal";
-import ClientDashboard from "@/components/ClientDashboard";
+import ClientDashboard from "@/components/client/dasboard/ClientDashboard";
 
 export const metadata = {
   title: "Dashboard · Foodiego",

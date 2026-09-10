@@ -12,7 +12,6 @@ import {
   BarChart3, Calendar, Receipt, Camera, Loader2, Clock, X, ArrowRight,
   CreditCard, Eye, LogOut, LayoutGrid, Settings, Truck, Ticket, Lock, Shield,
 } from 'lucide-react';
-import CreateMenuItem from '@/components/CreateMenuItem';
 import { useApp } from '@/context/AppContext';
 
 interface ClientDashboardProps {

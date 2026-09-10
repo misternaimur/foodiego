@@ -6,22 +6,34 @@ import jwt from "jsonwebtoken";
 import { redirect } from 'next/navigation';
 import { Clock } from 'lucide-react';
 
+// Define strict TypeScript interface for orders
+interface Order {
+  _id: string;
+  restaurantId?: {
+    restaurantName?: string;
+  };
+  status: string;
+  paymentMethod: string;
+  totalAmount: number;
+}
+
 const getApiToken = (userId: string, role: string) => {
   const secret = process.env.JWT_SECRET || "rtvCXlkDa5KJk4qowNg/VzgucBKlzeRZ1OOzbSWkXMw=";
   return jwt.sign({ userId, role }, secret, { expiresIn: "1h" });
 };
 
-async function getRecentOrders() {
+async function getRecentOrders(): Promise<Order[]> {
   const session = await getOptionalSession();
   if (!session || session.role !== "admin") return [];
 
   await dbConnect();
-  const user = await User.findOne({ uid: session.userId }).lean();
+  const user = await User.findOne({ uid: session.userId }).select("_id role").lean();
   if (!user) return [];
 
   const token = getApiToken(user._id.toString(), user.role);
-  let apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!apiUrl || apiUrl === "..." || apiUrl === "") {
+  let apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  
+  if (!apiUrl || apiUrl === "...") {
     apiUrl = "http://localhost:8000";
   }
 
@@ -30,10 +42,20 @@ async function getRecentOrders() {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store'
     });
-    const data = await res.json();
+
+    const contentType = res.headers.get("content-type");
+    const data = contentType && contentType.includes("application/json") 
+      ? await res.json() 
+      : { data: [] };
+
+    if (!res.ok) {
+      console.error("Failed to fetch recent orders:", data.message || res.statusText);
+      return [];
+    }
+
     return data.data || [];
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching recent orders:", error);
     return [];
   }
 }
@@ -88,7 +110,7 @@ export default async function AdminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {recentOrders.map((order: any) => (
+                {recentOrders.map((order: Order) => (
                   <tr key={order._id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       #{order._id.slice(-6).toUpperCase()}
