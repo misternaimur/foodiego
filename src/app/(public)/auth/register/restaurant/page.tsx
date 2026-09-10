@@ -33,8 +33,7 @@ import {
 } from "lucide-react";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, storage } from "@/lib/firebase/client";
+import { auth } from "@/lib/firebase/client";
 import { registerRestaurant } from "@/app/(public)/actions/restaurant";
 import { sendRegistrationOtp, verifyRegistrationOtp } from "@/app/(public)/actions/otp";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
@@ -236,13 +235,22 @@ function RestaurantRegisterFormContent() {
         }
       }
 
-      // Best-effort logo upload — registration still completes if it fails.
+      // Best-effort logo upload: if Imgbb is unreachable we still complete the
+      // registration rather than leaving the form stuck. The logo can be added
+      // later from the profile page.
       let logoUrl: string | undefined;
       if (logoFile) {
         try {
-          const logoRef = ref(storage, `restaurant-logos/${uid}/${Date.now()}-${logoFile.name}`);
-          await uploadBytes(logoRef, logoFile);
-          logoUrl = await getDownloadURL(logoRef);
+          const uploadForm = new FormData();
+          uploadForm.append("file", logoFile);
+          uploadForm.append("folder", "restaurants");
+          const uploadRes = await fetch("/api/upload/image", { method: "POST", body: uploadForm });
+          const uploadJson: { success: boolean; imageUrl?: string; message?: string } = await uploadRes.json();
+          if (uploadJson.success && uploadJson.imageUrl) {
+            logoUrl = uploadJson.imageUrl;
+          } else {
+            console.warn("Restaurant logo upload failed, continuing without it:", uploadJson.message);
+          }
         } catch (error) {
           console.warn("Restaurant logo upload failed, continuing without it:", error);
         }

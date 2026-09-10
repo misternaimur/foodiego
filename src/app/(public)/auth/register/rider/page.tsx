@@ -23,8 +23,7 @@ import {
 } from "lucide-react";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, storage } from "@/lib/firebase/client";
+import { auth } from "@/lib/firebase/client";
 import { registerRider } from "@/app/(public)/actions/rider";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
 import {
@@ -107,16 +106,24 @@ async function registerRiderAction(
     }
   }
 
-  // Best-effort photo upload: if Storage is unreachable (e.g. missing bucket
-  // CORS policy for web origins) we still complete the registration rather than
-  // leaving the form stuck. The photo can be added later from the profile page.
+  // Best-effort photo upload via Imgbb: if upload is unreachable we still complete the
+  // registration rather than leaving the form stuck. The photo can be added later.
   let photoUrl: string | undefined;
-  try {
-    const photoRef = ref(storage, `rider-photos/${uid}/${Date.now()}-${photoFile.name}`);
-    await uploadBytes(photoRef, photoFile);
-    photoUrl = await getDownloadURL(photoRef);
-  } catch (error) {
-    console.warn("Rider photo upload failed, continuing without it:", error);
+  if (photoFile) {
+    try {
+      const uploadForm = new FormData();
+      uploadForm.append("file", photoFile);
+      uploadForm.append("folder", "riders");
+      const uploadRes = await fetch("/api/upload/image", { method: "POST", body: uploadForm });
+      const uploadJson: { success: boolean; imageUrl?: string; message?: string } = await uploadRes.json();
+      if (uploadJson.success && uploadJson.imageUrl) {
+        photoUrl = uploadJson.imageUrl;
+      } else {
+        console.warn("Rider photo upload failed, continuing without it:", uploadJson.message);
+      }
+    } catch (error) {
+      console.warn("Rider photo upload failed, continuing without it:", error);
+    }
   }
 
   return registerRider(idToken, { ...validatedFields.data, photoUrl });

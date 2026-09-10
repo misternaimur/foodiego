@@ -514,9 +514,12 @@ export default function ClientDashboard({
 
   // Restaurant Profile state
   const [restaurantName, setRestaurantName] = useState('Truffle House Kitchen');
-  const [restaurantDescription, setRestaurantDescription] = useState('Gourmet burgers and artisanal sides crafted with premium ingredients.');
-  const [restaurantLogo, setRestaurantLogo] = useState<string | null>(null);
+  const [restaurantDescription, setRestaurantDescription] = useState('Gourmet burgers and artisanal sides crafted with premium ingredients.');  const [restaurantLogo, setRestaurantLogo] = useState<string | null>(null);
   const [restaurantCover, setRestaurantCover] = useState<string | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [isUploadingStudio, setIsUploadingStudio] = useState(false);
+  const [isUploadingSupport, setIsUploadingSupport] = useState(false);
   const [businessHours, setBusinessHours] = useState('10:00 AM - 11:00 PM');
   const operatingDaysSeed = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const [openDays, setOpenDays] = useState<string[]>(operatingDaysSeed);
@@ -533,12 +536,6 @@ export default function ClientDashboard({
   const [taxId, setTaxId] = useState('TX-8492-5521');
   const [payoutMethod, setPayoutMethod] = useState('Bank Transfer · Chase ****4521');
   const [notificationFlags, setNotificationFlags] = useState({
-    newOrder: true,
-    orderStatus: true,
-    paymentEarnings: true,
-    newReview: true,
-    deliveryUpdate: true,
-    supportTicket: false,
     systemAnnouncement: true,
   });
   const [currentPassword, setCurrentPassword] = useState('');
@@ -571,17 +568,50 @@ export default function ClientDashboard({
   const [studioGenerating, setStudioGenerating] = useState(false);
   const studioAllTags = ['Appetizer', 'Spicy', 'Signature', 'Gluten-Free', 'Seafood', 'Vegetarian'];
 
-  const handleStudioImage = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => setStudioImage(reader.result as string);
-    reader.readAsDataURL(file);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(null), 3000);
   };
 
-  const handleImageUpload = (file: File, setter: (val: string) => void) => {
-    if (!file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = () => setter(reader.result as string);
-    reader.readAsDataURL(file);
+  const handleImageUpload = async (
+    file: File,
+    setter: (val: string) => void,
+    folder = 'general',
+    setLoading?: (loading: boolean) => void
+  ) => {
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select a valid image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image must be smaller than 5MB');
+      return;
+    }
+    if (setLoading) setLoading(true);
+    try {
+      const uploadForm = new FormData();
+      uploadForm.append('file', file);
+      uploadForm.append('folder', folder);
+      const res = await fetch('/api/upload/image', { method: 'POST', body: uploadForm });
+      const data = await res.json();
+      if (data.success && data.imageUrl) {
+        setter(data.imageUrl);
+        showToast('Image uploaded successfully!');
+      } else {
+        showToast(data.message || 'Image upload failed');
+      }
+    } catch (err) {
+      console.error('Image upload error:', err);
+      showToast('Unable to upload image. Please try again.');
+    } finally {
+      if (setLoading) setLoading(false);
+    }
+  };
+
+  const handleStudioImage = (file: File) => {
+    handleImageUpload(file, (url) => setStudioImage(url), 'menu-items', setIsUploadingStudio);
   };
 
   const toggleStudioTag = (tag: string) =>
@@ -602,13 +632,6 @@ export default function ClientDashboard({
       setStudioImage(null);
       setStudioTags(['Signature']);
     }, 1200);
-  };
-
-  const [toast, setToast] = useState<string | null>(null);
-
-  const showToast = (msg: string) => {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 3000);
   };
 
   const handleLogout = async () => {
@@ -1401,18 +1424,40 @@ export default function ClientDashboard({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
                           <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Restaurant Logo</label>
-                          <label className="mt-2 flex flex-col items-center justify-center gap-2 h-32 rounded-2xl border-2 border-dashed border-gray-300 bg-[#F8FAFC] cursor-pointer hover:border-[#b93815]/60 transition-colors">
-                            <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, setRestaurantLogo); }} />
-                            {restaurantLogo ? <Image src={restaurantLogo} alt="Logo" width={64} height={64} className="object-cover rounded-xl" /> : <Camera size={24} className="text-gray-400" />}
-                            <span className="text-[10px] font-bold text-gray-500">Upload Logo</span>
+                          <label className="mt-2 flex flex-col items-center justify-center gap-2 h-32 rounded-2xl border-2 border-dashed border-gray-300 bg-[#F8FAFC] cursor-pointer hover:border-[#b93815]/60 transition-colors relative overflow-hidden">
+                            <input type="file" accept="image/*" disabled={isUploadingLogo} className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, setRestaurantLogo, 'restaurants', setIsUploadingLogo); }} />
+                            {isUploadingLogo ? (
+                              <div className="flex flex-col items-center gap-1">
+                                <Loader2 size={24} className="animate-spin text-[#b93815]" />
+                                <span className="text-[10px] font-bold text-gray-500">Uploading...</span>
+                              </div>
+                            ) : restaurantLogo ? (
+                              <Image src={restaurantLogo} alt="Logo" width={64} height={64} className="object-cover rounded-xl" />
+                            ) : (
+                              <>
+                                <Camera size={24} className="text-gray-400" />
+                                <span className="text-[10px] font-bold text-gray-500">Upload Logo</span>
+                              </>
+                            )}
                           </label>
                         </div>
                         <div>
                           <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Cover Image</label>
-                          <label className="mt-2 flex flex-col items-center justify-center gap-2 h-32 rounded-2xl border-2 border-dashed border-gray-300 bg-[#F8FAFC] cursor-pointer hover:border-[#b93815]/60 transition-colors">
-                            <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, setRestaurantCover); }} />
-                            {restaurantCover ? <Image src={restaurantCover} alt="Cover" width={120} height={64} className="object-cover rounded-xl w-full h-16" /> : <Camera size={24} className="text-gray-400" />}
-                            <span className="text-[10px] font-bold text-gray-500">Upload Cover</span>
+                          <label className="mt-2 flex flex-col items-center justify-center gap-2 h-32 rounded-2xl border-2 border-dashed border-gray-300 bg-[#F8FAFC] cursor-pointer hover:border-[#b93815]/60 transition-colors relative overflow-hidden">
+                            <input type="file" accept="image/*" disabled={isUploadingCover} className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f, setRestaurantCover, 'restaurants', setIsUploadingCover); }} />
+                            {isUploadingCover ? (
+                              <div className="flex flex-col items-center gap-1">
+                                <Loader2 size={24} className="animate-spin text-[#b93815]" />
+                                <span className="text-[10px] font-bold text-gray-500">Uploading...</span>
+                              </div>
+                            ) : restaurantCover ? (
+                              <Image src={restaurantCover} alt="Cover" width={120} height={64} className="object-cover rounded-xl w-full h-16" />
+                            ) : (
+                              <>
+                                <Camera size={24} className="text-gray-400" />
+                                <span className="text-[10px] font-bold text-gray-500">Upload Cover</span>
+                              </>
+                            )}
                           </label>
                         </div>
                       </div>

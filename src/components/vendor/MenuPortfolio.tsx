@@ -11,6 +11,7 @@ import {
   Star,
   ShoppingBag,
   Upload,
+  Loader2,
   Trash2,
   UtensilsCrossed,
   Pizza,
@@ -118,7 +119,40 @@ export default function MenuPortfolio() {
   const [selectedCategory, setSelectedCategory] = useState<Category | 'All'>('All');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const itemsPerPage = 10;
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file (JPEG, PNG, WebP, GIF)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be smaller than 5MB');
+      return;
+    }
+    setIsUploadingImage(true);
+    try {
+      const uploadForm = new FormData();
+      uploadForm.append('file', file);
+      uploadForm.append('folder', 'menu-items');
+      const res = await fetch('/api/upload/image', { method: 'POST', body: uploadForm });
+      const data = await res.json();
+      if (data.success && data.imageUrl) {
+        setUploadedImageUrl(data.imageUrl);
+      } else {
+        alert(data.message || 'Image upload failed');
+      }
+    } catch (err) {
+      console.error('Image upload error:', err);
+      alert('Unable to upload image. Please try again.');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   const { data: items = [] } = useQuery({
     queryKey: ['menu'],
@@ -389,13 +423,14 @@ export default function MenuPortfolio() {
                     description: formData.get('description') as string,
                     category: (formData.get('category') as Category) || 'Burgers',
                     price: parseFloat(formData.get('price') as string) || 0,
-                    image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=400',
+                    image: uploadedImageUrl || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=400',
                     status: 'Active',
                     orders: 0,
                     rating: 0,
                     addons: formData.get('addons')?.toString().split(',').map(s => s.trim()).filter(Boolean) || [],
                   };
                   createMutation.mutate(newItem);
+                  setUploadedImageUrl(null);
                 }}
                 className="p-6 space-y-5"
               >
@@ -445,10 +480,31 @@ export default function MenuPortfolio() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Image</label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#00A36C] transition-colors cursor-pointer">
-                    <Upload className="mx-auto text-gray-400 mb-2" size={24} />
-                    <p className="text-sm text-gray-600">Drop image here or click to upload</p>
-                  </div>
+                  <label className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#00A36C] transition-colors cursor-pointer block">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageSelect}
+                      disabled={isUploadingImage}
+                    />
+                    {isUploadingImage ? (
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Loader2 className="animate-spin text-[#00A36C]" size={24} />
+                        <p className="text-sm font-semibold text-gray-600">Uploading to Imgbb...</p>
+                      </div>
+                    ) : uploadedImageUrl ? (
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <Image src={uploadedImageUrl} alt="Preview" width={96} height={64} className="object-cover rounded-lg" />
+                        <p className="text-xs font-semibold text-[#00A36C]">Image Uploaded!</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="mx-auto text-gray-400 mb-2" size={24} />
+                        <p className="text-sm text-gray-600">Drop image here or click to upload</p>
+                      </>
+                    )}
+                  </label>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Add-ons (comma separated)</label>

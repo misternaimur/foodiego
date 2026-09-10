@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
@@ -311,6 +311,37 @@ export default function CreateMenuItem() {
   const [formImage, setFormImage] = useState('');
   const [formTags, setFormTags] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
+  const [isUploadingMenuImage, setIsUploadingMenuImage] = useState(false);
+  const [uploadedDishImageUrl, setUploadedDishImageUrl] = useState<string | null>(null);
+
+  const handleMenuImageUpload = async (file: File, callback: (url: string) => void) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be smaller than 5MB');
+      return;
+    }
+    setIsUploadingMenuImage(true);
+    try {
+      const uploadForm = new FormData();
+      uploadForm.append('file', file);
+      uploadForm.append('folder', 'menu-items');
+      const res = await fetch('/api/upload/image', { method: 'POST', body: uploadForm });
+      const data = await res.json();
+      if (data.success && data.imageUrl) {
+        callback(data.imageUrl);
+      } else {
+        alert(data.message || 'Image upload failed');
+      }
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      alert('Unable to upload image. Please try again.');
+    } finally {
+      setIsUploadingMenuImage(false);
+    }
+  };
 
   const openAddForm = () => {
     setFormName('');
@@ -1409,13 +1440,29 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Image URL {editingItem ? '' : '*'}</label>
-            <input
-              type="url"
-              value={formImage}
-              onChange={(e) => setFormImage(e.target.value)}
-              placeholder="https://..."
-              className="w-full rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20"
-            />
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={formImage}
+                onChange={(e) => setFormImage(e.target.value)}
+                placeholder="https://..."
+                className="flex-1 rounded-xl border border-gray-300 py-2.5 px-3.5 text-sm text-black focus:border-[#b93815] focus:outline-none focus:ring-2 focus:ring-[#b93815]/20"
+              />
+              <label className="inline-flex items-center gap-1.5 bg-[#fff1ec] text-[#b93815] hover:bg-[#fbe2d8] border border-[#f3c9ba] text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer shrink-0 transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={isUploadingMenuImage}
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleMenuImageUpload(f, (url) => setFormImage(url));
+                  }}
+                />
+                {isUploadingMenuImage ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                {isUploadingMenuImage ? 'Uploading...' : 'Upload'}
+              </label>
+            </div>
           </div>
         </div>
 
@@ -2253,21 +2300,44 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
                   </div>
 
                   {/* Drop-zone with AI Analysis overlay */}
-                  <div className="relative border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 hover:border-[#b93815]/40 transition-colors p-10">
+                  <label className="relative border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 hover:border-[#b93815]/40 transition-colors p-10 block cursor-pointer overflow-hidden">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={isUploadingMenuImage}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleMenuImageUpload(f, (url) => setUploadedDishImageUrl(url));
+                      }}
+                    />
                     <div className="flex flex-col items-center justify-center text-center">
-                      <div className="bg-[#fff1ec] text-[#b93815] h-16 w-16 rounded-full flex items-center justify-center mb-4">
-                        <Camera size={28} />
-                      </div>
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-2 bg-[#b93815] text-white hover:bg-[#9a2c0f] font-bold py-3 px-5 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95"
-                      >
-                        <Plus size={18} strokeWidth={2.5} />
-                        Upload Food Images or Drag and Drop
-                      </button>
-                      <p className="mt-3 text-xs text-gray-400">
-                        PNG, JPG up to 10MB each
-                      </p>
+                      {isUploadingMenuImage ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 size={36} className="animate-spin text-[#b93815]" />
+                          <p className="text-sm font-bold text-gray-700">Uploading to Imgbb...</p>
+                        </div>
+                      ) : uploadedDishImageUrl ? (
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="relative w-48 h-32 rounded-xl overflow-hidden shadow-md">
+                            <Image src={uploadedDishImageUrl} alt="Uploaded preview" fill className="object-cover" />
+                          </div>
+                          <p className="text-xs font-bold text-emerald-600">Imgbb Upload Success!</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="bg-[#fff1ec] text-[#b93815] h-16 w-16 rounded-full flex items-center justify-center mb-4">
+                            <Camera size={28} />
+                          </div>
+                          <span className="inline-flex items-center gap-2 bg-[#b93815] text-white hover:bg-[#9a2c0f] font-bold py-3 px-5 rounded-xl shadow-sm transition-all">
+                            <Plus size={18} strokeWidth={2.5} />
+                            Upload Food Images or Drag and Drop
+                          </span>
+                          <p className="mt-3 text-xs text-gray-400">
+                            PNG, JPG up to 5MB
+                          </p>
+                        </>
+                      )}
                     </div>
 
                     {/* AI Image Analysis Overlay */}
@@ -2289,7 +2359,7 @@ Total Popular Items Revenue: $${totalRevenue.toLocaleString()}
                         </button>
                       </div>
                     )}
-                  </div>
+                  </label>
 
                   {/* Suggested Tags */}
                   <div className="mt-6">
