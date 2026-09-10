@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { uploadImage } from "@/app/(public)/actions/upload";
 
 export interface MenuItemAddon {
   name: string;
@@ -44,8 +45,8 @@ export interface CreateMenuItemInput {
   addons?: MenuItemAddon[];
 }
 
-const fetcher = async (input: string, init?: RequestInit) => {
-  const res = await fetch(input, { credentials: "include", ...init });
+const fetcher = async (input: string) => {
+  const res = await fetch(input, { credentials: "include" });
   if (!res.ok) {
     const error = new Error("Network response was not ok");
     (error as { status?: number }).status = res.status;
@@ -69,6 +70,7 @@ export const useMenuItems = (params?: {
     queryKey: ["vendor-menu", params?.category, params?.search, params?.page],
     queryFn: () => fetcher(`/api/v1/vendor/menu${qs ? `?${qs}` : ""}`),
     staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -127,22 +129,39 @@ export const useCreateMenuItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: CreateMenuItemInput) => {
+    mutationFn: async (input: CreateMenuItemInput & { imageFile?: File }) => {
+      let imageUrl = input.image || "";
+
+      if (input.imageFile) {
+        const formData = new FormData();
+        formData.append("file", input.imageFile);
+        formData.append("folder", "menu-items");
+        try {
+          const uploadResult = await uploadImage(formData);
+          if (uploadResult.success) {
+            imageUrl = uploadResult.data.secureUrl;
+          }
+        } catch {
+          imageUrl = `https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=200`;
+        }
+      }
+
       const res = await fetch("/api/v1/vendor/menu/create", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
+        body: JSON.stringify({ ...input, image: imageUrl }),
       });
       if (!res.ok) throw new Error("Failed to create item");
-      return res.json();
+      const response = await res.json();
+      return response.item ?? response;
     },
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: ["vendor-menu"] });
 
       const previous = queryClient.getQueryData<PaginatedMenuResponse>(["vendor-menu"]);
 
-      const newItem = {
+      const newItem: MenuItem = {
         _id: `temp-${Date.now()}`,
         vendorId: "",
         name: input.name,
@@ -172,6 +191,21 @@ export const useCreateMenuItem = () => {
     onError: (_err, _variables, context) => {
       if (context?.previous) {
         queryClient.setQueryData(["vendor-menu"], context.previous);
+      }
+    },
+    onSuccess: (createdItem: MenuItem) => {
+      if (createdItem) {
+        queryClient.setQueryData(["vendor-menu"], (old: PaginatedMenuResponse | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            items: old.items.map((item) =>
+              item._id === (createdItem._id || old.items.find((i) => i._id.startsWith("temp-"))?._id)
+                ? { ...createdItem, _id: createdItem._id || item._id }
+                : item
+            ),
+          };
+        });
       }
     },
     onSettled: () => {

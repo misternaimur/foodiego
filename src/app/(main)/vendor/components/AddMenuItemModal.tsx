@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Upload, Plus, Trash2 } from "lucide-react";
+import { X, Upload, Plus, Trash2, Check } from "lucide-react";
 import { useCreateMenuItem } from "@/hooks/useVendorMenu";
 import type { CreateMenuItemInput, MenuItemAddon } from "@/hooks/useVendorMenu";
+
 interface AddMenuItemModalProps {
   open: boolean;
   onClose: () => void;
@@ -15,10 +17,13 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
   const [category, setCategory] = useState("Burgers");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
-  const [image, setImage] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
   const [addons, setAddons] = useState<MenuItemAddon[]>([]);
 
-  const { mutate: createItem, isPending: isCreating } = useCreateMenuItem();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { mutateAsync: createItem, isPending: isCreating, isError, error } = useCreateMenuItem();
 
   const categories = ["Burgers", "Pizza", "Drinks", "Desserts", "Sides", "Snacks"];
   const categoryIcons: Record<string, string> = {
@@ -30,21 +35,40 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
     Snacks: "🥨",
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = () => setImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !price) return;
 
-    const input: CreateMenuItemInput = {
+    const input: CreateMenuItemInput & { imageFile?: File } = {
       name,
       category,
       price: parseFloat(price),
       description,
-      image: image || `https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=200`,
       addons,
     };
 
-    await createItem(input);
-    onClose();
+    if (imageFile) {
+      input.imageFile = imageFile;
+    } else if (imagePreview) {
+      input.image = imagePreview;
+    }
+
+    try {
+      await createItem(input);
+      onClose();
+    } catch {
+      // error is handled by isError in the UI
+    }
   };
 
   const addAddon = () => {
@@ -155,21 +179,55 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                    Image URL
+                    Item Image
                   </label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-4">
                     <input
-                      type="url"
-                      value={image}
-                      onChange={(e) => setImage(e.target.value)}
-                      className="flex-1 rounded-xl border border-[#E5E7EB] px-4 py-2.5 text-sm text-gray-800 focus:border-[#10B981] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20"
-                      placeholder="https://..."
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageChange}
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      className="hidden"
                     />
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-400">
-                      <Upload size={18} />
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex h-24 w-24 items-center justify-center rounded-xl border-2 border-dashed border-[#E5E7EB] bg-gray-50 text-gray-500 hover:border-[#10B981] hover:text-[#10B981] transition-colors"
+                    >
+                      <Upload size={24} />
+                    </button>
+                    {imagePreview ? (
+                      <div className="relative h-24 w-24 overflow-hidden rounded-xl border border-[#E5E7EB]">
+                        <Image
+                          src={imagePreview}
+                          alt="Upload preview"
+                          fill
+                          className="object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImageFile(null);
+                            setImagePreview("");
+                          }}
+                          className="absolute top-1 right-1 rounded-full bg-gray-100 p-1 text-gray-600 hover:bg-gray-200"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">
+                        Click to upload (max 5MB)
+                      </span>
+                    )}
                   </div>
                 </div>
+
+                {isError && (
+                  <div className="sm:col-span-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                    {(error as Error)?.message || "An error occurred while creating the item."}
+                  </div>
+                )}
 
                 <div className="sm:col-span-2">
                   <div className="flex items-center justify-between mb-2">
@@ -197,9 +255,7 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
                           <input
                             type="text"
                             value={addon.name}
-                            onChange={(e) =>
-                              updateAddon(idx, "name", e.target.value)
-                            }
+                            onChange={(e) => updateAddon(idx, "name", e.target.value)}
                             className="flex-1 rounded-xl border border-[#E5E7EB] px-3 py-2 text-sm text-gray-800 focus:border-[#10B981] focus:outline-none"
                             placeholder="Add-on name"
                           />
@@ -208,9 +264,7 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
                             <input
                               type="number"
                               value={addon.price || ""}
-                              onChange={(e) =>
-                                updateAddon(idx, "price", Number(e.target.value) || 0)
-                              }
+                              onChange={(e) => updateAddon(idx, "price", Number(e.target.value) || 0)}
                               className="w-12 border-0 text-sm text-gray-800 focus:outline-none"
                               placeholder="0"
                               min="0"
@@ -242,10 +296,21 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
               </button>
               <button
                 type="submit"
+                onClick={handleSubmit}
                 disabled={isCreating || !name || !price}
-                className="rounded-xl bg-[#10B981] px-4 py-2 text-sm font-semibold text-white hover:bg-[#059669] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="rounded-xl bg-[#10B981] px-4 py-2 text-sm font-semibold text-white hover:bg-[#059669] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               >
-                {isCreating ? "Saving..." : "Create Item"}
+                {isCreating ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Check size={14} />
+                    Create Item
+                  </>
+                )}
               </button>
             </div>
           </motion.div>
