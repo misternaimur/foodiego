@@ -59,6 +59,7 @@ export interface RestaurantMenuCategory {
 
 // Complete Restaurant Entity Structure aligned with Backend
 export interface Restaurant {
+    logoUrl: boolean;
     id: string;                    // (MongoDB _id)
     userId: string;
     restaurantName: string;

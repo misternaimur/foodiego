@@ -1,12 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
+import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { Star, Clock, Heart, Filter, ChevronRight, ChevronLeft, Tag, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Filter,
+  Heart,
+  Sparkles,
+  Star,
+  Tag,
+} from 'lucide-react';
+
 import { useApp } from '@/context/AppContext';
 
-// Sample Banner Data
 const PROMO_SLIDES = [
   {
     id: 1,
@@ -40,142 +49,214 @@ const PROMO_SLIDES = [
   },
 ];
 
-export default function RestaurantsPage() {
-  const { restaurants, isRestaurantsLoading, favorites, toggleFavorite } = useApp();
+type SortOption = 'relevance' | 'fastest' | 'rating';
 
-  // Banner State
+const getValidImage = (
+  logoUrl: unknown,
+  imageUrl: unknown,
+): string => {
+  if (typeof logoUrl === 'string' && logoUrl.trim().length > 0) {
+    return logoUrl;
+  }
+
+  if (typeof imageUrl === 'string' && imageUrl.trim().length > 0) {
+    return imageUrl;
+  }
+
+  return '/default-banner.png';
+};
+
+export default function RestaurantsPage() {
+  const {
+    restaurants,
+    isRestaurantsLoading,
+    favorites,
+    toggleFavorite,
+  } = useApp();
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-
-  // Filter & Sort States
-  const [selectedSort, setSelectedSort] = useState<'relevance' | 'fastest' | 'rating'>('relevance');
-  const [minRating, setMinRating] = useState<number>(0);
-  const [selectedCuisine, setSelectedCuisine] = useState<string>('All');
+  const [selectedSort, setSelectedSort] =
+    useState<SortOption>('relevance');
+  const [minRating, setMinRating] = useState(0);
+  const [selectedCuisine, setSelectedCuisine] = useState('All');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // Auto-slide effect every 5 seconds
   useEffect(() => {
     if (isHovered) return;
 
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % PROMO_SLIDES.length);
+      setCurrentSlide((previousSlide) => {
+        return (previousSlide + 1) % PROMO_SLIDES.length;
+      });
     }, 5000);
 
     return () => clearInterval(timer);
   }, [isHovered]);
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % PROMO_SLIDES.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + PROMO_SLIDES.length) % PROMO_SLIDES.length);
+  const nextSlide = () => {
+    setCurrentSlide(
+      (previousSlide) => (previousSlide + 1) % PROMO_SLIDES.length,
+    );
+  };
 
-  // Extract all unique cuisines
+  const previousSlide = () => {
+    setCurrentSlide(
+      (previousSlide) =>
+        (previousSlide - 1 + PROMO_SLIDES.length) % PROMO_SLIDES.length,
+    );
+  };
+
   const allCuisines = useMemo(() => {
-    const cuisinesSet = new Set<string>();
-    restaurants.forEach((r) => r.cuisines?.forEach((c) => cuisinesSet.add(c)));
-    return ['All', ...Array.from(cuisinesSet)];
+    const cuisines = new Set<string>();
+
+    restaurants.forEach((restaurant) => {
+      restaurant.cuisines?.forEach((cuisine) => {
+        cuisines.add(cuisine);
+      });
+    });
+
+    return ['All', ...Array.from(cuisines)];
   }, [restaurants]);
 
-  // Filter & Sort Logic
   const filteredRestaurants = useMemo(() => {
-    return restaurants
-      .filter((r) => {
-        const matchesRating = r.rating >= minRating;
-        const matchesCuisine = selectedCuisine === 'All' || r.cuisines?.includes(selectedCuisine);
+    return [...restaurants]
+      .filter((restaurant) => {
+        const matchesRating = restaurant.rating >= minRating;
+
+        const matchesCuisine =
+          selectedCuisine === 'All' ||
+          restaurant.cuisines?.includes(selectedCuisine);
+
         return matchesRating && matchesCuisine;
       })
-      .sort((a, b) => {
-        if (selectedSort === 'rating') return b.rating - a.rating;
-        if (selectedSort === 'fastest') {
-          const timeA = parseInt(a.deliveryTime) || 999;
-          const timeB = parseInt(b.deliveryTime) || 999;
-          return timeA - timeB;
+      .sort((firstRestaurant, secondRestaurant) => {
+        if (selectedSort === 'rating') {
+          return secondRestaurant.rating - firstRestaurant.rating;
         }
+
+        if (selectedSort === 'fastest') {
+          const firstTime = Number.parseInt(
+            firstRestaurant.deliveryTime,
+            10,
+          ) || 999;
+
+          const secondTime = Number.parseInt(
+            secondRestaurant.deliveryTime,
+            10,
+          ) || 999;
+
+          return firstTime - secondTime;
+        }
+
         return 0;
       });
   }, [restaurants, minRating, selectedCuisine, selectedSort]);
 
+  const resetFilters = () => {
+    setSelectedSort('relevance');
+    setMinRating(0);
+    setSelectedCuisine('All');
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF7EE] py-8 lg:py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
               All Restaurants
             </h1>
-            <p className="text-sm text-gray-600 mt-1 font-medium">
+
+            <p className="mt-1 text-sm font-medium text-gray-600">
               Discover top kitchens near you delivered fast
             </p>
           </div>
 
           <button
-            onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-            className="lg:hidden inline-flex items-center gap-2 bg-white border border-[#E8E2D5] px-4 py-2 rounded-full text-xs font-bold text-[#15462D] shadow-xs cursor-pointer"
+            type="button"
+            onClick={() => setIsMobileFilterOpen((isOpen) => !isOpen)}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#E8E2D5] bg-white px-4 py-2 text-xs font-bold text-[#15462D] shadow-xs lg:hidden"
           >
             <Filter size={14} />
-            <span>Filters</span>
+            Filters
           </button>
         </div>
 
-        {/* Grid Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-          
-          {/* Left Sidebar Filter */}
-          <aside className={`lg:block ${isMobileFilterOpen ? 'block' : 'hidden'} bg-white border border-[#E8E2D5] p-6 rounded-3xl sticky top-24 shadow-xs z-10`}>
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
-              <h3 className="text-lg font-bold text-slate-900">Filters</h3>
-              {(selectedSort !== 'relevance' || minRating > 0 || selectedCuisine !== 'All') && (
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-4">
+          {/* Filters */}
+          <aside
+            className={`${
+              isMobileFilterOpen ? 'block' : 'hidden'
+            } sticky top-24 z-10 rounded-3xl border border-[#E8E2D5] bg-white p-6 shadow-xs lg:block`}
+          >
+            <div className="mb-6 flex items-center justify-between border-b border-gray-100 pb-4">
+              <h2 className="text-lg font-bold text-slate-900">
+                Filters
+              </h2>
+
+              {(selectedSort !== 'relevance' ||
+                minRating > 0 ||
+                selectedCuisine !== 'All') && (
                 <button
-                  onClick={() => {
-                    setSelectedSort('relevance');
-                    setMinRating(0);
-                    setSelectedCuisine('All');
-                  }}
-                  className="text-xs font-semibold text-emerald-800 hover:underline cursor-pointer"
+                  type="button"
+                  onClick={resetFilters}
+                  className="cursor-pointer text-xs font-semibold text-emerald-800 hover:underline"
                 >
                   Reset All
                 </button>
               )}
             </div>
 
-            {/* Sort Options */}
+            {/* Sort */}
             <div className="mb-6">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-500 mb-3">
+              <h3 className="mb-3 text-xs font-extrabold uppercase tracking-wider text-gray-500">
                 Sort By
-              </h4>
+              </h3>
+
               <div className="space-y-2">
                 {[
                   { id: 'relevance', label: 'Relevance' },
                   { id: 'fastest', label: 'Fastest Delivery' },
                   { id: 'rating', label: 'Top Rated' },
-                ].map((sort) => (
-                  <label key={sort.id} className="flex items-center gap-3 cursor-pointer group">
+                ].map((option) => (
+                  <label
+                    key={option.id}
+                    className="group flex cursor-pointer items-center gap-3"
+                  >
                     <input
                       type="radio"
                       name="sort"
-                      checked={selectedSort === sort.id}
-                      onChange={() => setSelectedSort(sort.id as 'relevance' | 'fastest' | 'rating')}
-                      className="w-4 h-4 text-[#15462D] focus:ring-[#15462D] accent-[#15462D]"
+                      value={option.id}
+                      checked={selectedSort === option.id}
+                      onChange={() =>
+                        setSelectedSort(option.id as SortOption)
+                      }
+                      className="h-4 w-4 accent-[#15462D]"
                     />
+
                     <span className="text-sm font-medium text-gray-700 group-hover:text-slate-900">
-                      {sort.label}
+                      {option.label}
                     </span>
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Rating Filter */}
+            {/* Rating */}
             <div className="mb-6">
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-500 mb-3">
+              <h3 className="mb-3 text-xs font-extrabold uppercase tracking-wider text-gray-500">
                 Rating
-              </h4>
+              </h3>
+
               <div className="flex flex-wrap gap-2">
-                {[0, 4.0, 4.5].map((rating) => (
+                {[0, 4, 4.5].map((rating) => (
                   <button
                     key={rating}
+                    type="button"
                     onClick={() => setMinRating(rating)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    className={`cursor-pointer rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
                       minRating === rating
                         ? 'bg-[#15462D] text-white'
                         : 'bg-[#FAF7EE] text-gray-700 hover:bg-gray-200/60'
@@ -187,21 +268,27 @@ export default function RestaurantsPage() {
               </div>
             </div>
 
-            {/* Cuisine Filter */}
+            {/* Cuisine */}
             <div>
-              <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-500 mb-3">
+              <h3 className="mb-3 text-xs font-extrabold uppercase tracking-wider text-gray-500">
                 Cuisine
-              </h4>
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+              </h3>
+
+              <div className="max-h-60 space-y-2 overflow-y-auto pr-2">
                 {allCuisines.map((cuisine) => (
-                  <label key={cuisine} className="flex items-center gap-3 cursor-pointer group">
+                  <label
+                    key={cuisine}
+                    className="group flex cursor-pointer items-center gap-3"
+                  >
                     <input
                       type="radio"
                       name="cuisine"
+                      value={cuisine}
                       checked={selectedCuisine === cuisine}
                       onChange={() => setSelectedCuisine(cuisine)}
-                      className="w-4 h-4 text-[#15462D] focus:ring-[#15462D] accent-[#15462D]"
+                      className="h-4 w-4 accent-[#15462D]"
                     />
+
                     <span className="text-sm font-medium text-gray-700 group-hover:text-slate-900">
                       {cuisine}
                     </span>
@@ -211,40 +298,46 @@ export default function RestaurantsPage() {
             </div>
           </aside>
 
-          {/* Main Area: Banner + Restaurant Grid */}
+          {/* Main Content */}
           <main className="lg:col-span-3">
-            
-            {/* COMPACT AUTO-SLIDER (5 Seconds) */}
+            {/* Promo Slider */}
             <div
-              className="relative w-full rounded-2xl overflow-hidden mb-8 shadow-md group"
+              className="group relative mb-8 w-full overflow-hidden rounded-2xl shadow-md"
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
             >
               <div
                 className="flex transition-transform duration-700 ease-in-out"
-                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                style={{
+                  transform: `translateX(-${currentSlide * 100}%)`,
+                }}
               >
                 {PROMO_SLIDES.map((slide) => (
                   <div
                     key={slide.id}
-                    className={`w-full shrink-0 bg-linear-to-r ${slide.bgGradient} p-5 sm:p-6 text-white relative flex items-center justify-between min-h-[140px] sm:min-h-[160px]`}
+                    className={`relative flex min-h-35 w-full shrink-0 items-center justify-between bg-gradient-to-r p-5 text-white sm:min-h-[160px] sm:p-6 ${slide.bgGradient}`}
                   >
                     <div className="relative z-10 max-w-lg">
-                      <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full mb-2 ${slide.badgeColor}`}>
+                      <span
+                        className={`mb-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase ${slide.badgeColor}`}
+                      >
                         <Tag size={10} />
                         {slide.tag}
                       </span>
-                      <h2 className="text-lg sm:text-2xl font-black tracking-tight mb-1">
+
+                      <h2 className="mb-1 text-lg font-black tracking-tight sm:text-2xl">
                         {slide.title}
                       </h2>
-                      <p className="text-xs text-white/80 font-medium mb-3 line-clamp-1">
+
+                      <p className="mb-3 line-clamp-1 text-xs font-medium text-white/80">
                         {slide.description}
                       </p>
+
                       <Link
                         href={slide.buttonLink}
-                        className="inline-flex items-center gap-1.5 bg-white text-gray-900 hover:bg-gray-100 font-extrabold text-[11px] px-4 py-2 rounded-full transition-all shadow-xs uppercase tracking-wider"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[11px] font-extrabold uppercase tracking-wider text-gray-900 shadow-xs transition-all hover:bg-gray-100"
                       >
-                        <span>{slide.buttonText}</span>
+                        {slide.buttonText}
                         <Sparkles size={12} className="text-amber-500" />
                       </Link>
                     </div>
@@ -252,32 +345,36 @@ export default function RestaurantsPage() {
                 ))}
               </div>
 
-              {/* Slider Controls */}
               <button
-                onClick={prevSlide}
-                className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-xs transition-colors cursor-pointer"
+                type="button"
+                onClick={previousSlide}
                 aria-label="Previous slide"
+                className="absolute left-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-full bg-black/30 p-1.5 text-white transition-colors hover:bg-black/50"
               >
                 <ChevronLeft size={16} />
               </button>
+
               <button
+                type="button"
                 onClick={nextSlide}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-xs transition-colors cursor-pointer"
                 aria-label="Next slide"
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer rounded-full bg-black/30 p-1.5 text-white transition-colors hover:bg-black/50"
               >
                 <ChevronRight size={16} />
               </button>
 
-              {/* Dots Indicator */}
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
-                {PROMO_SLIDES.map((_, idx) => (
+              <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5">
+                {PROMO_SLIDES.map((slide, index) => (
                   <button
-                    key={idx}
-                    onClick={() => setCurrentSlide(idx)}
-                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                      currentSlide === idx ? 'w-5 bg-white' : 'w-1.5 bg-white/40'
+                    key={slide.id}
+                    type="button"
+                    onClick={() => setCurrentSlide(index)}
+                    aria-label={`Go to slide ${index + 1}`}
+                    className={`h-1.5 cursor-pointer rounded-full transition-all ${
+                      currentSlide === index
+                        ? 'w-5 bg-white'
+                        : 'w-1.5 bg-white/40'
                     }`}
-                    aria-label={`Go to slide ${idx + 1}`}
                   />
                 ))}
               </div>
@@ -285,87 +382,125 @@ export default function RestaurantsPage() {
 
             {/* Restaurant Cards */}
             {isRestaurantsLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {[1, 2, 3, 4].map((n) => (
-                  <div key={n} className="w-full h-72 bg-white/70 rounded-3xl animate-pulse" />
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {[1, 2, 3, 4].map((item) => (
+                  <div
+                    key={item}
+                    className="h-72 w-full animate-pulse rounded-3xl bg-white/70"
+                  />
                 ))}
               </div>
             ) : filteredRestaurants.length === 0 ? (
-              <div className="text-center py-20 bg-white rounded-3xl border border-[#E8E2D5]">
-                <p className="text-base font-semibold text-gray-700">No restaurants found</p>
-                <p className="text-xs text-gray-500 mt-1">Try resetting your filters or selecting a different cuisine.</p>
+              <div className="rounded-3xl border border-[#E8E2D5] bg-white py-20 text-center">
+                <p className="text-base font-semibold text-gray-700">
+                  No restaurants found
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  Try resetting your filters or selecting a different cuisine.
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 {filteredRestaurants.map((restaurant) => {
-                  const isFav = favorites.includes(restaurant.id);
-                  const validImage = restaurant.image && restaurant.image.trim() !== '' 
-                    ? restaurant.image 
-                    : '/default-banner.png';
+                  const isFavorite = favorites.includes(restaurant.id);
+
+                  const imageUrl = getValidImage(
+                    restaurant.logoUrl,
+                    restaurant.image,
+                  );
 
                   return (
                     <div
                       key={restaurant.id}
-                      className="group bg-white rounded-3xl border border-[#E8E2D5] overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                      className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-[#E8E2D5] bg-white transition-all duration-300 hover:shadow-xl"
                     >
-                      <Link href={`/restaurants/${restaurant.slug}`} className="block relative">
-                        <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
+                      <Link
+                        href={`/restaurants/${restaurant.slug}`}
+                        className="block"
+                      >
+                        <div className="relative h-48 w-full overflow-hidden bg-gray-100">
                           <Image
-                            src={validImage}
+                            src={imageUrl}
                             alt={restaurant.restaurantName}
                             fill
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
                           />
+
                           <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent" />
-                          
+
                           {restaurant.badge && (
-                            <span className="absolute top-3 left-3 bg-[#15462D] text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full shadow-xs">
+                            <span className="absolute left-3 top-3 rounded-full bg-[#15462D] px-3 py-1 text-[10px] font-extrabold uppercase text-white shadow-xs">
                               {restaurant.badge}
                             </span>
                           )}
 
                           <button
                             type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
+                            aria-label="Toggle favorite"
+                            onClick={(event) => {
+                              event.preventDefault();
                               toggleFavorite(restaurant.id);
                             }}
-                            className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-md hover:bg-white text-gray-700 transition-colors shadow-xs cursor-pointer"
+                            className="absolute right-3 top-3 cursor-pointer rounded-full bg-white/80 p-2 text-gray-700 shadow-xs backdrop-blur-md transition-colors hover:bg-white"
                           >
-                            <Heart size={16} className={isFav ? 'fill-red-500 text-red-500' : ''} />
+                            <Heart
+                              size={16}
+                              className={
+                                isFavorite
+                                  ? 'fill-red-500 text-red-500'
+                                  : ''
+                              }
+                            />
                           </button>
                         </div>
 
                         <div className="p-5">
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <h3 className="text-lg font-black text-slate-900 group-hover:text-[#15462D] transition-colors truncate">
+                          <div className="mb-1 flex items-start justify-between gap-2">
+                            <h3 className="truncate text-lg font-black text-slate-900 transition-colors group-hover:text-[#15462D]">
                               {restaurant.restaurantName}
                             </h3>
-                            <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/50 shrink-0">
-                              <Star size={13} className="fill-amber-400 text-amber-400" />
-                              <span className="text-xs font-bold text-gray-900">{restaurant.rating}</span>
-                              <span className="text-[10px] text-gray-500">({restaurant.reviewCount})</span>
+
+                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-amber-200/50 bg-amber-50 px-2 py-0.5">
+                              <Star
+                                size={13}
+                                className="fill-amber-400 text-amber-400"
+                              />
+
+                              <span className="text-xs font-bold text-gray-900">
+                                {restaurant.rating}
+                              </span>
+
+                              <span className="text-[10px] text-gray-500">
+                                ({restaurant.reviewCount})
+                              </span>
                             </div>
                           </div>
 
-                          <p className="text-xs text-gray-500 font-medium truncate mb-3">
-                            {restaurant.cuisines?.join(' • ') || 'Various Cuisines'}
+                          <p className="mb-3 truncate text-xs font-medium text-gray-500">
+                            {restaurant.cuisines?.join(' • ') ||
+                              'Various Cuisines'}
                           </p>
 
-                          <div className="flex items-center gap-4 text-xs font-bold text-gray-600 pt-3 border-t border-gray-100">
+                          <div className="flex items-center gap-4 border-t border-gray-100 pt-3 text-xs font-bold text-gray-600">
                             <span className="flex items-center gap-1">
-                              <Clock size={13} className="text-emerald-800" />
+                              <Clock
+                                size={13}
+                                className="text-emerald-800"
+                              />
                               {restaurant.deliveryTime}
                             </span>
                             <span>•</span>
-                            <span>Tk {restaurant.deliveryFee} delivery</span>
+                            <span>
+                              Tk {restaurant.deliveryFee} delivery
+                            </span>
                           </div>
                         </div>
                       </Link>
 
-                      {restaurant.offers && restaurant.offers.length > 0 && (
-                        <div className="bg-[#FAF7EE] px-5 py-2.5 border-t border-[#E8E2D5] flex items-center justify-between text-xs font-bold text-[#15462D]">
+                      {restaurant.offers?.length > 0 && (
+                        <div className="flex items-center justify-between border-t border-[#E8E2D5] bg-[#FAF7EE] px-5 py-2.5 text-xs font-bold text-[#15462D]">
                           <span>🏷️ {restaurant.offers[0].title}</span>
                           <ChevronRight size={14} />
                         </div>

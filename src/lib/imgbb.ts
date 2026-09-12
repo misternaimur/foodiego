@@ -33,9 +33,12 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB app-level cap (Imgbb allows up 
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
 function isSupportedImage(buffer: Buffer, mimeType: string): boolean {
-  if (mimeType === "image/jpeg") return buffer.length > 2 && buffer[0] === 0xff && buffer[1] === 0xd8;
-  if (mimeType === "image/png") return buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
-  if (mimeType === "image/gif") {
+  if (mimeType === "image/jpeg") 
+    return buffer.length > 2 && buffer[0] === 0xff && buffer[1] === 0xd8;
+  if (mimeType === "image/png") 
+    return buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+  if (mimeType === "image/gif") 
+  {
     const header = buffer.subarray(0, 6).toString("ascii");
     return header === "GIF87a" || header === "GIF89a";
   }

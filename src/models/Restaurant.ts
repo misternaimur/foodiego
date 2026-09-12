@@ -15,7 +15,7 @@ export interface RestaurantDocument {
   phone?: string;
   address: string;
   description?: string;
-  logoUrl?: string; // Cloudinary ba other source theke asa image URL store korar field
+  logoUrl?: string; 
   cuisineType?: string;
   openingTime?: string;
   closingTime?: string;
