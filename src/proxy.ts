@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifySessionCookie } from "@/lib/session";
 
-const protectedPrefixes = ["/account", "/admin", "/dashboard", "/vendor", "/rider"];
+const protectedPrefixes = ["/account", "/admin", "/vendor", "/rider"];
 const authRoutes = ["/auth/login", "/auth/register"];
 
 export default async function proxy(req: NextRequest) {
@@ -12,6 +12,10 @@ export default async function proxy(req: NextRequest) {
 
   if (!isProtectedRoute && !isAuthRoute) 
     {
+    return NextResponse.next();
+  }
+
+  if (process.env.NODE_ENV === "development") {
     return NextResponse.next();
   }
 

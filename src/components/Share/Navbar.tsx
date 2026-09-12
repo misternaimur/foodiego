@@ -59,13 +59,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const role = propUser?.role;
   const dashboardHref =
-  role === 'admin'
-    ? '/admin'
-    : role === 'restaurant'
-    ? '/vendor'
-    : role === 'rider'
-    ? '/rider'
-    : '/client';
+    role === 'admin'
+      ? '/admin'
+      : role === 'restaurant'
+      ? '/vendor'
+      : role === 'rider'
+      ? '/rider'
+      : '/client';
 
   const handleLogout = async () => {
     if (onLogout) {
@@ -87,13 +87,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Conditionally hide the Navbar on admin, vendor, rider, or client dashboard paths
   if (
-  pathname?.startsWith('/admin') ||
-  pathname?.startsWith('/vendor') ||
-  pathname?.startsWith('/rider') ||
-  pathname?.startsWith('/client')
-) {
-  return null;
-}
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/vendor') ||
+    pathname?.startsWith('/rider') ||
+    pathname?.startsWith('/client')
+  ) {
+    return null;
+  }
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,10 +103,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       router.push(`/restaurants?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
-
-  if (pathname?.includes('/dashboard')) {
-    return null;
-  }
 
   return (
     <>
@@ -271,15 +267,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                         <span>Dashboard</span>
                       </Link>
 
-                      <Link
-                        href="/account"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
-                      >
-                        <Settings size={16} className="text-[#15462D]" />
-                        <span>Settings</span>
-                      </Link>
-                    </div>
+                    <Link
+                      href="/settings"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
+                    >
+                      <Settings size={16} className="text-[#15462D]" />
+                      <span>Settings</span>
+                    </Link>
+                  </div>
 
                     <div className="pt-1 border-t border-gray-100">
                       <button
