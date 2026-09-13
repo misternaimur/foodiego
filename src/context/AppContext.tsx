@@ -186,7 +186,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const fetchRestaurants = async () => {
             setIsRestaurantsLoading(true);
             try {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:000';
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
                 const res = await fetch(`${API_URL}/api/restaurants`);
 
                 if (!res.ok) {
