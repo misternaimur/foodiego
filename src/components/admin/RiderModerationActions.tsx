@@ -7,7 +7,7 @@ import {
   approveRider,
   rejectRider,
   resetRiderStatus,
-} from "@/app/(public)/actions/admin
+} from "@/actions/admin" 
 
 type Action = "approve" | "reject" | "reset";
 

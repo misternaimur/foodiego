@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Map, { Marker, Source, Layer, NavigationControl, MapRef } from 'react-map-gl/maplibre';
-import 'maplibre-gl/dist/maplibre-gl.css';
 import {
   MapPin,
   Navigation,
@@ -247,19 +245,7 @@ const riderMarkerStyle = `
   }
 `;
 
-function MapController({ selectedDelivery, mapRef }: { selectedDelivery: Delivery | null; mapRef: React.RefObject<MapRef | null> }) {
-  useEffect(() => {
-    if (selectedDelivery && mapRef.current) {
-      mapRef.current.flyTo({
-        center: [selectedDelivery.lng, selectedDelivery.lat],
-        zoom: 15.5,
-        duration: 2000,
-      });
-    }
-  }, [selectedDelivery, mapRef]);
 
-  return null;
-}
 
 export default function DeliveryManagement() {
   const [deliveries, setDeliveries] = useState<Delivery[]>(mockDeliveries);
@@ -269,7 +255,6 @@ export default function DeliveryManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isStoreOpen, setIsStoreOpen] = useState(true);
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(mockDeliveries[0]);
-  const mapRef = useRef<MapRef | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
 
   const centerMapOnDelivery = useCallback((delivery: Delivery) => {
@@ -710,102 +695,7 @@ export default function DeliveryManagement() {
                 </div>
 
                 <div className="relative h-96">
-                  <Map
-                    ref={mapRef}
-                    initialViewState={{
-                      longitude: RESTAURANT_POSITION[1],
-                      latitude: RESTAURANT_POSITION[0],
-                      zoom: 15.5,
-                      pitch: 60,
-                      bearing: 0,
-                    }}
-                    mapStyle="https://tiles.openfreemap.org/styles/liberty"
-                    style={{ height: '100%', width: '100%' }}
-                  >
-                    <NavigationControl position="top-right" />
-                    <MapController selectedDelivery={selectedDelivery} mapRef={mapRef} />
-
-                    {/* Restaurant Origin Marker */}
-                    <Marker longitude={RESTAURANT_POSITION[1]} latitude={RESTAURANT_POSITION[0]} anchor="center">
-                      <div className="relative flex items-center justify-center">
-                        <div className="restaurant-pulse" />
-                        <div className="restaurant-marker">F</div>
-                      </div>
-                    </Marker>
-
-                    {/* Rider Markers & Routes */}
-                    {deliveries.map((delivery) => {
-                      const rider = riders.find((r) => r.name === delivery.rider);
-                      if (!rider || delivery.status === 'Assigning...') return null;
-                      return (
-                        <React.Fragment key={delivery.id}>
-                          <Source
-                            id={`route-${delivery.id}`}
-                            type="geojson"
-                            data={{
-                              type: 'Feature',
-                              properties: {},
-                              geometry: {
-                                type: 'LineString',
-                                coordinates: [RESTAURANT_POSITION, [delivery.lng, delivery.lat]],
-                              },
-                            }}
-                          >
-                            <Layer
-                              id={`route-line-${delivery.id}`}
-                              type="line"
-                              paint={{
-                                'line-color': '#00A36C',
-                                'line-width': 3,
-                                'line-opacity': 0.7,
-                                'line-dasharray': [2, 2],
-                              }}
-                            />
-                            <Layer
-                              id={`route-glow-${delivery.id}`}
-                              type="line"
-                              paint={{
-                                'line-color': '#00A36C',
-                                'line-width': 8,
-                                'line-opacity': 0.15,
-                                'line-blur': 4,
-                              }}
-                            />
-                          </Source>
-
-                          <Marker
-                            longitude={delivery.lng}
-                            latitude={delivery.lat}
-                            anchor="center"
-                            onClick={() => centerMapOnDelivery(delivery)}
-                          >
-                            <div className="relative flex items-center justify-center">
-                              <div className="rider-pulse" />
-                              <div className="rider-marker">{delivery.riderInitials}</div>
-                            </div>
-                            {selectedDeliveryId === delivery.id && rider && (
-                              <div className="telemetry-badge absolute top-14 left-1/2 -translate-x-1/2 z-10">
-                                <div className="flex items-center gap-2 text-[10px] font-bold text-gray-700">
-                                  <span className="flex items-center gap-1 text-emerald-600">
-                                    <Zap size={10} /> {rider.speed} km/h
-                                  </span>
-                                  <span className="flex items-center gap-1 text-blue-600">
-                                    <Battery size={10} /> {rider.battery}%
-                                  </span>
-                                  <a href={`tel:${rider.phone}`} className="text-emerald-600 hover:text-emerald-700">
-                                    <Phone size={10} />
-                                  </a>
-                                </div>
-                                <div className="text-[10px] text-gray-500 mt-0.5">
-                                  ETA {delivery.eta} mins
-                                </div>
-                              </div>
-                            )}
-                          </Marker>
-                        </React.Fragment>
-                      );
-                    })}
-                  </Map>
+ 
                 </div>
               </div>
 

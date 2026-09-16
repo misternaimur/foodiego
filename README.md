@@ -5,7 +5,7 @@
 
 <!-- PROJECT LOGO -->
 <!-- You can replace the SVG below with your actual logo image -->
-<img src="https://img.icons8.com/fluency/96/000000/food-truck.png" alt="Foodiego Logo" width="80" height="80">
+<img src="@/public/default-logo.png" alt="Foodiego Logo" width="80" height="80">
 
 # 🍔 Foodiego – AI-Powered Food Delivery & Logistics Platform
 

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { ArrowLeft, ShoppingBag, ShieldCheck, Sparkles, Plus, Minus, CheckCircle, Loader2 } from 'lucide-react';
-import { createOrderAction } from '../actions/order';
+import { createOrderAction } from '../../../actions/order';
 
 export default function CartPage() {
   const { cart, addToCart, removeFromCart, clearCart, user } = useApp();

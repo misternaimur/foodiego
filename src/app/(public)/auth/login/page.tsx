@@ -7,7 +7,7 @@ import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, LoaderCircle, ArrowLeft } from "lucide-react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
-import { establishSession } from "@/app/(public)/actions/auth";
+import { establishSession } from "@/actions/auth";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
 import type { FormState } from "@/lib/definitions";
 

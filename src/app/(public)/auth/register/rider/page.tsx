@@ -24,7 +24,7 @@ import {
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { auth } from "@/lib/firebase/client";
-import { registerRider } from "@/app/(public)/actions/rider";
+import { registerRider } from "@/actions/rider";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
 import {
   RIDER_VEHICLE_TYPES,

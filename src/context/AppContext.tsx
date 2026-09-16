@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { FoodItem } from '@/components/FoodCard';
 import { auth } from '@/lib/firebase/client';
-import { logout } from '@/app/(public)/actions/auth';
+import { logout } from '@/actions/auth';
 
 // Type definition for selected options like size or choice modifiers
 export interface SelectedOption {

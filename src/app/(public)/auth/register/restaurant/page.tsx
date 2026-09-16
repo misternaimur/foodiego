@@ -34,8 +34,8 @@ import {
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { auth } from "@/lib/firebase/client";
-import { registerRestaurant } from "@/app/(public)/actions/restaurant";
-import { sendRegistrationOtp, verifyRegistrationOtp } from "@/app/(public)/actions/otp";
+import { registerRestaurant } from "@/actions/restaurant";
+import { sendRegistrationOtp, verifyRegistrationOtp } from "@/actions/otp";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
 import {
   RestaurantRegisterFormSchema,

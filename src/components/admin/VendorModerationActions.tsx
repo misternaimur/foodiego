@@ -6,7 +6,7 @@ import {
   approveRestaurant,
   rejectRestaurant,
   resetRestaurantStatus,
-} from "@/app/(public)/actions/adminn
+} from "@/actions/admin"; 
 
 type Action = "approve" | "reject" | "reset";
 

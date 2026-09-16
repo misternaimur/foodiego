@@ -2,9 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import {
   MapPin,
   Navigation,
@@ -161,39 +158,10 @@ const statusConfig: Record<TableStatus, { color: string; bg: string; border: str
   },
 };
 
-const CustomRestaurantIcon = () => {
-  return new L.DivIcon({
-    className: 'custom-restaurant-marker',
-    html: `<div style="position:relative;width:40px;height:40px;">
-      <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,163,108,0.15);animation:ping 1.5s cubic-bezier(0,0,0.2,1) infinite;"></div>
-      <div style="position:absolute;inset:8px;border-radius:50%;background:#00A36C;box-shadow:0 0 10px rgba(0,163,108,0.6);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:12px;">F</div>
-    </div>
-    <style>
-      @keyframes ping { 75%,100% { transform: scale(2.5); opacity: 0; } }
-    </style>`,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-  });
-};
 
-const CustomRiderIcon = (name: string) => {
-  return new L.DivIcon({
-    className: 'custom-rider-marker',
-    html: `<div style="position:relative;width:36px;height:36px;">
-      <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,163,108,0.1);border:2px solid #00A36C;display:flex;align-items:center;justify-content:center;color:#00A36C;font-weight:bold;font-size:11px;box-shadow:0 2px 8px rgba(0,0,0,0.15);">${name[0]}</div>
-    </div>`,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-  });
-};
 
-function MapController() {
-  const map = useMap();
-  useEffect(() => {
-    map.setView([23.7937, 90.4066], 14);
-  }, [map]);
-  return null;
-}
+
+
 
 export default function RestaurantCommandCenter() {
   const [drivers, setDrivers] = useState<Driver[]>(mockDrivers);
@@ -364,57 +332,7 @@ export default function RestaurantCommandCenter() {
                 </span>
               </div>
               <div className="h-80 w-full">
-                <MapContainer center={restaurantPosition} zoom={14} className="h-full w-full" zoomControl={false}>
-                  <MapController />
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <Marker position={restaurantPosition} icon={CustomRestaurantIcon()}>
-                    <Popup>
-                      <div className="text-xs font-bold text-gray-900">FoodieGo Restaurant</div>
-                      <div className="text-[10px] text-gray-500">Banani Road 11, Dhaka</div>
-                    </Popup>
-                  </Marker>
-                  {drivers.map((driver) => (
-                    <Marker
-                      key={driver.id}
-                      position={[driver.lat, driver.lng]}
-                      icon={CustomRiderIcon(driver.name)}
-                    >
-                      <Popup>
-                        <div className="text-xs font-bold text-gray-900">Rider {driver.name}</div>
-                        <div className="text-[10px] text-gray-500">{driver.vehicle} • {driver.speed} km/h</div>
-                        <div className="text-[10px] text-emerald-600 font-semibold">ETA {driver.eta} mins</div>
-                      </Popup>
-                    </Marker>
-                  ))}
-                  {drivers.map((driver) => (
-                    <Polyline
-                      key={`route-${driver.id}`}
-                      positions={driver.route.map((p) => [p.lat, p.lng])}
-                      pathOptions={{
-                        color: '#00A36C',
-                        weight: 3,
-                        opacity: 0.6,
-                        dashArray: '6, 8',
-                        lineCap: 'round',
-                      }}
-                    />
-                  ))}
-                  {drivers.map((driver) => (
-                    <Polyline
-                      key={`route-glow-${driver.id}`}
-                      positions={driver.route.map((p) => [p.lat, p.lng])}
-                      pathOptions={{
-                        color: '#00A36C',
-                        weight: 8,
-                        opacity: 0.15,
-                        lineCap: 'round',
-                      }}
-                    />
-                  ))}
-                </MapContainer>
+ 
               </div>
 
               {/* Driver Cards */}

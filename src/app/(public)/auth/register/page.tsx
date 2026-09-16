@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
-import { establishSession } from "@/app/(public)/actions/auth";
-import { sendRegistrationOtp, verifyRegistrationOtp } from "@/app/(public)/actions/otp";
+import { establishSession } from "@/actions/auth";
+import { sendRegistrationOtp, verifyRegistrationOtp } from "@/actions/otp";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
 import { ROLES, RegisterFormSchema, type SelectableRole } from "@/lib/definitions";
 
