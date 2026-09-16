@@ -52,9 +52,9 @@ type MenuCategoryData = {
 };
 
 export default function RestaurantDetailPage() {
-  const { slug } = useParams(); // URL slug parameter
-  const router = useRouter(); // Next.js router hook
-  const { getRestaurantBySlug, addToCart, favorites, toggleFavorite } = useApp(); // Access AppContext
+  const { slug } = useParams();
+  const router = useRouter();
+  const { getRestaurantBySlug, addToCart, favorites, toggleFavorite } = useApp();
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedFoodForModal, setSelectedFoodForModal] = useState<FoodItem | null>(null);
@@ -70,7 +70,7 @@ export default function RestaurantDetailPage() {
   const [dynamicRating, setDynamicRating] = useState<number>(restaurant?.rating || 4.5);
   const [dynamicReviewCount, setDynamicReviewCount] = useState<number>(restaurant?.reviewCount || 1);
 
-  // Fetch menu items from Express backend API[cite: 10]
+  // Fetch menu items from Express backend API
   useEffect(() => {
     const loadRestaurantMenu = async () => {
       if (!restaurant?.id) return;
@@ -87,7 +87,7 @@ export default function RestaurantDetailPage() {
         const data = await res.json();
         const items = data.data || [];
 
-        // Map backend schema (_id, imageUrl) to local interface properties[cite: 10]
+        // Map backend schema (_id, imageUrl) to local interface properties
         const formattedItems = items.map((item: any) => ({
           ...item,
           id: item._id || item.id,
