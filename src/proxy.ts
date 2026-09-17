@@ -19,7 +19,7 @@ export function getDashboardPathByRole(role: string): string {
     case "customer":
     case "client":
     default:
-      return "/client";
+      return "/admin";
   }
 }
 
