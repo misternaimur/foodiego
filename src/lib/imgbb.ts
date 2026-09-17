@@ -30,6 +30,7 @@ export type UploadToImgbbResult =
   | { success: false; message: string };
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5MB app-level cap (Imgbb allows up to 32MB)
+const UPLOAD_TIMEOUT_MS = 20_000;
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
 function isSupportedImage(buffer: Buffer, mimeType: string): boolean {
@@ -86,11 +87,24 @@ export async function uploadToImgbb(
   if (options?.expirationSeconds) form.append("expiration", String(options.expirationSeconds));
 
   let response: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
   try {
-    response = await fetch(IMGBB_UPLOAD_URL, { method: "POST", body: form });
+    response = await fetch(IMGBB_UPLOAD_URL, {
+      method: "POST",
+      body: form,
+      signal: controller.signal,
+    });
   } catch (error) {
     console.error("Imgbb network error:", error);
-    return { success: false, message: "Network error while uploading image. Please try again." };
+    return {
+      success: false,
+      message: error instanceof DOMException && error.name === "AbortError"
+        ? "Image upload timed out. Please try again or continue without a logo."
+        : "Network error while uploading image. Please try again.",
+    };
+  } finally {
+    clearTimeout(timeout);
   }
 
   let payload: ImgbbUploadResponse;

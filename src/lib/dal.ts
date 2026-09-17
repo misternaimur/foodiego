@@ -38,11 +38,28 @@ export const verifySession = cache(async () => {
   return session;
 });
 
-export const verifyRole = cache(async (...roles: Role[]) => {
+function getRoleDashboard(role: string): string {
+  const norm = role ? role.toLowerCase() : "";
+  if (norm === "admin") return "/admin";
+  if (norm === "restaurant" || norm === "vendor") return "/vendor";
+  if (norm === "rider") return "/rider";
+  return "/client";
+}
+
+export const verifyRole = cache(async (...roles: (Role | "vendor" | "client")[]) => {
   const session = await verifySession();
 
-  if (!roles.includes(session.role)) {
-    redirect("/");
+  const userRole = session.role ? session.role.toLowerCase() : "";
+  const allowed = roles.some((r) => {
+    const rNorm = r.toLowerCase();
+    if (rNorm === userRole) return true;
+    if ((rNorm === "restaurant" || rNorm === "vendor") && (userRole === "restaurant" || userRole === "vendor")) return true;
+    if ((rNorm === "customer" || rNorm === "client") && (userRole === "customer" || userRole === "client")) return true;
+    return false;
+  });
+
+  if (!allowed) {
+    redirect(getRoleDashboard(session.role));
   }
 
   return session;

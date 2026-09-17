@@ -244,7 +244,13 @@ function RestaurantRegisterFormContent() {
           const uploadForm = new FormData();
           uploadForm.append("file", logoFile);
           uploadForm.append("folder", "restaurants");
-          const uploadRes = await fetch("/api/upload/image", { method: "POST", body: uploadForm });
+          const uploadController = new AbortController();
+          const uploadTimeout = setTimeout(() => uploadController.abort(), 25_000);
+          const uploadRes = await fetch("/api/upload/image", {
+            method: "POST",
+            body: uploadForm,
+            signal: uploadController.signal,
+          }).finally(() => clearTimeout(uploadTimeout));
           const uploadJson: { success: boolean; imageUrl?: string; message?: string } = await uploadRes.json();
           if (uploadJson.success && uploadJson.imageUrl) {
             logoUrl = uploadJson.imageUrl;

@@ -57,15 +57,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   const user = propUser ?? contextUser;
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const role = propUser?.role;
+  const role = user?.role;
   const dashboardHref =
-  role === 'admin'
-    ? '/admin'
-    : role === 'restaurant'
-    ? '/vendor'
-    : role === 'rider'
-    ? '/rider'
-    : '/client';
+    role === 'admin'
+      ? '/admin'
+      : role === 'restaurant' || role === 'vendor'
+      ? '/vendor'
+      : role === 'rider'
+      ? '/rider'
+      : '/client';
 
   const handleLogout = async () => {
     if (onLogout) {
@@ -242,10 +242,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <p className="text-sm font-semibold text-gray-900 truncate">{user.name || 'User'}</p>
                       <p className="text-xs text-gray-500 truncate">{user.email || 'user@example.com'}</p>
                     </div>
-
-                  <div className="py-1">
+                    <div className="py-1">
                     <Link
-                      href="/account"
+                      href="/client/profile"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
                     >
@@ -254,7 +253,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </Link>
 
                     <Link
-                      href="/client/cart"
+                      href="/cart"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
                     >
@@ -272,7 +271,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </Link>
 
                       <Link
-                        href="/account"
+                        href={dashboardHref}
                         onClick={() => setIsDropdownOpen(false)}
                         className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
                       >
@@ -388,10 +387,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             </>
           ) : (
             <div className="pt-3 border-t border-[#E8E2D5] space-y-1">
-              <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Profile</Link>
-              <Link href="/client/cart" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">My Cart</Link>
+              <Link href="/client/profile" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Profile</Link>
+              <Link href="/cart" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">My Cart</Link>
               <Link href={dashboardHref} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Dashboard</Link>
-              <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Settings</Link>
+              <Link href={dashboardHref} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Settings</Link>
               <button 
                 onClick={async () => { setIsMobileMenuOpen(false); await handleLogout(); }} 
                 className="block w-full text-left py-2 text-sm text-red-600 font-medium"

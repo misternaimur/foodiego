@@ -6,6 +6,7 @@ import { Navbar } from "@/components/Share/Navbar";
 import Footer from "@/components/Share/Footer";
 import { getOptionalSession } from "@/lib/dal";
 import FAQSection from "@/components/FAQ";
+import AIRecommendation from "@/components/AIRecommendation";
 
 export default async function Home() {
   const session = await getOptionalSession();
@@ -18,6 +19,7 @@ export default async function Home() {
       <PickedForYouSection />
       <FAQSection />
       <HowItWorksSection />
+      <AIRecommendation/>
       <Footer />
     </main>
   );

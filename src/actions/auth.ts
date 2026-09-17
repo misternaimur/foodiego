@@ -1,3 +1,4 @@
+// src/actions/auth.ts
 "use server";
 
 import { redirect } from "next/navigation";
@@ -17,7 +18,7 @@ function roleHome(role: Role) {
     case "rider":
       return "/rider";
     default:
-      return "/";
+      return "/client";
   }
 }
 
@@ -35,7 +36,7 @@ function getSafeRedirectPath(value: string | undefined, role: Role) {
       ? "/vendor"
       : role === "rider"
         ? "/rider"
-        : null;
+        : "/client";
 
   return allowedPrefix && (candidate === allowedPrefix || candidate.startsWith(`${allowedPrefix}/`))
     ? candidate
@@ -72,7 +73,6 @@ export async function establishSession(
         return { errors: { email: ["An account with this email already exists."] } };
       }
 
-      // Registration is gated behind e-mail OTP verification.
       const otpVerified = await consumeVerifiedRegistrationOtp(email ?? "");
       if (!otpVerified) {
         return { message: "Please verify your email with the code we sent before continuing." };

@@ -1,25 +1,12 @@
-import { redirect } from "next/navigation";
-import { verifyRole } from "@/lib/dal";
-import { getOrCreateRiderProfile } from "@/lib/profile";
-import RiderStatusScreen from "@/components/rider/RiderStatusScreen";
+// Usage — rider/pending/page.tsx
+import { StatusScreen } from "@/components/ui/StatusScreen";
 
-export default async function RiderPendingPage() {
-  const session = await verifyRole("rider");
-
-  const rider = await getOrCreateRiderProfile(session);
-
-  if (!rider || rider.status === "approved") {
-    redirect("/rider");
-  }
-
+export default function RiderPendingPage() {
   return (
-    <RiderStatusScreen
-      status={rider.status}
-      fullName={rider.fullName}
-      city={rider.city}
-      vehicleType={rider.vehicleType}
-      photoUrl={rider.photoUrl}
-      submittedAt={rider.createdAt.toISOString()}
+    <StatusScreen
+      status="pending"
+      title="Your rider application is under review"
+      message="Our team is verifying your documents. This usually takes 1-2 business days."
     />
   );
 }

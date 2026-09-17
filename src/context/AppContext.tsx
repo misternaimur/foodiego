@@ -14,6 +14,9 @@ export interface SelectedOption {
 
 // Type definition for items inside the shopping cart (FoodItem + Customization details)
 export interface CartItem extends FoodItem {
+    menuItemId: string; // backend menuItemId (_id)
+    restaurantId?: string;
+    restaurantName?: string;
     cartItemId: string; // Unique ID based on specific customizations (size, addons, instructions)
     selectedSize?: SelectedOption;
     selectedAddons?: SelectedOption[];
@@ -94,11 +97,22 @@ type RawRestaurant = Partial<Restaurant> & {
 };
 
 // Payload options structure when adding items to cart
-interface CustomizationOptions {
+export interface CustomizationOptions {
     selectedSize?: SelectedOption;
     selectedAddons?: SelectedOption[];
     specialInstructions?: string;
     quantity?: number;
+}
+
+export interface RestaurantContextInfo {
+    restaurantId: string;
+    restaurantName: string;
+}
+
+export interface PendingCartItem {
+    food: FoodItem;
+    customization?: CustomizationOptions;
+    restaurantContext?: RestaurantContextInfo;
 }
 
 // Global Application Context Type Blueprint
@@ -109,10 +123,14 @@ interface AppContextType {
     isAuthLoading: boolean;
     restaurants: Restaurant[];
     isRestaurantsLoading: boolean;
+    pendingConflictItem: PendingCartItem | null;
+    setPendingConflictItem: (item: PendingCartItem | null) => void;
     getRestaurantBySlug: (slug: string) => Restaurant | undefined;
     getRestaurantById: (id: string) => Restaurant | undefined;
-    addToCart: (food: FoodItem, customization?: CustomizationOptions) => void;
+    addToCart: (food: FoodItem, customization?: CustomizationOptions, restaurantContext?: RestaurantContextInfo) => boolean;
+    clearCartAndAdd: (food: FoodItem, customization?: CustomizationOptions, restaurantContext?: RestaurantContextInfo) => void;
     removeFromCart: (cartItemId: string) => void;
+    updateCartItemQuantity: (cartItemId: string, delta: number) => void;
     toggleFavorite: (id: string) => void;
     clearCart: () => void;
     logoutUser: () => Promise<void>;

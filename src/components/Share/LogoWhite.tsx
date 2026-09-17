@@ -15,11 +15,12 @@ export default function Logo({ className = "" }: LogoProps) {
       href="/"
       className={`flex items-center group ${className}`}
     >
-      <div className="relative w-[140px] h-[40px] overflow-hidden">
+      <div className="relative h-10 w-35 overflow-hidden">
         <Image
           src="/assets/images/logo/Foodiego.png"
           alt="Foodiego Logo"
           fill
+          sizes="140px"
           priority
           className="object-cover object-center"
         />

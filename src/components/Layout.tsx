@@ -24,11 +24,11 @@ import {
 
 const sidebarNav = [
   { label: 'Home', href: '/', icon: Home },
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Dashboard', href: '/vendor', icon: LayoutDashboard },
   { label: 'Payments & Earnings', href: '/vendor/payments', icon: CreditCard },
-  { label: 'Orders', href: '/orders', icon: ShoppingBag },
-  { label: 'Products', href: '/products', icon: Package },
-  { label: 'Settings', href: '/settings', icon: Settings },
+  { label: 'Orders', href: '/vendor/orders', icon: ShoppingBag },
+  { label: 'Menu Items', href: '/vendor/menu', icon: Package },
+  { label: 'Settings', href: '/vendor/settings', icon: Settings },
 ];
 
 interface LayoutProps {
@@ -84,6 +84,7 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileSidebarRef = useRef<HTMLDivElement>(null);
 
@@ -96,8 +97,6 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
-
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const handleBack = () => {
     router.back();
@@ -168,7 +167,7 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
                     </span>
                   )}
                 </div>
-                <span className="hidden sm:inline-block max-w-[100px] truncate">
+                <span className="hidden sm:inline-block max-w-25 truncate">
                   {user?.name || 'Account'}
                 </span>
                 <motion.span animate={{ rotate: userDropdownOpen ? 180 : 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
@@ -203,7 +202,7 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
                       <span>My Cart</span>
                     </Link>
                     <Link
-                      href="/dashboard"
+                      href="/vendor"
                       onClick={() => setUserDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
                     >
@@ -211,7 +210,7 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
                       <span>Dashboard</span>
                     </Link>
                     <Link
-                      href="/account"
+                      href="/vendor/profile"
                       onClick={() => setUserDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
                     >
@@ -219,7 +218,7 @@ export default function Layout({ children, user, onLogout }: LayoutProps) {
                       <span>Account</span>
                     </Link>
                     <Link
-                      href="/settings"
+                      href="/vendor/settings"
                       onClick={() => setUserDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
                     >

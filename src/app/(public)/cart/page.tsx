@@ -55,24 +55,21 @@ export default function CartPage() {
 
     setIsSubmitting(true);
     
-    // Group all cart items by restaurantId because an order belongs to one restaurant
-    // For simplicity, we assume all items in the cart are from the same restaurant (common in food delivery)
-    // We will just use the restaurantId of the first item
-    const restaurantId = cart[0].restaurantId;
-
     const items = cart.map(item => ({
-      menuItemId: item.id,
-      name: item.name,
+      productId: item.id,
       price: item.totalUnitPrice || item.price,
       quantity: item.quantity,
     }));
 
     const orderData = {
-      restaurantId,
       items,
       totalAmount: total,
-      deliveryAddress,
-      paymentMethod,
+      shippingAddress: {
+        street: deliveryAddress,
+        city: "Chattogram",
+        postalCode: "",
+        country: "Bangladesh",
+      },
     };
 
     try {
@@ -84,7 +81,7 @@ export default function CartPage() {
       } else {
         alert(res.message || "Failed to place order. Please try again.");
       }
-    } catch (error) {
+    } catch {
       alert("An unexpected error occurred.");
     } finally {
       setIsSubmitting(false);
@@ -135,7 +132,7 @@ export default function CartPage() {
 
   return (
     <main className="min-h-[calc(100vh-80px)] bg-[#FAF7EE] w-full py-10 px-4 sm:px-6 lg:px-12">
-      <div className="max-w-[1400px] mx-auto">
+      <div className="max-w-350 mx-auto">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-8 pb-4 border-b border-emerald-900/10">
           <div>
@@ -237,7 +234,7 @@ export default function CartPage() {
           </div>
 
           {/* Summary Card (Span 1 - Sticky) */}
-          <div className="bg-[#113220] text-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-emerald-950/10 h-fit space-y-6 sticky top-6 relative overflow-hidden">
+          <div className="bg-[#113220] text-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-emerald-950/10 h-fit space-y-6 sticky top-6 overflow-hidden">
             <div className="absolute -top-16 -right-16 w-48 h-48 bg-emerald-600/20 rounded-full blur-2xl pointer-events-none" />
 
             <div className="relative z-10 flex items-center gap-2 border-b border-white/10 pb-4">
