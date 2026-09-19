@@ -170,9 +170,11 @@ export const useUpdateMenuItem = () => {
           const uploadResult = await uploadImage(formData);
           if (uploadResult.success) {
             imageUrl = uploadResult.data.secureUrl;
+          } else {
+            throw new Error(uploadResult.error);
           }
-        } catch {
-          // Keep whatever image the item already had rather than losing it.
+        } catch (error) {
+          throw new Error(error instanceof Error ? error.message : "Image upload failed.");
         }
       }
 
@@ -239,9 +241,11 @@ export const useCreateMenuItem = () => {
           const uploadResult = await uploadImage(formData);
           if (uploadResult.success) {
             imageUrl = uploadResult.data.secureUrl;
+          } else {
+            throw new Error(uploadResult.error);
           }
-        } catch {
-          imageUrl = `https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=200`;
+        } catch (error) {
+          throw new Error(error instanceof Error ? error.message : "Image upload failed.");
         }
       }
 
