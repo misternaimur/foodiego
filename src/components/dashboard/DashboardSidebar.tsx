@@ -76,11 +76,11 @@ export function DashboardSidebar({ config, badgeCounts }: DashboardSidebarProps)
   }
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col rounded-2-[24px] bg-[#0A0A0A] p-4">
+    <aside className="flex w-60 shrink-0 flex-col rounded-2-[24px] bg-zinc-950 dark:bg-zinc-950 p-4">
       {/* Brand mark */}
       <div className="flex items-center gap-2.5 px-2 pb-7 pt-2">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#10B981]">
-          <UtensilsCrossed className="h-[18px] w-[18px] text-white" strokeWidth={2.25} />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary">
+          <UtensilsCrossed className="h-[18px] w-[18px] text-primary-foreground" strokeWidth={2.25} />
         </div>
         <p className="text-[15px] font-bold text-white">Foodiego</p>
       </div>
@@ -89,7 +89,10 @@ export function DashboardSidebar({ config, badgeCounts }: DashboardSidebarProps)
       <nav className="flex flex-1 flex-col gap-2 overflow-y-auto">
         {visibleItems.map((item) => {
           const Icon = icons[item.icon as keyof typeof icons] ?? LayoutDashboard;
-          const isActive = pathname === item.href;
+          const isActive =
+            item.href === "/"
+              ? pathname === "/"
+              : pathname === item.href || pathname.startsWith(item.href + "/");
           const badge = item.badgeKey ? badgeCounts?.[item.badgeKey] : undefined;
 
           return (
@@ -98,14 +101,14 @@ export function DashboardSidebar({ config, badgeCounts }: DashboardSidebarProps)
               href={item.href}
               className={`relative flex items-center gap-3 rounded-xl px-3.5 py-3 text-[13.5px] font-medium transition-colors duration-150 ${
                 isActive
-                  ? "bg-[#10B981] text-white"
-                  : "bg-[#18181B] text-[#8B8B92] hover:bg-[#212124] hover:text-[#D4D4D8]"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
               }`}
             >
               <Icon className="h-[17px] w-[17px] shrink-0" strokeWidth={2} />
               <span className="truncate">{item.label}</span>
               {!!badge && (
-                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#EF4444] px-1 text-[10px] font-bold text-white ring-2 ring-[#0A0A0A]">
+                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-zinc-950">
                   {badge}
                 </span>
               )}
@@ -118,7 +121,7 @@ export function DashboardSidebar({ config, badgeCounts }: DashboardSidebarProps)
       <div className="flex flex-col gap-0.5 border-t border-white/10 pt-4">
         <Link
           href="/"
-          className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-[#6B6B72] transition-colors duration-150 hover:text-[#D4D4D8]"
+          className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-zinc-500 transition-colors duration-150 hover:text-zinc-200"
         >
           <Home className="h-4 w-4" strokeWidth={2} />
           Home page
@@ -133,7 +136,7 @@ export function DashboardSidebar({ config, badgeCounts }: DashboardSidebarProps)
               ? "/client/profile"
               : "/admin"
           }
-          className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-[#6B6B72] transition-colors duration-150 hover:text-[#D4D4D8]"
+          className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-zinc-500 transition-colors duration-150 hover:text-zinc-200"
         >
           <Settings className="h-4 w-4" strokeWidth={2} />
           Account settings
@@ -141,7 +144,7 @@ export function DashboardSidebar({ config, badgeCounts }: DashboardSidebarProps)
         <form action={logout}>
           <button
             type="submit"
-            className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-[#6B6B72] transition-colors duration-150 hover:text-[#F87171]"
+            className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-[13px] font-medium text-zinc-500 transition-colors duration-150 hover:text-red-400"
           >
             <LogOut className="h-4 w-4" strokeWidth={2} />
             Logout

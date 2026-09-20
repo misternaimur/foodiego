@@ -1,24 +1,17 @@
 "use client";
 
 import {
+  ArrowUpRight,
   Bike,
   CheckCircle2,
   Clock3,
   DollarSign,
-  History,
-  Home,
-  LogOut,
   MapPin,
-  Menu,
   Package,
   Phone,
   Search,
-  Settings,
-  Star,
   Timer,
   User,
-  X,
-  ArrowUpRight,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -96,7 +89,6 @@ const deliveries: Delivery[] = [
 ];
 
 export default function RiderDeliveriesPage() {
-  const [mobileMenu, setMobileMenu] = useState(false);
   const [search, setSearch] = useState("");
 
   const filteredDeliveries = deliveries.filter((delivery) => {
@@ -110,482 +102,324 @@ export default function RiderDeliveriesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900">
-      <div className="flex min-h-screen">
+    <div className="space-y-7">
 
-        {/* ================= SIDEBAR ================= */}
+      {/* ================= PAGE HEADER ================= */}
 
-        <aside
-          className={`fixed left-0 top-0 z-50 h-screen w-64 border-r border-slate-200 bg-white transition-transform duration-300 lg:sticky lg:top-0 lg:z-30 lg:block lg:h-screen lg:translate-x-0 ${
-            mobileMenu ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <div className="relative flex h-full flex-col">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 
-            {/* Mobile Close */}
-            <button
-              onClick={() => setMobileMenu(false)}
-              className="absolute right-4 top-5 z-10 rounded-lg p-2 hover:bg-slate-100 lg:hidden"
-              aria-label="Close menu"
-            >
-              <X className="h-5 w-5 text-slate-600" />
-            </button>
+        <div>
+          <p className="mb-2 text-4xl font-bold text-green-500">
+            Rider Dashboard
+          </p>
 
-            {/* ================= PROFILE ================= */}
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            Deliveries
+          </h1>
 
-            <div className="border-b border-slate-100 px-5 py-6">
-              <div className="flex items-center gap-3">
+          <p className="mt-2 max-w-xl text-sm text-slate-500">
+            Track your active deliveries and review your completed
+            delivery history.
+          </p>
+        </div>
 
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100">
-                  <User className="h-6 w-6 text-green-500" />
-                </div>
+        <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5">
+          <span className="h-2 w-2 rounded-full bg-green-500" />
 
-                <div>
-                  <p className="font-semibold text-slate-800">
-                    Afrin
-                  </p>
+          <span className="text-sm font-medium text-green-700">
+            You&apos;re available
+          </span>
+        </div>
 
-                  <div className="mt-0.5 flex items-center gap-1">
-                    <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-semibold text-green-600">
-                      Rider
-                    </span>
-                  </div>
+      </section>
 
-                  {/* Rating stays yellow */}
-                  <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    <span>4.9 Rating</span>
-                  </div>
-                </div>
+      {/* ================= STATS ================= */}
 
-              </div>
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+        <DeliveryStat
+          icon={<Bike className="h-5 w-5" />}
+          title="Active Delivery"
+          value="1"
+          description="Currently on the way"
+          highlight
+        />
+
+        <DeliveryStat
+          icon={<Clock3 className="h-5 w-5" />}
+          title="Accepted"
+          value="1"
+          description="Ready to start"
+        />
+
+        <DeliveryStat
+          icon={<CheckCircle2 className="h-5 w-5" />}
+          title="Completed"
+          value="3"
+          description="Today's completed"
+        />
+
+        <DeliveryStat
+          icon={<DollarSign className="h-5 w-5" />}
+          title="Delivery Earnings"
+          value="$47.00"
+          description="From today's deliveries"
+        />
+
+      </section>
+
+      {/* ================= ACTIVE DELIVERY ================= */}
+
+      <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
+
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
+
+              <p className="text-sm font-semibold text-green-600">
+                Active Delivery
+              </p>
             </div>
 
-            {/* ================= NAVIGATION ================= */}
+            <h2 className="mt-2 text-xl font-bold text-slate-900">
+              Burger Joint → Sarah M.
+            </h2>
 
-            <nav className="flex-1 px-4 py-5">
-
-              {/* Dashboard */}
-              <a
-                href="/rider"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
-              >
-                <Home className="h-4 w-4" />
-                Dashboard
-              </a>
-
-              {/* Orders */}
-              <a
-                href="/rider/orders"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
-              >
-                <Package className="h-4 w-4" />
-                Orders
-              </a>
-
-              {/* Deliveries ACTIVE */}
-              <a
-                href="/rider/deliveries"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm"
-              >
-                <Bike className="h-4 w-4" />
-                Deliveries
-              </a>
-
-              {/* Earnings */}
-              <a
-                href="/rider/earnings"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
-              >
-                <DollarSign className="h-4 w-4" />
-                Earnings
-              </a>
-
-              {/* Shift History */}
-              <a
-                href="/rider/shift-history"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
-              >
-                <History className="h-4 w-4" />
-                Shift History
-              </a>
-
-              {/* Settings */}
-              <a
-                href="/rider/settings"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-600"
-              >
-                <Settings className="h-4 w-4" />
-                Settings
-              </a>
-
-              {/* Logout */}
-              <button
-                type="button"
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </button>
-
-            </nav>
-          </div>
-        </aside>
-
-        {/* ================= MOBILE OVERLAY ================= */}
-
-        {mobileMenu && (
-          <div
-            className="fixed inset-0 z-40 bg-black/30 lg:hidden"
-            onClick={() => setMobileMenu(false)}
-          />
-        )}
-
-        {/* ================= MAIN ================= */}
-
-        <main className="min-w-0 flex-1">
-
-          {/* Mobile Menu Button */}
-          <div className="border-b border-slate-200 bg-white px-5 py-3 lg:hidden">
-            <button
-              onClick={() => setMobileMenu(true)}
-              className="rounded-lg p-2 hover:bg-slate-100"
-              aria-label="Open menu"
-            >
-              <Menu className="h-5 w-5 text-slate-700" />
-            </button>
+            <p className="mt-1 text-sm text-slate-500">
+              Order #ORD-9921
+            </p>
           </div>
 
-          {/* ================= CONTENT ================= */}
+          <div className="text-left sm:text-right">
+            <p className="text-xs text-slate-400">
+              Payout
+            </p>
 
-          <div className="space-y-7 p-5 md:p-8 lg:p-10">
+            <p className="text-2xl font-bold text-slate-900">
+              $12.50
+            </p>
+          </div>
 
-            {/* ================= PAGE HEADER ================= */}
+        </div>
 
-            <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        {/* ROUTE */}
+
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+
+          {/* Pickup */}
+          <div className="rounded-xl bg-slate-50 p-5">
+
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Pickup
+            </p>
+
+            <div className="mt-3 flex items-start gap-3">
+
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100">
+                <MapPin className="h-4 w-4 text-green-600" />
+              </div>
 
               <div>
-                <p className="mb-2 text-4xl font-bold text-green-500">
-                  Rider Dashboard
+                <p className="font-semibold text-slate-800">
+                  Burger Joint
                 </p>
 
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                  Deliveries
-                </h1>
-
-                <p className="mt-2 max-w-xl text-sm text-slate-500">
-                  Track your active deliveries and review your completed
-                  delivery history.
+                <p className="mt-1 text-sm text-slate-500">
+                  Downtown Burger Joint
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5">
-                <span className="h-2 w-2 rounded-full bg-green-500" />
+            </div>
+          </div>
 
-                <span className="text-sm font-medium text-green-700">
-                  You&apos;re available
-                </span>
+          {/* Delivery */}
+          <div className="rounded-xl bg-slate-50 p-5">
+
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Delivery
+            </p>
+
+            <div className="mt-3 flex items-start gap-3">
+
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100">
+                <MapPin className="h-4 w-4 text-green-600" />
               </div>
 
-            </section>
+              <div>
+                <p className="font-semibold text-slate-800">
+                  Sarah M.
+                </p>
 
-            {/* ================= STATS ================= */}
-
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-              <DeliveryStat
-                icon={<Bike className="h-5 w-5" />}
-                title="Active Delivery"
-                value="1"
-                description="Currently on the way"
-                highlight
-              />
-
-              <DeliveryStat
-                icon={<Clock3 className="h-5 w-5" />}
-                title="Accepted"
-                value="1"
-                description="Ready to start"
-              />
-
-              <DeliveryStat
-                icon={<CheckCircle2 className="h-5 w-5" />}
-                title="Completed"
-                value="3"
-                description="Today's completed"
-              />
-
-              <DeliveryStat
-                icon={<DollarSign className="h-5 w-5" />}
-                title="Delivery Earnings"
-                value="$47.75"
-                description="From today's deliveries"
-              />
-
-            </section>
-
-            {/* ================= ACTIVE DELIVERY ================= */}
-
-            <section className="rounded-2xl border border-green-200 bg-white p-6 shadow-sm">
-
-              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
-
-                    <p className="text-sm font-semibold text-green-600">
-                      Active Delivery
-                    </p>
-                  </div>
-
-                  <h2 className="mt-2 text-xl font-bold text-slate-900">
-                    Burger Joint → Sarah M.
-                  </h2>
-
-                  <p className="mt-1 text-sm text-slate-500">
-                    Order #ORD-9921
-                  </p>
-                </div>
-
-                <div className="text-left sm:text-right">
-                  <p className="text-xs text-slate-400">
-                    Payout
-                  </p>
-
-                  <p className="text-2xl font-bold text-slate-900">
-                    $12.50
-                  </p>
-                </div>
-
+                <p className="mt-1 text-sm text-slate-500">
+                  89 Lake Street
+                </p>
               </div>
 
-              {/* ================= ROUTE ================= */}
+            </div>
+          </div>
 
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        </div>
 
-                {/* Pickup */}
-                <div className="rounded-xl bg-slate-50 p-5">
+        {/* DELIVERY INFO */}
 
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    Pickup
-                  </p>
+        <div className="mt-5 flex flex-wrap gap-3">
 
-                  <div className="mt-3 flex items-start gap-3">
+          <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-4 py-2.5">
+            <MapPin className="h-4 w-4 text-slate-400" />
+            <span className="text-sm text-slate-600">
+              5.1 km
+            </span>
+          </div>
 
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100">
-                      <MapPin className="h-4 w-4 text-green-600" />
-                    </div>
+          <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-4 py-2.5">
+            <Timer className="h-4 w-4 text-slate-400" />
+            <span className="text-sm text-slate-600">
+              28 min
+            </span>
+          </div>
 
-                    <div>
-                      <p className="font-semibold text-slate-800">
-                        Burger Joint
-                      </p>
+          <div className="flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2.5">
+            <Bike className="h-4 w-4 text-green-500" />
 
-                      <p className="mt-1 text-sm text-slate-500">
-                        Downtown Burger Joint
-                      </p>
-                    </div>
+            <span className="text-sm font-medium text-green-600">
+              On the way
+            </span>
+          </div>
 
-                  </div>
-                </div>
+        </div>
 
-                {/* Delivery */}
-                <div className="rounded-xl bg-slate-50 p-5">
+        {/* PROGRESS */}
 
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    Delivery
-                  </p>
+        <div className="mt-6">
 
-                  <div className="mt-3 flex items-start gap-3">
+          <div className="mb-3 flex items-center justify-between">
 
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100">
-                      <MapPin className="h-4 w-4 text-green-600" />
-                    </div>
+            <p className="text-sm font-semibold text-slate-700">
+              Delivery Progress
+            </p>
 
-                    <div>
-                      <p className="font-semibold text-slate-800">
-                        Sarah M.
-                      </p>
-
-                      <p className="mt-1 text-sm text-slate-500">
-                        89 Lake Street
-                      </p>
-                    </div>
-
-                  </div>
-                </div>
-
-              </div>
-
-              {/* ================= DELIVERY INFO ================= */}
-
-              <div className="mt-5 flex flex-wrap gap-3">
-
-                <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-4 py-2.5">
-                  <MapPin className="h-4 w-4 text-slate-400" />
-                  <span className="text-sm text-slate-600">
-                    5.1 km
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 rounded-lg bg-slate-50 px-4 py-2.5">
-                  <Timer className="h-4 w-4 text-slate-400" />
-                  <span className="text-sm text-slate-600">
-                    28 min
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2.5">
-                  <Bike className="h-4 w-4 text-green-500" />
-
-                  <span className="text-sm font-medium text-green-600">
-                    On the way
-                  </span>
-                </div>
-
-              </div>
-
-              {/* ================= PROGRESS ================= */}
-
-              <div className="mt-6">
-
-                <div className="mb-3 flex items-center justify-between">
-
-                  <p className="text-sm font-semibold text-slate-700">
-                    Delivery Progress
-                  </p>
-
-                  <p className="text-xs font-medium text-green-500">
-                    75%
-                  </p>
-
-                </div>
-
-                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full w-3/4 rounded-full bg-green-500" />
-                </div>
-
-                <div className="mt-3 flex justify-between text-xs text-slate-400">
-                  <span>Accepted</span>
-                  <span>Picked Up</span>
-
-                  <span className="font-semibold text-green-500">
-                    On the Way
-                  </span>
-
-                  <span>Delivered</span>
-                </div>
-
-              </div>
-
-              {/* ================= ACTIONS ================= */}
-
-              <div className="mt-6 flex flex-wrap gap-3">
-
-                <button
-                  type="button"
-                  className="flex items-center gap-2 rounded-lg bg-green-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
-                >
-                  View Delivery
-                  <ArrowUpRight className="h-4 w-4" />
-                </button>
-
-                <button
-                  type="button"
-                  className="flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                >
-                  <Phone className="h-4 w-4" />
-                  Contact Customer
-                </button>
-
-              </div>
-
-            </section>
-
-            {/* ================= DELIVERY HISTORY ================= */}
-
-            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
-              {/* Header */}
-              <div className="border-b border-slate-100 p-5 md:p-6">
-
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900">
-                      Delivery History
-                    </h2>
-
-                    <p className="mt-1 text-sm text-slate-500">
-                      View your recent delivery activity.
-                    </p>
-                  </div>
-
-                  {/* Search */}
-                  <div className="relative w-full sm:w-64">
-
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-                    <input
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      type="text"
-                      placeholder="Search deliveries..."
-                      className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-green-300 focus:bg-white focus:ring-2 focus:ring-green-100"
-                    />
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              {/* List */}
-              {filteredDeliveries.length === 0 ? (
-
-                <div className="px-6 py-16 text-center">
-
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-                    <Package className="h-6 w-6 text-slate-400" />
-                  </div>
-
-                  <h3 className="mt-4 font-semibold text-slate-800">
-                    No deliveries found
-                  </h3>
-
-                  <p className="mt-1 text-sm text-slate-500">
-                    Try searching with another order or customer name.
-                  </p>
-
-                </div>
-
-              ) : (
-
-                <div className="divide-y divide-slate-100">
-
-                  {filteredDeliveries.map((delivery) => (
-                    <DeliveryRow
-                      key={delivery.id}
-                      delivery={delivery}
-                    />
-                  ))}
-
-                </div>
-
-              )}
-
-            </section>
+            <p className="text-xs font-medium text-green-500">
+              75%
+            </p>
 
           </div>
-        </main>
-      </div>
+
+          <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full w-3/4 rounded-full bg-green-500" />
+          </div>
+
+          <div className="mt-3 flex justify-between text-xs text-slate-400">
+            <span>Accepted</span>
+            <span>Picked Up</span>
+
+            <span className="font-semibold text-green-500">
+              On the Way
+            </span>
+
+            <span>Delivered</span>
+          </div>
+
+        </div>
+
+        {/* ACTIONS */}
+
+        <div className="mt-6 flex flex-wrap gap-3">
+
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-lg bg-green-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-600"
+          >
+            View Delivery
+            <ArrowUpRight className="h-4 w-4" />
+          </button>
+
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            <Phone className="h-4 w-4" />
+            Contact Customer
+          </button>
+
+        </div>
+
+      </section>
+
+      {/* ================= DELIVERY HISTORY ================= */}
+
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+        {/* Header */}
+        <div className="border-b border-slate-100 p-5 md:p-6">
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">
+                Delivery History
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                View your recent delivery activity.
+              </p>
+            </div>
+
+            {/* Search */}
+            <div className="relative w-full sm:w-64">
+
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                type="text"
+                placeholder="Search deliveries..."
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-green-300 focus:bg-white focus:ring-2 focus:ring-green-100"
+              />
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* List */}
+        {filteredDeliveries.length === 0 ? (
+
+          <div className="px-6 py-16 text-center">
+
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+              <Package className="h-6 w-6 text-slate-400" />
+            </div>
+
+            <h3 className="mt-4 font-semibold text-slate-800">
+              No deliveries found
+            </h3>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Try searching with another order or customer name.
+            </p>
+
+          </div>
+
+        ) : (
+
+          <div className="divide-y divide-slate-100">
+
+            {filteredDeliveries.map((delivery) => (
+              <DeliveryRow
+                key={delivery.id}
+                delivery={delivery}
+              />
+            ))}
+
+          </div>
+
+        )}
+
+      </section>
     </div>
   );
 }
@@ -704,7 +538,7 @@ function DeliveryRow({
         </div>
 
         {/* Route */}
-        <div className="hidden min-w-57.5 lg:block">
+        <div className="hidden min-w-[230px] lg:block">
 
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
             Delivery Route
@@ -722,7 +556,7 @@ function DeliveryRow({
 
             </div>
 
-            <div className="ml-0.75 h-3 border-l border-dashed border-slate-300" />
+            <div className="ml-[3px] h-3 border-l border-dashed border-slate-300" />
 
             <div className="flex items-center gap-2">
 
@@ -738,7 +572,7 @@ function DeliveryRow({
         </div>
 
         {/* Payout */}
-        <div className="flex items-center justify-between gap-5 xl:block xl:min-w-25">
+        <div className="flex items-center justify-between gap-5 xl:block xl:min-w-[100px]">
 
           <div>
 
@@ -759,7 +593,7 @@ function DeliveryRow({
         </div>
 
         {/* Action */}
-        <div className="flex items-center gap-2 xl:min-w-37.5 xl:justify-end">
+        <div className="flex items-center gap-2 xl:min-w-[150px] xl:justify-end">
 
           {isProgress && (
             <button
@@ -818,7 +652,7 @@ function DeliveryStatusBadge({
       "bg-green-50 text-green-700 border-green-200",
   };
 
-  const icons = {
+  const statusIcons = {
     "In Progress": <Clock3 className="h-3 w-3" />,
     Accepted: <Bike className="h-3 w-3" />,
     Completed: <CheckCircle2 className="h-3 w-3" />,
@@ -828,7 +662,7 @@ function DeliveryStatusBadge({
     <span
       className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold ${styles[status]}`}
     >
-      {icons[status]}
+      {statusIcons[status]}
       {status}
     </span>
   );

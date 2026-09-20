@@ -2,16 +2,56 @@
 
 @import "tailwindcss";
 
-:root {
-  --background: #faf7ee;
-  --foreground: #171717;
+@theme {
+  --color-background: 250 247 238; /* #FAF7EE */
+  --color-foreground: 23 23 23; /* #171717 */
+  --color-card: 255 255 255; /* #FFFFFF */
+  --color-card-foreground: 23 23 23;
+  --color-popover: 255 255 255;
+  --color-popover-foreground: 23 23 23;
+  --color-primary: 21 70 45; /* #15462D - Foodiego green */
+  --color-primary-foreground: 255 255 255;
+  --color-secondary: 239 235 224; /* #EFEBE0 */
+  --color-secondary-foreground: 23 23 23;
+  --color-muted: 248 245 237;
+  --color-muted-foreground: 107 114 128;
+  --color-accent: 239 235 224;
+  --color-accent-foreground: 23 23 23;
+  --color-destructive: 239 68 68;
+  --color-destructive-foreground: 255 255 255;
+  --color-border: 229 231 235;
+  --color-input: 229 231 235;
+  --color-ring: 21 70 45;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  @theme {
+    --color-background: 10 10 10; /* #0A0A0A */
+    --color-foreground: 250 250 250;
+    --color-card: 24 24 27; /* zinc-900 */
+    --color-card-foreground: 250 250 250;
+    --color-popover: 24 24 27;
+    --color-popover-foreground: 250 250 250;
+    --color-primary: 16 185 129; /* emerald-500 */
+    --color-primary-foreground: 255 255 255;
+    --color-secondary: 39 39 42; /* zinc-800 */
+    --color-secondary-foreground: 250 250 250;
+    --color-muted: 39 39 42;
+    --color-muted-foreground: 161 161 170;
+    --color-accent: 39 39 42;
+    --color-accent-foreground: 250 250 250;
+    --color-destructive: 239 68 68;
+    --color-destructive-foreground: 255 255 255;
+    --color-border: 39 39 42;
+    --color-input: 39 39 42;
+    --color-ring: 16 185 129;
   }
+}
+
+body {
+  background-color: rgb(var(--color-background));
+  color: rgb(var(--color-foreground));
+  font-family: "font01", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 @font-face {
@@ -19,12 +59,6 @@
   src: url("/assets/font/3y9K6as8bTXq_nANBjzKo3IeZx8z6up5BeSl9D4dj_x9PpZBMlGIInE.woff2");
   font-weight: normal;
   font-style: normal;
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "font01";
 }
 
 @keyframes fadeSlideIn {

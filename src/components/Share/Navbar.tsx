@@ -8,6 +8,7 @@ import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, Chevron
 import { useApp } from '@/context/AppContext';
 import LogoGreen from './LogoGreen';
 import CartDrawer from '@/components/client/CartDrawer';
+import { ModeToggle } from '@/components/ui/mode-toggle';
 
 export interface NavItem {
   label: string;
@@ -199,6 +200,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Section: Actions & Conditional Profile / Order Now */}
           <div className="flex items-center gap-4 sm:gap-5 shrink-0">
+            {/* Theme Toggle */}
+            <ModeToggle />
+
             {/* Cart Trigger Button */}
             <button 
               onClick={() => setIsCartOpen(true)}

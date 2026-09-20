@@ -16,9 +16,9 @@ interface Order {
 const allOrders: Order[] = [
   { id: "#FG-10234", restaurant: "Greenhouse Cafe", items: "Truffle Smashburger, Fries", total: 22.5, status: "On the way", date: "Today, 1:45 PM" },
   { id: "#FG-10229", restaurant: "Sushi Master", items: "Sushi Platter x1", total: 34.0, status: "Delivered", date: "Yesterday, 8:10 PM" },
-  { id: "#FG-10218", restaurant: "Sweet Treats Bakery", items: "Berry Cheesecake", total: 12.0, status: "Delivered", date: "Oct 21, 2026" },
-  { id: "#FG-10199", restaurant: "Spice Route Indian", items: "Chicken Biryani, Naan x2", total: 28.75, status: "Delivered", date: "Oct 18, 2026" },
-  { id: "#FG-10180", restaurant: "Burger Joint Co.", items: "Double Cheeseburger", total: 15.0, status: "Cancelled", date: "Oct 12, 2026" },
+  { id: "#FG-10218", restaurant: "Sweet Treats Bakery", items: "Berry Cheesecake", total: 12.0, status: "Delivered", date: "Sep 21, 2025" },
+  { id: "#FG-10199", restaurant: "Spice Route Indian", items: "Chicken Biryani, Naan x2", total: 28.75, status: "Delivered", date: "Sep 18, 2025" },
+  { id: "#FG-10180", restaurant: "Burger Joint Co.", items: "Double Cheeseburger", total: 15.0, status: "Cancelled", date: "Sep 12, 2025" },
 ];
 
 const statusColors: Record<Order["status"], string> = {
@@ -53,11 +53,11 @@ export default function ClientOrdersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">My Orders</h1>
-        <p className="mt-1 text-sm text-gray-500">Track, reorder, or review your past orders.</p>
+        <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">My Orders</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Track, reorder, or review your past orders.</p>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-xs">
+      <div className="rounded-2xl border bg-card shadow-xs">
         <div className="flex flex-col gap-4 border-b border-gray-100 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-2 overflow-x-auto text-xs font-bold">
             {tabs.map((tab) => (
@@ -108,7 +108,7 @@ export default function ClientOrdersPage() {
                   <p className="text-sm font-extrabold text-gray-900">${order.total.toFixed(2)}</p>
                   {order.status === "On the way" && (
                     <Link
-                      href="/client/track"
+                      href="/client/trackorders"
                       className="inline-flex items-center gap-1.5 rounded-full bg-[#15462D] px-3.5 py-2 text-[11px] font-bold text-white hover:bg-[#0e3320]"
                     >
                       <MapPin size={13} /> Track

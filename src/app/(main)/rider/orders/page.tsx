@@ -8,18 +8,11 @@ import {
   Clock3,
   DollarSign,
   Filter,
-  History,
-  Home,
-  LogOut,
   MapPin,
-  Menu,
   Package,
   Search,
-  Settings,
-  Star,
   Timer,
   User,
-  X,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -115,9 +108,7 @@ const tabs: Array<"All" | OrderStatus> = [
 ];
 
 export default function RiderOrdersPage() {
-  const [mobileMenu, setMobileMenu] = useState(false);
-  const [activeTab, setActiveTab] =
-    useState<"All" | OrderStatus>("All");
+  const [activeTab, setActiveTab] = useState<"All" | OrderStatus>("All");
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
 
@@ -136,425 +127,230 @@ export default function RiderOrdersPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900">
-      <div className="flex min-h-screen">
+    <div className="space-y-7">
 
-        {/* =====================================================
-            SIDEBAR
-        ===================================================== */}
+      {/* ================= PAGE HEADER ================= */}
 
-        <aside
-          className={`fixed left-0 top-0 z-50 h-screen w-64 border-r border-slate-200 bg-white transition-transform duration-300 lg:sticky lg:top-0 lg:z-30 lg:block lg:h-screen lg:translate-x-0 ${
-            mobileMenu
-              ? "translate-x-0"
-              : "-translate-x-full"
-          }`}
-        >
-          <div className="relative flex h-full flex-col">
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 
-            {/* Mobile Close */}
-            <button
-              type="button"
-              onClick={() => setMobileMenu(false)}
-              className="absolute right-4 top-5 z-10 rounded-lg p-2 transition hover:bg-slate-100 lg:hidden"
-              aria-label="Close menu"
-            >
-              <X className="h-5 w-5 text-slate-600" />
-            </button>
+        <div>
+          <p className="mb-2 text-4xl font-bold text-green-500">
+            Rider Dashboard
+          </p>
 
-            {/* =================================================
-                RIDER PROFILE
-            ================================================= */}
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            Orders
+          </h1>
 
-            <div className="border-b border-slate-100 px-5 py-6">
-              <div className="flex items-center gap-3">
+          <p className="mt-2 max-w-xl text-sm text-slate-500">
+            Find available delivery requests and manage your
+            active orders in one place.
+          </p>
+        </div>
 
-                {/* Avatar - GREEN */}
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100">
-                  <User className="h-6 w-6 text-green-500" />
-                </div>
+        {/* Availability - GREEN */}
+        <div className="flex w-fit items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5">
+          <span className="h-2 w-2 rounded-full bg-green-500" />
 
-                <div>
-                  <p className="font-semibold text-slate-800">
-                    Afrin
-                  </p>
+          <span className="text-sm font-medium text-green-700">
+            You&apos;re available
+          </span>
+        </div>
 
-                  <p className="text-xs font-medium text-green-500">
-                    Rider
-                  </p>
+      </section>
 
-                  {/* Rating - ONLY YELLOW */}
-                  <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    <span>4.9 Rating</span>
-                  </div>
-                </div>
+      {/* ================= STATS ================= */}
+
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+        <OrderStat
+          icon={<Package className="h-5 w-5" />}
+          title="Total Orders"
+          value="6"
+          description="Today's orders"
+        />
+
+        <OrderStat
+          icon={<Bike className="h-5 w-5" />}
+          title="Available"
+          value="2"
+          description="Waiting for riders"
+          highlight
+        />
+
+        <OrderStat
+          icon={<Clock3 className="h-5 w-5" />}
+          title="In Progress"
+          value="1"
+          description="Active deliveries"
+        />
+
+        <OrderStat
+          icon={<DollarSign className="h-5 w-5" />}
+          title="Today's Earnings"
+          value="$142.50"
+          description="+12.5% from yesterday"
+        />
+
+      </section>
+
+      {/* ================= ORDERS PANEL ================= */}
+
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+        {/* Panel Header */}
+        <div className="border-b border-slate-100 p-5 md:p-6">
+
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">
+                Delivery Orders
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Choose an order based on distance, time and earnings.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+
+              {/* Search */}
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search orders..."
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-green-300 focus:bg-white focus:ring-2 focus:ring-green-100"
+                />
+              </div>
+
+              {/* Filter */}
+              <button
+                type="button"
+                onClick={() => setShowFilter(!showFilter)}
+                className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+              >
+                <Filter className="h-4 w-4" />
+
+                Filter
+
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform ${
+                    showFilter ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+            </div>
+          </div>
+
+          {/* FILTER DROPDOWN */}
+
+          {showFilter && (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Filter by status
+              </p>
+
+              <div className="flex flex-wrap gap-2">
+
+                {tabs.map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => {
+                      setActiveTab(tab);
+                      setShowFilter(false);
+                    }}
+                    className={`rounded-md px-3 py-2 text-xs font-medium transition ${
+                      activeTab === tab
+                        ? "bg-green-500 text-white"
+                        : "bg-white text-slate-600 hover:bg-green-50 hover:text-green-600"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
 
               </div>
             </div>
+          )}
 
-            {/* =================================================
-                NAVIGATION
-            ================================================= */}
+          {/* TABS */}
 
-            <nav className="flex-1 px-4 py-5">
+          <div className="mt-6 flex gap-6 overflow-x-auto border-b border-slate-100">
 
-              {/* Dashboard */}
-              <a
-                href="/rider"
-                onClick={() => setMobileMenu(false)}
-                className="mb-2 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
-              >
-                <Home className="h-4 w-4" />
-                Dashboard
-              </a>
-
-              {/* Orders - ACTIVE */}
-              <a
-                href="/rider/orders"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg bg-green-500 px-4 py-3 text-sm font-medium text-white shadow-sm"
-              >
-                <Package className="h-4 w-4" />
-                Orders
-              </a>
-
-              {/* Deliveries */}
-              <a
-                href="/rider/deliveries"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
-              >
-                <Bike className="h-4 w-4" />
-                Deliveries
-              </a>
-
-              {/* Earnings */}
-              <a
-                href="/rider/earnings"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
-              >
-                <DollarSign className="h-4 w-4" />
-                Earnings
-              </a>
-
-              {/* Shift History */}
-              <a
-                href="/rider/shift-history"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
-              >
-                <History className="h-4 w-4" />
-                Shift History
-              </a>
-
-              {/* Settings */}
-              <a
-                href="/rider/settings"
-                onClick={() => setMobileMenu(false)}
-                className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-50 hover:text-green-500"
-              >
-                <Settings className="h-4 w-4" />
-                Settings
-              </a>
-
-              {/* Logout */}
+            {tabs.map((tab) => (
               <button
+                key={tab}
                 type="button"
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500"
+                onClick={() => setActiveTab(tab)}
+                className={`relative whitespace-nowrap pb-3 text-sm font-medium transition ${
+                  activeTab === tab
+                    ? "text-green-500"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
               >
-                <LogOut className="h-4 w-4" />
-                Logout
+                {tab}
+
+                {activeTab === tab && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-green-500" />
+                )}
               </button>
+            ))}
 
-            </nav>
-          </div>
-        </aside>
-
-        {/* =====================================================
-            MOBILE OVERLAY
-        ===================================================== */}
-
-        {mobileMenu && (
-          <div
-            className="fixed inset-0 z-40 bg-black/30 lg:hidden"
-            onClick={() => setMobileMenu(false)}
-          />
-        )}
-
-        {/* =====================================================
-            MAIN
-        ===================================================== */}
-
-        <main className="min-w-0 flex-1">
-
-          {/* Mobile Menu Button */}
-          <div className="px-5 pt-5 lg:hidden">
-            <button
-              type="button"
-              onClick={() => setMobileMenu(true)}
-              className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm transition hover:bg-slate-50"
-              aria-label="Open menu"
-            >
-              <Menu className="h-5 w-5 text-slate-700" />
-            </button>
           </div>
 
-          {/* Mobile Heading */}
-          <div className="px-5 pt-5 lg:hidden">
-            <h2 className="text-2xl font-bold">
-              Rider Dashboard
-            </h2>
+        </div>
+
+        {/* ORDER LIST */}
+
+        {filteredOrders.length === 0 ? (
+          <div className="px-6 py-16 text-center">
+
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+              <Package className="h-6 w-6 text-slate-400" />
+            </div>
+
+            <h3 className="mt-4 font-semibold text-slate-800">
+              No orders found
+            </h3>
 
             <p className="mt-1 text-sm text-slate-500">
-              Manage your delivery orders from here.
+              Try another search or status filter.
             </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setActiveTab("All");
+              }}
+              className="mt-4 rounded-lg bg-green-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-600"
+            >
+              Clear Filters
+            </button>
+
           </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
 
-          {/* =================================================
-              PAGE CONTENT
-          ================================================= */}
-
-          <div className="space-y-7 p-5 md:p-8 lg:p-10">
-
-            {/* =================================================
-                PAGE HEADER
-            ================================================= */}
-
-            <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-
-              <div>
-                <p className="mb-2 text-4xl font-bold text-green-500">
-                  Rider Dashboard
-                </p>
-
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                  Orders
-                </h1>
-
-                <p className="mt-2 max-w-xl text-sm text-slate-500">
-                  Find available delivery requests and manage your
-                  active orders in one place.
-                </p>
-              </div>
-
-              {/* Availability - GREEN */}
-              <div className="flex w-fit items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5">
-                <span className="h-2 w-2 rounded-full bg-green-500" />
-
-                <span className="text-sm font-medium text-green-700">
-                  You&apos;re available
-                </span>
-              </div>
-
-            </section>
-
-            {/* =================================================
-                STATS
-            ================================================= */}
-
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-              <OrderStat
-                icon={<Package className="h-5 w-5" />}
-                title="Total Orders"
-                value="24"
-                description="Today's orders"
+            {filteredOrders.map((order) => (
+              <OrderRow
+                key={order.id}
+                order={order}
               />
+            ))}
 
-              <OrderStat
-                icon={<Bike className="h-5 w-5" />}
-                title="Available"
-                value="6"
-                description="Waiting for riders"
-                highlight
-              />
-
-              <OrderStat
-                icon={<Clock3 className="h-5 w-5" />}
-                title="In Progress"
-                value="2"
-                description="Active deliveries"
-              />
-
-              <OrderStat
-                icon={<DollarSign className="h-5 w-5" />}
-                title="Today's Earnings"
-                value="$142.50"
-                description="+12.5% from yesterday"
-              />
-
-            </section>
-
-            {/* =================================================
-                ORDERS PANEL
-            ================================================= */}
-
-            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
-              {/* Panel Header */}
-              <div className="border-b border-slate-100 p-5 md:p-6">
-
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900">
-                      Delivery Orders
-                    </h2>
-
-                    <p className="mt-1 text-sm text-slate-500">
-                      Choose an order based on distance, time and earnings.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-
-                    {/* Search */}
-                    <div className="relative w-full sm:w-64">
-                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-
-                      <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search orders..."
-                        className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-green-300 focus:bg-white focus:ring-2 focus:ring-green-100"
-                      />
-                    </div>
-
-                    {/* Filter */}
-                    <button
-                      type="button"
-                      onClick={() => setShowFilter(!showFilter)}
-                      className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-                    >
-                      <Filter className="h-4 w-4" />
-
-                      Filter
-
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
-                          showFilter ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                  </div>
-                </div>
-
-                {/* =================================================
-                    FILTER DROPDOWN
-                ================================================= */}
-
-                {showFilter && (
-                  <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                      Filter by status
-                    </p>
-
-                    <div className="flex flex-wrap gap-2">
-
-                      {tabs.map((tab) => (
-                        <button
-                          key={tab}
-                          type="button"
-                          onClick={() => {
-                            setActiveTab(tab);
-                            setShowFilter(false);
-                          }}
-                          className={`rounded-md px-3 py-2 text-xs font-medium transition ${
-                            activeTab === tab
-                              ? "bg-green-500 text-white"
-                              : "bg-white text-slate-600 hover:bg-green-50 hover:text-green-600"
-                          }`}
-                        >
-                          {tab}
-                        </button>
-                      ))}
-
-                    </div>
-                  </div>
-                )}
-
-                {/* =================================================
-                    TABS
-                ================================================= */}
-
-                <div className="mt-6 flex gap-6 overflow-x-auto border-b border-slate-100">
-
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setActiveTab(tab)}
-                      className={`relative whitespace-nowrap pb-3 text-sm font-medium transition ${
-                        activeTab === tab
-                          ? "text-green-500"
-                          : "text-slate-500 hover:text-slate-800"
-                      }`}
-                    >
-                      {tab}
-
-                      {activeTab === tab && (
-                        <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-green-500" />
-                      )}
-                    </button>
-                  ))}
-
-                </div>
-
-              </div>
-
-              {/* =================================================
-                  ORDER LIST
-              ================================================= */}
-
-              {filteredOrders.length === 0 ? (
-                <div className="px-6 py-16 text-center">
-
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
-                    <Package className="h-6 w-6 text-slate-400" />
-                  </div>
-
-                  <h3 className="mt-4 font-semibold text-slate-800">
-                    No orders found
-                  </h3>
-
-                  <p className="mt-1 text-sm text-slate-500">
-                    Try another search or status filter.
-                  </p>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearch("");
-                      setActiveTab("All");
-                    }}
-                    className="mt-4 rounded-lg bg-green-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-600"
-                  >
-                    Clear Filters
-                  </button>
-
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-100">
-
-                  {filteredOrders.map((order) => (
-                    <OrderRow
-                      key={order.id}
-                      order={order}
-                    />
-                  ))}
-
-                </div>
-              )}
-
-            </section>
           </div>
-        </main>
-      </div>
+        )}
+
+      </section>
     </div>
   );
 }
@@ -634,9 +430,7 @@ function OrderRow({
 
       <div className="flex flex-col gap-5 xl:flex-row xl:items-center">
 
-        {/* =================================================
-            RESTAURANT
-        ================================================= */}
+        {/* RESTAURANT */}
 
         <div className="flex min-w-0 flex-1 items-start gap-4">
 
@@ -682,9 +476,7 @@ function OrderRow({
           </div>
         </div>
 
-        {/* =================================================
-            DELIVERY ROUTE
-        ================================================= */}
+        {/* DELIVERY ROUTE */}
 
         <div className="hidden min-w-[230px] lg:block">
 
@@ -720,9 +512,7 @@ function OrderRow({
           </div>
         </div>
 
-        {/* =================================================
-            PAYOUT
-        ================================================= */}
+        {/* PAYOUT */}
 
         <div className="flex items-center justify-between gap-5 xl:block xl:min-w-[100px]">
 
@@ -744,9 +534,7 @@ function OrderRow({
 
         </div>
 
-        {/* =================================================
-            ACTIONS
-        ================================================= */}
+        {/* ACTIONS */}
 
         <div className="flex items-center gap-2 xl:min-w-[150px] xl:justify-end">
 
@@ -823,7 +611,7 @@ function StatusBadge({
       "bg-slate-100 text-slate-600 border-slate-200",
   };
 
-  const icons: Record<OrderStatus, React.ReactNode> = {
+  const statusIcons: Record<OrderStatus, React.ReactNode> = {
     Available: (
       <Bike className="h-3 w-3" />
     ),
@@ -845,7 +633,7 @@ function StatusBadge({
     <span
       className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold ${styles[status]}`}
     >
-      {icons[status]}
+      {statusIcons[status]}
       {status}
     </span>
   );
