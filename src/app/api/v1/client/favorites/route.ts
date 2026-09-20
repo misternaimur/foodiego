@@ -19,6 +19,7 @@ export async function GET() {
     const favorites = await backendFetchAsUser<string[]>(session, `/api/users/${session.id}/favorites`);
     return NextResponse.json({ favorites });
   } catch (error) {
+    console.error("Failed to load favorites:", error);
     const status = error instanceof BackendError ? error.status : 500;
     return NextResponse.json({ error: "Failed to load favorites" }, { status });
   }
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ favorites });
   } catch (error) {
+    console.error("Failed to update favorites:", error);
     const status = error instanceof BackendError ? error.status : 500;
     return NextResponse.json({ error: "Failed to update favorites" }, { status });
   }

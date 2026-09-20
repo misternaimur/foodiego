@@ -75,6 +75,7 @@ export interface OrderItem {
   name: string;
   price: number;
   quantity: number;
+  specialInstructions?: string;
 }
 
 export interface Order {
@@ -86,9 +87,11 @@ export interface Order {
   totalAmount: number;
   deliveryFee: number;
   deliveryAddress: string;
+  deliveryNote?: string;
   paymentMethod: "cash" | "card" | "online";
   paymentStatus: "pending" | "paid" | "failed";
-  status: "pending" | "confirmed" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
+  status: "pending" | "confirmed" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
+  riderRating?: number;
   createdAt: string;
 }
 
@@ -98,6 +101,7 @@ export interface PlaceOrderInput {
   subtotal: number;
   deliveryFee: number;
   deliveryAddress: string;
+  deliveryNote?: string;
   city: string;
   paymentMethod: "cod" | "online";
 }
@@ -125,5 +129,5 @@ export function toDisplayStatus(status: Order["status"]): DisplayOrderStatus {
   if (status === "delivered") return "Delivered";
   if (status === "cancelled") return "Cancelled";
   if (status === "out_for_delivery") return "On the way";
-  return "Preparing";
+  return "Preparing"; // pending / confirmed / preparing / ready all read as "Preparing" here
 }

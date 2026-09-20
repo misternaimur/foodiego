@@ -25,21 +25,21 @@ const recommendations = {
   Pizza: [
     {
       name: "Chicken Cheese Pizza",
-      price: "৳420",
+      price: "$420",
       rating: "4.8",
       image:
         "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&q=80",
     },
     {
       name: "Pepperoni Pizza",
-      price: "৳380",
+      price: "$380",
       rating: "4.7",
       image:
         "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80",
     },
     {
       name: "Classic Margherita",
-      price: "৳350",
+      price: "$350",
       rating: "4.6",
       image:
         "https://images.unsplash.com/photo-1579751626657-72bc17010498?w=600&q=80",
@@ -49,21 +49,21 @@ const recommendations = {
   Healthy: [
     {
       name: "Healthy Green Bowl",
-      price: "৳280",
+      price: "$280",
       rating: "4.8",
       image:
         "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=600&q=80",
     },
     {
       name: "Fresh Salad Bowl",
-      price: "৳250",
+      price: "$250",
       rating: "4.7",
       image:
         "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=80",
     },
     {
       name: "Avocado Bowl",
-      price: "৳320",
+      price: "$320",
       rating: "4.9",
       image:
         "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80",
@@ -73,21 +73,21 @@ const recommendations = {
   Spicy: [
     {
       name: "Spicy Chicken Wings",
-      price: "৳330",
+      price: "$330",
       rating: "4.8",
       image:
         "https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=600&q=80",
     },
     {
       name: "Spicy Fried Chicken",
-      price: "৳290",
+      price: "$290",
       rating: "4.7",
       image:
         "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=600&q=80",
     },
     {
       name: "Hot Chicken Burger",
-      price: "৳360",
+      price: "$360",
       rating: "4.6",
       image:
         "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=80",
@@ -97,21 +97,21 @@ const recommendations = {
   Dessert: [
     {
       name: "Chocolate Cake",
-      price: "৳220",
+      price: "$220",
       rating: "4.9",
       image:
         "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&q=80",
     },
     {
       name: "Strawberry Dessert",
-      price: "৳250",
+      price: "$250",
       rating: "4.8",
       image:
         "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=600&q=80",
     },
     {
       name: "Creamy Pancakes",
-      price: "৳280",
+      price: "$280",
       rating: "4.7",
       image:
         "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=600&q=80",
@@ -121,21 +121,21 @@ const recommendations = {
   "Surprise Me": [
     {
       name: "Crispy Chicken Burger",
-      price: "৳320",
+      price: "$320",
       rating: "4.8",
       image:
         "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&q=80",
     },
     {
       name: "Creamy Pasta",
-      price: "৳380",
+      price: "$380",
       rating: "4.7",
       image:
         "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=600&q=80",
     },
     {
       name: "Chicken Rice Bowl",
-      price: "৳300",
+      price: "$300",
       rating: "4.8",
       image:
         "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&q=80",

@@ -22,6 +22,7 @@ import { Rider, type RiderStatus } from "@/models/Rider";
 import { OrderBooking } from "@/models/OrderBooking";
 import RiderModerationActions from "@/components/admin/RiderModerationActions";
 import InviteLinkButton from "@/components/admin/InviteLinkButton";
+import RiderFleetMap from "@/components/admin/RiderFleetMap";
 
 export const dynamic = "force-dynamic";
 
@@ -207,6 +208,15 @@ export default async function AdminRidersPage({
               <span className="text-3xl font-extrabold text-gray-900">{allCount.toLocaleString()}</span>
             </div>
           </div>
+        </div>
+
+        {/* Live Fleet Map */}
+        <div className="mb-8">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-gray-900">Live Fleet Map</h2>
+            <p className="text-xs text-gray-400">Updates every 20 seconds</p>
+          </div>
+          <RiderFleetMap />
         </div>
 
         {/* Main Content Card Container */}

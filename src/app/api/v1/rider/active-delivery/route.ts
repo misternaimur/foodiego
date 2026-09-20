@@ -8,8 +8,9 @@ export interface ActiveDelivery {
   _id: string;
   restaurantName: string;
   deliveryAddress: string;
+  deliveryNote?: string;
   totalAmount: number;
-  status: "pending" | "confirmed" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
+  status: "pending" | "confirmed" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
   itemsSummary: string;
   customerName: string;
 }
@@ -44,6 +45,7 @@ export async function GET() {
     _id: String(order._id),
     restaurantName: order.restaurantName || "Restaurant",
     deliveryAddress: order.deliveryAddress,
+    deliveryNote: order.deliveryNote || undefined,
     totalAmount: order.totalAmount,
     status: order.status,
     itemsSummary: order.items?.map((i) => i.name).join(", ") || "",

@@ -87,7 +87,7 @@ export default async function AdminDashboardPage() {
 
   const metrics = [
     { title: "TOTAL ORDERS", value: totalOrders.toLocaleString(), icon: <ShoppingCart size={20} /> },
-    { title: "TOTAL REVENUE", value: `৳${totalRevenue.toLocaleString()}`, icon: <Wallet size={20} /> },
+    { title: "TOTAL REVENUE", value: `$${totalRevenue.toLocaleString()}`, icon: <Wallet size={20} /> },
     { title: "TOTAL VENDORS", value: totalVendors.toLocaleString(), icon: <Store size={20} /> },
     { title: "TOTAL CUSTOMERS", value: totalCustomers.toLocaleString(), icon: <Users size={20} /> },
   ];
@@ -105,7 +105,7 @@ export default async function AdminDashboardPage() {
       title:
         o.status === "cancelled"
           ? `Order #${String(o._id).slice(-6).toUpperCase()} was cancelled.`
-          : `Order #${String(o._id).slice(-6).toUpperCase()} placed — ৳${o.totalAmount.toLocaleString()}.`,
+          : `Order #${String(o._id).slice(-6).toUpperCase()} placed — $${o.totalAmount.toLocaleString()}.`,
     })),
   ].slice(0, 4);
 
@@ -234,7 +234,7 @@ export default async function AdminDashboardPage() {
                         </td>
                         <td className="py-4 px-6 text-slate-900">{customer?.name || "Guest"}</td>
                         <td className="py-4 px-6">{restaurant?.restaurantName || order.restaurantName || "—"}</td>
-                        <td className="py-4 px-6 font-semibold text-slate-900">৳{order.totalAmount.toLocaleString()}</td>
+                        <td className="py-4 px-6 font-semibold text-slate-900">${order.totalAmount.toLocaleString()}</td>
                         <td className="py-4 px-6">
                           <span
                             className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${

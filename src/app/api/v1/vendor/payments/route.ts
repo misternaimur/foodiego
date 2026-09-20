@@ -5,6 +5,7 @@ import { dbConnect } from "@/lib/dbConnect";
 import { User } from "@/models/User";
 import { Restaurant } from "@/models/Restaurant";
 import { OrderBooking } from "@/models/OrderBooking";
+import { commissionRateOf } from "@/lib/commission";
 
 // ============================================================
 // UPDATE (vendor-payments real-data fix): this route used to return a
@@ -14,9 +15,9 @@ import { OrderBooking } from "@/models/OrderBooking";
 // vendor's real OrderBooking history:
 //   - "gross" per order = totalAmount - deliveryFee (the delivery fee is
 //     the rider's earning, not the vendor's — see OrderBooking.ts).
-//   - commission uses a flat PLATFORM_COMMISSION_RATE, since there is no
-//     per-vendor commission-rate field anywhere in the schema yet. A real
-//     Foodpanda-style system would let admins set this per vendor/tier.
+//   - commission uses this restaurant's own commissionRate when an admin
+//     has set one, otherwise the 15% platform default — see
+//     src/lib/commission.ts's commissionRateOf().
 //   - "Paid" transactions = delivered orders (revenue has been earned).
 //     "Pending" = orders still in the delivery pipeline (confirmed/
 //     preparing/out_for_delivery) — money not yet finalized.
@@ -26,8 +27,6 @@ import { OrderBooking } from "@/models/OrderBooking";
 //     so withdrawing only reduces this internal ledger — see
 //     src/app/api/v1/vendor/payments/withdraw/route.ts.
 // ============================================================
-
-const PLATFORM_COMMISSION_RATE = 0.15;
 
 export type PaymentStatus = "Paid" | "Pending" | "Failed";
 
@@ -70,6 +69,8 @@ export async function GET(req: NextRequest) {
   if (!restaurant) {
     return NextResponse.json({ error: "Restaurant profile not found" }, { status: 404 });
   }
+
+  const PLATFORM_COMMISSION_RATE = commissionRateOf(restaurant);
 
   const orders = await OrderBooking.find({ restaurantId: restaurant._id })
     .populate("customerId", "name")

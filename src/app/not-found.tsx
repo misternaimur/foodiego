@@ -1,61 +1,136 @@
-'use client';
+import type { Metadata } from "next";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  Compass,
+  Home,
+  Sparkles,
+  UtensilsCrossed,
+} from "lucide-react";
+import { Navbar } from "@/components/Share/Navbar";
+import Footer from "@/components/Share/Footer";
+import AIAssistantWidget from "@/components/AIAssistantWidget";
+import { getOptionalSession } from "@/lib/dal";
 
-import React from 'react';
-import Link from 'next/link';
-import { UtensilsCrossed, Compass, Home, Search, ArrowRight } from 'lucide-react';
+export const metadata: Metadata = {
+  title: "Page not found | Foodiego",
+  description:
+    "That page has gone missing. Browse restaurants, offers and more instead.",
+};
 
-export default function NotFound() {
+// Public routes only — anything under /client, /vendor, /admin or /rider is
+// auth-gated, so linking there from a 404 would just bounce the visitor to login.
+const suggestions = [
+  { href: "/restaurants", label: "Restaurants", icon: UtensilsCrossed },
+  { href: "/offers", label: "Offers", icon: Sparkles },
+  { href: "/foods", label: "Browse foods", icon: Compass },
+];
+
+/**
+ * app/not-found.tsx — the root not-found file. As well as catching notFound()
+ * calls, this handles any URL that matches no route in the whole app.
+ *
+ * It renders inside the ROOT layout, which only provides <html>, <body> and the
+ * app providers — the navbar and footer live in the (public)/(main) route-group
+ * layouts and so are not applied here. They are rendered explicitly below to
+ * keep the page visually identical to the rest of the site.
+ */
+export default async function NotFound() {
+  const session = await getOptionalSession();
+
   return (
-    <div className="min-h-screen bg-[#FAF7EE] flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 border border-[#E8E2D5] shadow-xs text-center relative overflow-hidden">
-        
-        {/* Decorative background element */}
-        <div className="absolute -top-12 -right-12 w-32 h-32 bg-amber-100 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-emerald-100 rounded-full blur-2xl pointer-events-none" />
+    <>
+      <Navbar
+        user={session ? { name: session.name, role: session.role } : null}
+      />
 
-        {/* Floating Animated Badge */}
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-[#15462D]/10 text-[#15462D] mb-6 shadow-inner">
-          <UtensilsCrossed size={40} className="animate-bounce" />
+      <main className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-20 sm:py-24">
+        {/* Decorative washes, matching the hero and other section backgrounds. */}
+        <div
+          className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute -bottom-28 -right-24 h-80 w-80 rounded-full bg-[#F49D37]/20 blur-3xl"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute top-1/3 right-1/4 h-56 w-56 rounded-full bg-purple-300/15 blur-3xl"
+          aria-hidden="true"
+        />
+
+        <div className="animate-fade-slide-in relative z-10 mx-auto w-full max-w-2xl text-center">
+          {/* Pill tag */}
+          <div className="mb-5 inline-flex items-center justify-center rounded-full bg-emerald-400 px-4 py-1.5 shadow-sm">
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#123B27]">
+              Error 404
+            </span>
+          </div>
+
+          {/* Oversized status code in the brand's green / amber */}
+          <p className="text-[80px] font-black leading-none tracking-tight sm:text-[120px]">
+            <span className="text-[#124734]">4</span>
+            <span className="text-[#F6A429]">0</span>
+            <span className="text-[#124734]">4</span>
+          </p>
+
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-[#124734] sm:text-3xl lg:text-4xl">
+            We couldn&apos;t find that page
+          </h1>
+
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-500 sm:text-base">
+            The link may be broken, or the page may have been moved. Let&apos;s
+            get you back to something delicious.
+          </p>
+
+          {/* Primary actions */}
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+            <Link
+              href="/"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#F6A429] px-7 py-3 font-semibold text-gray-900 shadow-md transition-all duration-200 hover:bg-[#e0931f] sm:w-auto"
+            >
+              <Home className="h-4 w-4" />
+              Back to home
+            </Link>
+
+            <Link
+              href="/restaurants"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#124734] px-7 py-3 font-semibold text-white shadow-md transition-all duration-200 hover:bg-[#1a5c3a] sm:w-auto"
+            >
+              <UtensilsCrossed className="h-4 w-4" />
+              Browse restaurants
+            </Link>
+          </div>
+
+          {/* Helpful destinations */}
+          <div className="mt-10 border-t border-[#E8E2D5] pt-6">
+            <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-[#F49D37]">
+              Popular destinations
+            </p>
+
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
+              {suggestions.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="inline-flex items-center gap-2 rounded-full border border-[#E8E2D5] bg-white/70 px-4 py-2 text-sm font-semibold text-[#374151] transition-colors duration-200 hover:border-[#124734]/30 hover:text-[#124734]"
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                </Link>
+              ))}
+            </div>
+
+            <p className="mt-6 inline-flex items-center gap-1.5 text-sm text-slate-500">
+              <ArrowLeft className="h-4 w-4" />
+              Or press the back button to return to the previous page.
+            </p>
+          </div>
         </div>
+      </main>
 
-        {/* Main Error Heading */}
-        <span className="block text-xs font-black tracking-widest text-emerald-800 uppercase mb-2">
-          Error 404
-        </span>
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3">
-          Recipe Not Found
-        </h1>
-        <p className="text-xs sm:text-sm font-medium text-gray-600 mb-8 leading-relaxed">
-          Looks like this page got cooked up and eaten! The URL you’re looking for doesn’t exist or has moved.
-        </p>
-
-        {/* Quick Action Buttons */}
-        <div className="space-y-3">
-          <Link
-            href="/"
-            className="w-full bg-[#15462D] hover:bg-[#0f3321] text-white text-xs sm:text-sm font-bold py-3.5 px-6 rounded-full flex items-center justify-center gap-2 transition-all shadow-xs group cursor-pointer"
-          >
-            <Home size={16} />
-            <span>Back to Home</span>
-            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </Link>
-
-          <Link
-            href="/restaurants"
-            className="w-full bg-white hover:bg-gray-50 text-gray-700 border border-[#E8E2D5] text-xs sm:text-sm font-bold py-3.5 px-6 rounded-full flex items-center justify-center gap-2 transition-all cursor-pointer"
-          >
-            <Search size={16} className="text-[#15462D]" />
-            <span>Explore Restaurants</span>
-          </Link>
-        </div>
-
-        {/* Footer help link */}
-        <div className="mt-8 pt-6 border-t border-gray-100 text-xs font-semibold text-gray-500 flex items-center justify-center gap-1.5">
-          <Compass size={14} className="text-amber-500" />
-          <span>Need help finding something? <Link href="/contact" className="text-[#15462D] underline">Contact support</Link></span>
-        </div>
-
-      </div>
-    </div>
+      <Footer />
+      <AIAssistantWidget />
+    </>
   );
 }

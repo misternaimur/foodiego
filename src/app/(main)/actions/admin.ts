@@ -1,5 +1,6 @@
 "use server";
 
+import mongoose from "mongoose";
 import { revalidatePath } from "next/cache";
 import { getOptionalSession } from "@/lib/dal";
 import { dbConnect } from "@/lib/dbConnect";
@@ -7,6 +8,26 @@ import { Restaurant, RESTAURANT_STATUSES, type RestaurantStatus } from "@/models
 import { Rider, RIDER_STATUSES, type RiderStatus } from "@/models/Rider";
 import { User, ACCOUNT_STATUSES, type AccountStatus } from "@/models/User";
 import { OrderBooking, ORDER_STATUSES, type OrderBookingStatus } from "@/models/OrderBooking";
+import { Notification } from "@/models/Notification";
+
+// UPDATE (notification-system fix): admin approve/reject/suspend actions
+// live entirely in Next.js (direct Mongoose), unlike the order-lifecycle
+// events which fire from foodiego-backend — both write into the same
+// "notification" collection. Failures here are logged, never thrown.
+async function notify(
+  userId: mongoose.Types.ObjectId | string | undefined,
+  type: string,
+  title: string,
+  message: string,
+  link?: string
+) {
+  if (!userId) return;
+  try {
+    await Notification.create({ userId, type, title, message, link });
+  } catch (error) {
+    console.error("Failed to create notification:", error);
+  }
+}
 
 const OBJECT_ID_RE = /^[a-fA-F0-9]{24}$/;
 
@@ -52,6 +73,14 @@ async function setRestaurantStatus(
     return { ok: false, message: "Restaurant application not found." };
   }
 
+  const RESTAURANT_STATUS_MESSAGES: Partial<Record<RestaurantStatus, [string, string]>> = {
+    approved: ["You're approved!", `${restaurant.restaurantName} is now live and taking orders.`],
+    rejected: ["Application declined", `Your application for ${restaurant.restaurantName} was not approved.`],
+    suspended: ["Account suspended", `${restaurant.restaurantName} has been suspended by the platform.`],
+  };
+  const entry = RESTAURANT_STATUS_MESSAGES[status];
+  if (entry) await notify(restaurant.userId, `vendor_${status}`, entry[0], entry[1], "/vendor");
+
   revalidatePath("/admin");
   revalidatePath("/admin/vendors");
   revalidatePath("/vendor");
@@ -80,6 +109,42 @@ export async function reactivateRestaurant(restaurantId: string): Promise<Modera
   return setRestaurantStatus(restaurantId, "approved");
 }
 
+// UPDATE (per-vendor-commission fix): the only way to change a vendor's
+// commission rate used to be editing the PLATFORM_COMMISSION_RATE constant
+// in code, which applied to every vendor identically. `null` clears the
+// override and falls back to the 15% platform default (see
+// src/lib/commission.ts).
+export async function setVendorCommissionRate(
+  restaurantId: string,
+  ratePercent: number | null
+): Promise<ModerationResult> {
+  const unauthorized = await requireAdmin();
+  if (unauthorized) return unauthorized;
+
+  if (!OBJECT_ID_RE.test(restaurantId)) {
+    return { ok: false, message: "Invalid restaurant reference." };
+  }
+  if (ratePercent !== null && (Number.isNaN(ratePercent) || ratePercent < 0 || ratePercent > 100)) {
+    return { ok: false, message: "Commission rate must be between 0 and 100." };
+  }
+
+  await dbConnect();
+  // Mongoose silently ignores an `undefined` value in an update object
+  // rather than clearing the field, so resetting to the platform default
+  // needs an explicit $unset instead of "set to undefined".
+  const update = ratePercent === null ? { $unset: { commissionRate: 1 } } : { $set: { commissionRate: ratePercent } };
+  const restaurant = await Restaurant.findByIdAndUpdate(restaurantId, update, { new: true }).lean();
+
+  if (!restaurant) {
+    return { ok: false, message: "Restaurant not found." };
+  }
+
+  revalidatePath("/admin/vendors");
+  revalidatePath("/admin/commission");
+
+  return { ok: true };
+}
+
 async function setRiderStatus(
   riderId: string,
   status: RiderStatus
@@ -104,6 +169,14 @@ async function setRiderStatus(
   if (!rider) {
     return { ok: false, message: "Rider application not found." };
   }
+
+  const RIDER_STATUS_MESSAGES: Partial<Record<RiderStatus, [string, string]>> = {
+    approved: ["You're approved!", "Your rider account is active — you can start accepting deliveries."],
+    rejected: ["Application declined", "Your rider application was not approved."],
+    suspended: ["Account suspended", "Your rider account has been suspended by the platform."],
+  };
+  const entry = RIDER_STATUS_MESSAGES[status];
+  if (entry) await notify(rider.userId, `rider_${status}`, entry[0], entry[1], "/rider");
 
   revalidatePath("/admin");
   revalidatePath("/admin/riders");

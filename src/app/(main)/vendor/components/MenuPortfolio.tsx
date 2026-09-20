@@ -26,6 +26,7 @@ import {
   Popcorn,
   Eye,
   EyeOff,
+  Pencil,
 } from "lucide-react";
 import {
   useMenuItems,
@@ -49,6 +50,10 @@ export default function MenuPortfolio() {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
+  // UPDATE (menu-edit fix): the item that AddMenuItemModal is currently
+  // editing (null = the modal is in "create new" mode). There was
+  // previously no way at all to edit an existing item's details.
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [density, setDensity] = useState<"compact" | "normal">("normal");
 
@@ -68,6 +73,16 @@ export default function MenuPortfolio() {
   const handleToggle = (item: MenuItem) => {
     if (toggleMutation.isPending && toggleMutation.variables === item._id) return;
     toggleMutation.mutate(item._id);
+  };
+
+  const handleEdit = (item: MenuItem) => {
+    setEditingItem(item);
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingItem(null);
   };
 
   const handleCategoryClick = (categoryName: string) => {
@@ -265,7 +280,7 @@ export default function MenuPortfolio() {
                             <td className={`px-4 py-3 ${density === "compact" ? "py-2" : ""}`}>
                               <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600"><Tag size={11} />{item.category}</span>
                             </td>
-                            <td className={`px-4 py-3 text-right text-sm font-black text-slate-900 ${density === "compact" ? "py-2" : ""}`}>৳{(item.price ?? 0).toLocaleString()}</td>
+                            <td className={`px-4 py-3 text-right text-sm font-black text-slate-900 ${density === "compact" ? "py-2" : ""}`}>${(item.price ?? 0).toLocaleString()}</td>
                             <td className={`px-4 py-3 ${density === "compact" ? "py-2" : ""}`}>
                               <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
                                 <span className="font-bold text-slate-700">{item.ordersCount ?? 0} orders</span>
@@ -282,6 +297,9 @@ export default function MenuPortfolio() {
                             </td>
                             <td className={`px-4 py-3 ${density === "compact" ? "py-2" : ""}`}>
                               <div className="flex items-center justify-center gap-1">
+                                <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }} transition={springTransition} onClick={() => handleEdit(item)} className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100" aria-label={`Edit ${item.name}`}>
+                                  <Pencil size={14} />
+                                </motion.button>
                                 <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }} transition={springTransition} onClick={() => handleToggle(item)} disabled={toggleMutation.isPending && toggleMutation.variables === item._id} className={`rounded-lg p-1.5 transition-colors disabled:opacity-50 ${item.isActive ? "text-slate-500 hover:bg-slate-100" : "text-rose-600 hover:bg-rose-50"}`} aria-label={item.isActive ? `Pause ${item.name}` : `Activate ${item.name}`}>
                                   {toggleMutation.isPending && toggleMutation.variables === item._id ? <LoaderCircle size={14} className="animate-spin" /> : item.isActive ? <PauseCircle size={14} /> : <CheckCircle size={14} />}
                                 </motion.button>
@@ -329,8 +347,11 @@ export default function MenuPortfolio() {
                               <span className="font-bold text-slate-700">{item.ordersCount ?? 0} orders</span>
                             </div>
                             <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-                              <span className="text-sm font-black text-slate-900">৳{(item.price ?? 0).toLocaleString()}</span>
+                              <span className="text-sm font-black text-slate-900">${(item.price ?? 0).toLocaleString()}</span>
                               <div className="flex items-center gap-1">
+                                <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }} transition={springTransition} onClick={() => handleEdit(item)} className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100" aria-label={`Edit ${item.name}`}>
+                                  <Pencil size={12} />
+                                </motion.button>
                                 <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.94 }} transition={springTransition} onClick={() => handleToggle(item)} disabled={toggleMutation.isPending && toggleMutation.variables === item._id} className={`rounded-lg p-1.5 transition-colors disabled:opacity-50 ${item.isActive ? "text-slate-500 hover:bg-slate-100" : "text-rose-600 hover:bg-rose-50"}`} aria-label={item.isActive ? `Pause ${item.name}` : `Activate ${item.name}`}>
                                   {toggleMutation.isPending && toggleMutation.variables === item._id ? <LoaderCircle size={12} className="animate-spin" /> : item.isActive ? <PauseCircle size={12} /> : <CheckCircle size={12} />}
                                 </motion.button>
@@ -367,7 +388,7 @@ export default function MenuPortfolio() {
         </motion.div>
       </motion.div>
 
-      <AddMenuItemModal open={showAddModal} onClose={() => setShowAddModal(false)} />
+      <AddMenuItemModal open={showAddModal} onClose={handleCloseModal} editItem={editingItem} />
     </motion.div>
   );
 }

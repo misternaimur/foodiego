@@ -186,6 +186,40 @@ const themes: Record<string, ThemeConfig> = {
       return { geometries: geoms, scales };
     },
   },
+  support: {
+    ambientColor: 0x8b5cf6,
+    ambientIntensity: 0.55,
+    pointLightColor: 0xec4899,
+    pointLightIntensity: 2.8,
+    directionalColor: 0xfff7ed,
+    directionalIntensity: 1.1,
+    objectColors: [0x8b5cf6, 0xec4899, 0xf6a429, 0x15462d, 0xa78bfa, 0xf472b6],
+    buildObjects: () => {
+      const geoms: THREE.BufferGeometry[] = [];
+      const scales: number[] = [];
+      for (let i = 0; i < 5; i++) {
+        const g = new THREE.IcosahedronGeometry(0.42, 0);
+        geoms.push(g);
+        scales.push(0.55 + Math.random() * 0.55);
+      }
+      for (let i = 0; i < 4; i++) {
+        const g = new THREE.TorusKnotGeometry(0.34, 0.1, 96, 12);
+        geoms.push(g);
+        scales.push(0.45 + Math.random() * 0.45);
+      }
+      for (let i = 0; i < 4; i++) {
+        const g = new THREE.OctahedronGeometry(0.36, 0);
+        geoms.push(g);
+        scales.push(0.5 + Math.random() * 0.5);
+      }
+      for (let i = 0; i < 3; i++) {
+        const g = new THREE.TorusGeometry(0.38, 0.1, 12, 32);
+        geoms.push(g);
+        scales.push(0.55 + Math.random() * 0.45);
+      }
+      return { geometries: geoms, scales };
+    },
+  },
   orders: {
     ambientColor: 0x14b8a6,
     ambientIntensity: 0.5,

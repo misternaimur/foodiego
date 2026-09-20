@@ -17,6 +17,11 @@ function getFirebaseConfig(): FirebaseOptions {
   };
 }
 
+export function hasFirebaseClientConfig(): boolean {
+  const config = getFirebaseConfig();
+  return Boolean(config.apiKey && config.projectId);
+}
+
 export function getClientApp(): FirebaseApp {
   if (!app) {
     const config = getFirebaseConfig();

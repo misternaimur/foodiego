@@ -50,6 +50,13 @@ export interface RestaurantDocument {
   // (that needs real merchant credentials), so a "withdrawal" only reduces
   // this internal ledger — it does not move real money.
   walletWithdrawn?: number;
+  // UPDATE (per-vendor-commission fix): every commission calculation used to
+  // read a single hardcoded PLATFORM_COMMISSION_RATE constant (15%) with no
+  // way to set one vendor's rate differently from another's. Undefined
+  // means "use the 15% platform default" — see commissionRateOf() in
+  // src/lib/commission.ts, which every route that computes commission now
+  // goes through instead of each defining its own constant.
+  commissionRate?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -91,6 +98,7 @@ const RestaurantSchema = new Schema<RestaurantDocument>(
     tradeLicenseUrl: { type: String, trim: true },
     ownerNidUrl: { type: String, trim: true },
     walletWithdrawn: { type: Number, default: 0 },
+    commissionRate: { type: Number, min: 0, max: 100 },
   },
   { timestamps: true, strict: false }
 );

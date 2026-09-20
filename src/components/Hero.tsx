@@ -36,15 +36,15 @@ export default function HeroSection() {
       `}</style>
 
       {/* Hero Container */}
-      <section className="relative overflow-hidden bg-[#15462D] text-white rounded-[2.5rem] pt-12 md:pt-16 shadow-2xl flex flex-col justify-between">
+      <section className="relative overflow-hidden bg-[#124734] text-white rounded-[2.5rem] pt-12 md:pt-16 shadow-2xl flex flex-col justify-between">
         
         {/* Top Content */}
         <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center flex flex-col items-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full text-xs sm:text-sm mb-6 border border-white/15">
             <div className="flex -space-x-2 overflow-hidden">
-              <span className="inline-block h-6 w-6 rounded-full ring-2 ring-[#15462D] bg-gray-300" />
-              <span className="inline-block h-6 w-6 rounded-full ring-2 ring-[#15462D] bg-gray-400" />
-              <span className="inline-block h-6 w-6 rounded-full ring-2 ring-[#15462D] bg-gray-500" />
+              <span className="inline-block h-6 w-6 rounded-full ring-2 ring-[#124734] bg-gray-300" />
+              <span className="inline-block h-6 w-6 rounded-full ring-2 ring-[#124734] bg-gray-400" />
+              <span className="inline-block h-6 w-6 rounded-full ring-2 ring-[#124734] bg-gray-500" />
             </div>
             <span className="font-medium">Loved By 2.4m Users with 4.8 Rating</span>
             <Star className="w-4 h-4 fill-amber-400 text-amber-400" />

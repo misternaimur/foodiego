@@ -19,15 +19,20 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
   }
 
+  const isCustomer = ticket.raisedByRole === "customer";
+  const ownerId = ticket.vendorId || ticket.raisedById;
+
   const [restaurant, user] = await Promise.all([
-    Restaurant.findOne({ userId: ticket.vendorId }).select("restaurantName").lean(),
-    User.findById(ticket.vendorId).select("name email").lean(),
+    isCustomer ? null : Restaurant.findOne({ userId: ownerId }).select("restaurantName").lean(),
+    User.findById(ownerId).select("name email").lean(),
   ]);
 
   return NextResponse.json({
     ticketId: ticket.ticketId,
-    name: restaurant?.restaurantName || user?.name || "Unknown vendor",
+    userType: isCustomer ? "Customer" : "Vendor",
+    name: restaurant?.restaurantName || user?.name || (isCustomer ? "Unknown customer" : "Unknown vendor"),
     email: user?.email,
+    orderId: ticket.orderId ? String(ticket.orderId) : undefined,
     subject: ticket.subject,
     category: ticket.category,
     priority: ticket.priority,

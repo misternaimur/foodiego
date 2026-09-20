@@ -68,9 +68,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
         {/* Drawer Header */}
         <div className="p-5 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShoppingBag size={20} className="text-[#15462D]" />
+            <ShoppingBag size={20} className="text-[#124734]" />
             <h2 className="text-lg font-extrabold text-gray-900">Your Cart</h2>
-            <span className="bg-emerald-100 text-[#15462D] text-xs font-bold px-2.5 py-0.5 rounded-full">
+            <span className="bg-emerald-100 text-[#124734] text-xs font-bold px-2.5 py-0.5 rounded-full">
               {isMounted ? totalCount : 0} items
             </span>
           </div>
@@ -172,7 +172,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose }) => {
               </div>
               <div className="flex justify-between text-sm font-black text-gray-900 pt-2 border-t border-gray-100">
                 <span>Total</span>
-                <span className="text-base text-[#15462D]">${total.toFixed(2)}</span>
+                <span className="text-base text-[#124734]">${total.toFixed(2)}</span>
               </div>
             </div>
 

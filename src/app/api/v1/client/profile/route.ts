@@ -33,6 +33,7 @@ export async function GET() {
       phone: user.phone || "",
     });
   } catch (error) {
+    console.error("Failed to load profile:", error);
     const status = error instanceof BackendError ? error.status : 500;
     return NextResponse.json({ error: "Failed to load profile" }, { status });
   }
@@ -57,6 +58,7 @@ export async function PATCH(req: NextRequest) {
       profile: { name: user.name, email: user.email, phone: user.phone || "" },
     });
   } catch (error) {
+    console.error("Failed to update profile:", error);
     const status = error instanceof BackendError ? error.status : 500;
     return NextResponse.json({ error: "Failed to update profile" }, { status });
   }

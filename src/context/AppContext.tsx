@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { FoodItem } from '@/components/FoodCard';
-import { getClientAuth } from '@/lib/firebase/client';
+import { getClientAuth, hasFirebaseClientConfig } from '@/lib/firebase/client';
 import { logout } from '@/app/(public)/actions/auth';
 import { favoritesApi } from '@/lib/clientApi';
 
@@ -168,7 +168,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Authentication states
     const [user, setUser] = useState<AuthUser | null>(null);
-    const [isAuthLoading, setIsAuthLoading] = useState(true);
+    const [isAuthLoading, setIsAuthLoading] = useState(hasFirebaseClientConfig);
 
     // Restaurant data states
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -176,6 +176,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Effect to monitor Firebase authentication state changes in real-time
     useEffect(() => {
+        if (!hasFirebaseClientConfig()) {
+            return;
+        }
+
         const unsubscribe = onAuthStateChanged(getClientAuth(), (firebaseUser) => {
             setUser(normalizeAuthUser(firebaseUser));
             setIsAuthLoading(false);

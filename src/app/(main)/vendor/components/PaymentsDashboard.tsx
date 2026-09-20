@@ -255,7 +255,7 @@ export default function PaymentsDashboard() {
                 "Transaction ID,Order ID,Customer,Date,Gross Amount,Commission,Net Earnings,Status",
                 ...(overview?.transactions || []).map(
                   (t) =>
-                    `"${t.id}","${t.orderId}","${t.customerName}","${t.date}","৳${t.grossAmount.toLocaleString()}","-৳${t.commission.toLocaleString()}","৳${t.netEarnings.toLocaleString()}","${t.status}"`
+                    `"${t.id}","${t.orderId}","${t.customerName}","${t.date}","$${t.grossAmount.toLocaleString()}","-$${t.commission.toLocaleString()}","$${t.netEarnings.toLocaleString()}","${t.status}"`
                 ),
               ].join("\n");
               const blob = new Blob([csv], { type: "text/csv" });
@@ -298,7 +298,7 @@ export default function PaymentsDashboard() {
               value={
                 <AnimatedCounter
                   value={overview?.totalEarnings || 245000}
-                  prefix="৳"
+                  prefix="$"
                   duration={2}
                 />
               }
@@ -323,7 +323,7 @@ export default function PaymentsDashboard() {
               value={
                 <AnimatedCounter
                   value={overview?.availableBalance || 45200}
-                  prefix="৳"
+                  prefix="$"
                   duration={1.5}
                 />
               }
@@ -340,7 +340,7 @@ export default function PaymentsDashboard() {
               value={
                 <AnimatedCounter
                   value={overview?.pendingBalance || 12000}
-                  prefix="৳"
+                  prefix="$"
                   duration={1.5}
                 />
               }
@@ -404,7 +404,7 @@ export default function PaymentsDashboard() {
                   tick={{ fontSize: 10, fill: "#9ca3af" }}
                   axisLine={false}
                   tickLine={false}
-                  tickFormatter={(v) => `৳${v}`}
+                  tickFormatter={(v) => `$${v}`}
                 />
                 <Tooltip
                   content={({ active, payload, label }) => {
@@ -421,11 +421,11 @@ export default function PaymentsDashboard() {
                         <div className="mt-1 space-y-1 text-xs">
                           <p className="flex items-center justify-between gap-4">
                             <span className="text-gray-500">Gross</span>
-                            <span className="font-semibold text-gray-900">৳{payload[0]?.value?.toLocaleString()}</span>
+                            <span className="font-semibold text-gray-900">${payload[0]?.value?.toLocaleString()}</span>
                           </p>
                           <p className="flex items-center justify-between gap-4">
                             <span className="text-gray-500">Net</span>
-                            <span className="font-semibold text-gray-900">৳{payload[1]?.value?.toLocaleString()}</span>
+                            <span className="font-semibold text-gray-900">${payload[1]?.value?.toLocaleString()}</span>
                           </p>
                         </div>
                       </motion.div>
@@ -554,7 +554,7 @@ export default function PaymentsDashboard() {
                   <th className="pb-3 font-semibold text-gray-500 uppercase tracking-wider">DATE</th>
                   <th className="pb-3 font-semibold text-gray-500 uppercase tracking-wider text-right">GROSS AMOUNT</th>
                   <th className="pb-3 font-semibold text-gray-500 uppercase tracking-wider text-right">COMMISSION (15%)</th>
-                  <th className="pb-3 font-semibold text-gray-500 uppercase tracking-wider text-right">NET EARNINGS (৳)</th>
+                  <th className="pb-3 font-semibold text-gray-500 uppercase tracking-wider text-right">NET EARNINGS ($)</th>
                   <th className="pb-3 font-semibold text-gray-500 uppercase tracking-wider">STATUS</th>
                 </tr>
               </thead>
@@ -570,9 +570,9 @@ export default function PaymentsDashboard() {
                     <td className="py-3 font-mono font-medium text-gray-900">{txn.id}</td>
                     <td className="py-3 text-gray-600">{txn.orderId}</td>
                     <td className="py-3 text-gray-500">{txn.date}</td>
-                    <td className="py-3 text-right font-medium text-gray-900">৳{txn.grossAmount.toLocaleString()}</td>
-                    <td className="py-3 text-right text-red-500">-৳{txn.commission.toLocaleString()}</td>
-                    <td className="py-3 text-right font-semibold text-emerald-600">৳{txn.netEarnings.toLocaleString()}</td>
+                    <td className="py-3 text-right font-medium text-gray-900">${txn.grossAmount.toLocaleString()}</td>
+                    <td className="py-3 text-right text-red-500">-${txn.commission.toLocaleString()}</td>
+                    <td className="py-3 text-right font-semibold text-emerald-600">${txn.netEarnings.toLocaleString()}</td>
                     <td className="py-3">{getStatusBadge(txn.status)}</td>
                   </motion.tr>
                 ))}

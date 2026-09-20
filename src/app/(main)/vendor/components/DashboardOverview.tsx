@@ -34,7 +34,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         <p className="text-xs font-medium text-slate-500">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} className="text-sm font-bold text-emerald-700 mt-1">
-            {entry.name}: ৳{entry.value.toLocaleString()}
+            {entry.name}: ${entry.value.toLocaleString()}
           </p>
         ))}
       </div>
@@ -121,7 +121,7 @@ export default function DashboardOverview() {
   const bestSellers = stats.bestSellers ?? [];
   const ratingBreakdown = stats.ratingBreakdown ?? [];
   const recentOrders = stats.recentOrders ?? [];
-  const formatCurrency = (value: number) => `৳${(value ?? 0).toLocaleString()}`;
+  const formatCurrency = (value: number) => `$${(value ?? 0).toLocaleString()}`;
 
   return (
     <motion.div variants={staggerContainer} initial="initial" animate="animate" className="space-y-6">
@@ -171,7 +171,7 @@ export default function DashboardOverview() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#64748B" }} tickMargin={8} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#64748B" }} tickCount={5} tickFormatter={(value) => `৳${(value / 1000).toFixed(0)}k`} width={50} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#64748B" }} tickCount={5} tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} width={50} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area
                   type="monotone"

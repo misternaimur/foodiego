@@ -29,7 +29,7 @@ const offers = [
   },
   {
     id: 3,
-    title: "৳100 OFF",
+    title: "$100 OFF",
     subtitle: "On Your First Order",
     description:
       "New to Foodiego? Start your food journey with a special discount on your first order.",

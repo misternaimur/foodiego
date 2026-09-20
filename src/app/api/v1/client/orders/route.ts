@@ -8,6 +8,7 @@ export interface ClientOrderItem {
   name: string;
   price: number;
   quantity: number;
+  specialInstructions?: string;
 }
 
 export interface ClientOrder {
@@ -20,9 +21,10 @@ export interface ClientOrder {
   totalAmount: number;
   deliveryFee: number;
   deliveryAddress: string;
+  deliveryNote?: string;
   paymentMethod: "cash" | "card" | "online";
   paymentStatus: "pending" | "paid" | "failed";
-  status: "pending" | "confirmed" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
+  status: "pending" | "confirmed" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
   createdAt: string;
 }
 
@@ -36,6 +38,11 @@ export async function GET() {
     const orders = await backendFetch<ClientOrder[]>(`/api/orders/customer/${session.id}`);
     return NextResponse.json({ orders });
   } catch (error) {
+    // UPDATE (production-deploy fix): log the real error — these catch
+    // blocks used to swallow it entirely, so a misconfigured/unreachable
+    // backend (e.g. missing BACKEND_URL on Vercel) never showed up
+    // anywhere, not even in server logs.
+    console.error("Failed to load orders:", error);
     const status = error instanceof BackendError ? error.status : 500;
     return NextResponse.json({ error: "Failed to load orders" }, { status });
   }
@@ -47,6 +54,7 @@ interface PlaceOrderBody {
   subtotal: number;
   deliveryFee: number;
   deliveryAddress: string;
+  deliveryNote?: string;
   city: string;
   paymentMethod: "cod" | "online";
 }
@@ -73,12 +81,14 @@ export async function POST(req: NextRequest) {
         totalAmount: body.subtotal + body.deliveryFee,
         deliveryFee: body.deliveryFee,
         deliveryAddress: body.deliveryAddress,
+        deliveryNote: body.deliveryNote || undefined,
         city: body.city,
         paymentMethod: body.paymentMethod === "online" ? "online" : "cash",
       },
     });
     return NextResponse.json({ order }, { status: 201 });
   } catch (error) {
+    console.error("Failed to place order:", error);
     const status = error instanceof BackendError ? error.status : 500;
     return NextResponse.json({ error: "Failed to place order" }, { status });
   }

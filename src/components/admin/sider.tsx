@@ -20,6 +20,7 @@ import {
   MessageCircle,
   Bell,
   LogOut,
+  Globe,
   X,
 } from 'lucide-react';
 import Logo from '../Share/LogoWhite';
@@ -136,7 +137,14 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
           (or just re-visiting /admin) landed you right back in, still
           logged in. It now calls the same logoutUser() every other
           dashboard's logout button uses. */}
-      <div className="p-4 border-t border-[#2e3132]">
+      <div className="p-4 border-t border-[#2e3132] space-y-1">
+        <Link
+          href="/"
+          onClick={onNavigate}
+          className="flex items-center gap-3 px-4 py-2.5 text-[#0d9488] hover:bg-[#2b2e2f] rounded-xl transition-colors font-medium text-sm"
+        >
+          <Globe size={18} /> Return to Home
+        </Link>
         <button
           type="button"
           onClick={() => {

@@ -4,8 +4,9 @@ import { verifySessionCookie } from "@/lib/session";
 import { dbConnect } from "@/lib/dbConnect";
 import { User } from "@/models/User";
 import { Restaurant } from "@/models/Restaurant";
-import { OrderBooking } from "@/models/OrderBooking";
-import { toVendorOrderStatus, VENDOR_ACTION_TO_ORDER_STATUS } from "@/lib/orderStatusMap";
+import { OrderBooking, type OrderBookingStatus } from "@/models/OrderBooking";
+import { toVendorOrderStatus } from "@/lib/orderStatusMap";
+import { backendFetchAsUser, BackendError } from "@/lib/backend";
 
 // UPDATE: this route used to read the (unused, always-empty) `Order` model.
 // It now reads `OrderBooking`, which is what the real customer checkout flow
@@ -50,6 +51,7 @@ export async function GET(req: NextRequest) {
       price: item.price,
       image: "",
       addons: [] as { name: string; price: number }[],
+      specialInstructions: item.specialInstructions || "",
     }));
 
     return {
@@ -71,12 +73,26 @@ export async function GET(req: NextRequest) {
       deliveryFee: o.deliveryFee || 0,
       total: o.totalAmount || 0,
       createdAt: o.createdAt.toISOString(),
-      notes: "",
+      notes: o.deliveryNote || "",
     };
   });
 
   return NextResponse.json(formattedOrders);
 }
+
+// UPDATE (order-lifecycle fix): this used to update OrderBooking.status
+// directly with no validation of the current status — a vendor could
+// technically "accept" an order that was already cancelled, or double-fire
+// a stale request. It now proxies to foodiego-backend's
+// PATCH /api/orders/:id/vendor-action, which enforces the real
+// pending->preparing->ready state machine server-side (see
+// orderBookingRoutes.js) and is the single place that logic lives — also
+// used directly by anything else that talks to foodiego-backend.
+const ACTION_TO_VENDOR_ACTION: Record<string, "accept" | "reject" | "ready"> = {
+  accept: "accept",
+  reject: "reject",
+  ready: "ready",
+};
 
 export async function POST(req: NextRequest) {
   const sessionCookie = req.cookies.get("session")?.value;
@@ -91,11 +107,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const restaurant = await Restaurant.findOne({ userId: user._id }).lean();
-  if (!restaurant) {
-    return NextResponse.json({ error: "Restaurant not found" }, { status: 404 });
-  }
-
   const body = await req.json();
   const { orderId, action } = body;
 
@@ -103,31 +114,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing orderId or action" }, { status: 400 });
   }
 
-  const newStatus = VENDOR_ACTION_TO_ORDER_STATUS[action];
-  if (!newStatus) {
+  const vendorAction = ACTION_TO_VENDOR_ACTION[action];
+  if (!vendorAction) {
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   }
 
-  // `orderId` here is the OrderBooking document's own _id (see the `id` field
-  // built in GET above) — scoped to this vendor's restaurantId so one vendor
-  // can never move another vendor's order.
-  const order = await OrderBooking.findOneAndUpdate(
-    { _id: orderId, restaurantId: restaurant._id },
-    { status: newStatus },
-    { new: true }
-  ).lean();
+  try {
+    const order = await backendFetchAsUser<{ status: OrderBookingStatus }>(
+      { id: user._id.toString(), role: user.role },
+      `/api/orders/${orderId}/vendor-action`,
+      { method: "PATCH", body: { action: vendorAction } }
+    );
 
-  if (!order) {
-    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    return NextResponse.json({
+      success: true,
+      orderId,
+      action,
+      newStatus: toVendorOrderStatus(order.status),
+      message: `Order ${action} processed successfully`,
+    });
+  } catch (error) {
+    console.error("Failed to update order status:", error);
+    const status = error instanceof BackendError ? error.status : 500;
+    const message = error instanceof BackendError ? error.message : "Failed to update order";
+    return NextResponse.json({ error: message }, { status });
   }
-
-  return NextResponse.json({
-    success: true,
-    orderId,
-    action,
-    newStatus: toVendorOrderStatus(newStatus),
-    message: `Order ${action} processed successfully`,
-  });
 }
 
 function formatTimeAgo(date: Date | string): string {

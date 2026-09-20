@@ -2,10 +2,6 @@ import mongoose from "mongoose";
 
 const MONGODB_URL = process.env.MONGODB_URL;
 
-if (!MONGODB_URL) {
-  throw new Error("Missing MONGODB_URL environment variable");
-}
-
 interface MongooseCache {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -21,8 +17,12 @@ global._mongooseCache = cache;
 export async function dbConnect() {
   if (cache.conn) return cache.conn;
 
+  if (!MONGODB_URL) {
+    throw new Error("Missing MONGODB_URL environment variable");
+  }
+
   if (!cache.promise) {
-    cache.promise = mongoose.connect(MONGODB_URL as string, {
+    cache.promise = mongoose.connect(MONGODB_URL, {
       dbName: "FoodBackend",
     });
   }

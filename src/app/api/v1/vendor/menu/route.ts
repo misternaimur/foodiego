@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { verifySessionCookie } from "@/lib/session";
 import { dbConnect } from "@/lib/dbConnect";
 import { User } from "@/models/User";
+import { Restaurant } from "@/models/Restaurant";
 import { MenuItem } from "@/models/MenuItem";
 
 export interface MenuItemAddon {
@@ -274,7 +275,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const filter: Record<string, unknown> = { vendorId: user._id };
+  // UPDATE (menu-visibility fix): items are linked by Restaurant._id, not
+  // User._id — see the matching comment in vendor/menu/create/route.ts.
+  const restaurant = await Restaurant.findOne({ userId: user._id }).lean();
+  if (!restaurant) {
+    return NextResponse.json({ error: "Restaurant profile not found" }, { status: 404 });
+  }
+
+  const filter: Record<string, unknown> = { vendorId: restaurant._id };
   if (category) filter.category = category;
   if (search) filter.name = { $regex: search, $options: "i" };
 
@@ -342,6 +350,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // UPDATE (menu-visibility fix): items are linked by Restaurant._id, not
+  // User._id — see the matching comment in vendor/menu/create/route.ts.
+  const restaurant = await Restaurant.findOne({ userId: user._id }).lean();
+  if (!restaurant) {
+    return NextResponse.json({ error: "Restaurant profile not found" }, { status: 404 });
+  }
+
   const body = await req.json();
   const { name, category, price, description, image, addons } = body;
 
@@ -353,7 +368,7 @@ export async function POST(req: NextRequest) {
   }
 
   const item = await MenuItem.create({
-    vendorId: user._id,
+    vendorId: restaurant._id,
     name,
     category,
     price,

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Bell,
   HelpCircle,
   Search,
   User,
@@ -21,6 +20,8 @@ import { useApp } from "@/context/AppContext";
 import { useVendorProfile, useUpdateVendorProfile } from "@/hooks/useVendorProfile";
 import { springTransition } from "@/app/(main)/vendor/components/motion";
 import { useVendorMobileNav } from "./VendorMobileNavContext";
+import NotificationBell from "@/components/shared/NotificationBell";
+import ThemeToggle from "@/components/shared/ThemeToggle";
 
 interface VendorHeaderProps {
   userName?: string;
@@ -150,17 +151,9 @@ export default function VendorHeader({ userName, userEmail }: VendorHeaderProps)
       </form>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-        <motion.button
-          type="button"
-          whileHover={{ y: -2 }}
-          whileTap={{ scale: 0.95 }}
-          transition={springTransition}
-          className="relative rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-          aria-label="Notifications"
-        >
-          <Bell size={20} />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
-        </motion.button>
+        <NotificationBell />
+
+        <ThemeToggle className="rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 cursor-pointer" />
 
         <motion.button
           type="button"

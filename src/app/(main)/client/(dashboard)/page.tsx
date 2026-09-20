@@ -30,7 +30,7 @@ export default function ClientOverviewPage() {
     { label: "Total Orders", value: String(orders.length), icon: ShoppingBag, color: "bg-emerald-50 text-[#15462D]" },
     { label: "Active Orders", value: String(activeOrders.length), icon: Clock, color: "bg-amber-50 text-amber-600" },
     { label: "Favorites", value: String(favorites.length), icon: Heart, color: "bg-rose-50 text-rose-600" },
-    { label: "Total Spent", value: `৳${totalSpent.toLocaleString()}`, icon: DollarSign, color: "bg-sky-50 text-sky-600" },
+    { label: "Total Spent", value: `$${totalSpent.toLocaleString()}`, icon: DollarSign, color: "bg-sky-50 text-sky-600" },
   ];
 
   return (
@@ -110,7 +110,7 @@ export default function ClientOverviewPage() {
                       #{order._id.slice(-6).toUpperCase()} &middot; {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  <p className="text-sm font-extrabold text-gray-900">৳{order.totalAmount.toLocaleString()}</p>
+                  <p className="text-sm font-extrabold text-gray-900">${order.totalAmount.toLocaleString()}</p>
                 </div>
               );
             })

@@ -147,7 +147,7 @@ function RevenueTrendChart({ data }: { data: AnalyticsData["revenueTrend"] }) {
           <h2 className="text-sm font-black text-slate-800">Revenue Trend</h2>
           <p className="mt-0.5 text-xs text-slate-400">Last 7 days</p>
         </div>
-        <span className="text-xs font-bold text-slate-500">Total: ৳{(data?.reduce((s, d) => s + (d.revenue ?? 0), 0) ?? 0 / 1000).toFixed(0)}k</span>
+        <span className="text-xs font-bold text-slate-500">Total: ${(data?.reduce((s, d) => s + (d.revenue ?? 0), 0) ?? 0 / 1000).toFixed(0)}k</span>
       </div>
       <div className="h-[220px] w-full">
         <ResponsiveContainer width="100%" height="100%">
@@ -160,7 +160,7 @@ function RevenueTrendChart({ data }: { data: AnalyticsData["revenueTrend"] }) {
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
             <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} tickMargin={6} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94A3B8" }} tickCount={5} tickFormatter={(v) => `৳${v / 1000}k`} width={46} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94A3B8" }} tickCount={5} tickFormatter={(v) => `$${v / 1000}k`} width={46} />
             <Tooltip contentStyle={{ backgroundColor: "rgba(255,255,255,0.96)", border: "1px solid #E2E8F0", borderRadius: 12, padding: "8px 12px" }} labelStyle={{ fontSize: 11, color: "#334155" }} itemStyle={{ fontSize: 11, color: "#059669" }} />
             <Area type="monotone" dataKey="revenue" stroke="#10B981" strokeWidth={2.5} fill="url(#revGradient)" dot={{ r: 3, fill: "#10B981" }} activeDot={{ r: 5, fill: "#10B981", stroke: "#ffffff", strokeWidth: 2 }} />
           </AreaChart>
@@ -208,9 +208,9 @@ export default function AnalyticsDashboard() {
       </motion.div>
 
       <motion.div variants={staggerContainer} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard title="Total Sales" value={(analytics.totalSales ?? 0)} change={analytics.salesChange ?? 0} icon={<DollarSign size={18} />} iconBg="bg-emerald-50 text-emerald-600" prefix="৳" delay={0.05} />
+        <MetricCard title="Total Sales" value={(analytics.totalSales ?? 0)} change={analytics.salesChange ?? 0} icon={<DollarSign size={18} />} iconBg="bg-emerald-50 text-emerald-600" prefix="$" delay={0.05} />
         <MetricCard title="Total Orders" value={(analytics.totalOrders ?? 0)} change={analytics.ordersChange ?? 0} icon={<ShoppingBag size={18} />} iconBg="bg-sky-50 text-sky-600" delay={0.1} />
-        <MetricCard title="Avg. Order Value" value={(analytics.avgOrderValue ?? 0)} change={analytics.avgOrderChange ?? 0} icon={<TrendingUp size={18} />} iconBg="bg-amber-50 text-amber-600" prefix="৳" delay={0.15} />
+        <MetricCard title="Avg. Order Value" value={(analytics.avgOrderValue ?? 0)} change={analytics.avgOrderChange ?? 0} icon={<TrendingUp size={18} />} iconBg="bg-amber-50 text-amber-600" prefix="$" delay={0.15} />
         <LiveVelocityCard ordersPerMinute={analytics.ordersPerMinute ?? 0} />
       </motion.div>
 
@@ -234,7 +234,7 @@ export default function AnalyticsDashboard() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94A3B8" }} tickMargin={6} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94A3B8" }} tickCount={5} tickFormatter={(v) => `৳${v / 1000}k`} width={46} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94A3B8" }} tickCount={5} tickFormatter={(v) => `$${v / 1000}k`} width={46} />
                 <Tooltip contentStyle={{ backgroundColor: "rgba(255,255,255,0.96)", border: "1px solid #E2E8F0", borderRadius: 12 }} labelStyle={{ fontSize: 11, color: "#334155" }} itemStyle={{ fontSize: 11, color: "#0D9488" }} />
                 <Area type="monotone" dataKey="revenue" stroke="#0D9488" strokeWidth={2} fill="url(#areaDash)" dot={{ r: 3, fill: "#0D9488" }} />
               </AreaChart>
@@ -274,7 +274,7 @@ export default function AnalyticsDashboard() {
                       <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ backgroundColor: `${item.color}20`, color: item.color }}>#{idx + 1}</span>
                       <span className="font-semibold text-sm text-slate-900">{item.name}</span>
                     </div>
-                    <span className="text-sm font-bold text-slate-900">৳{(item.revenue ?? 0).toLocaleString()}</span>
+                    <span className="text-sm font-bold text-slate-900">${(item.revenue ?? 0).toLocaleString()}</span>
                   </div>
                   <div className="relative h-2 w-full overflow-hidden rounded-full bg-slate-100">
                     <motion.div className="h-full rounded-full" style={{ backgroundColor: item.color }} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8, delay: idx * 0.1 }} />

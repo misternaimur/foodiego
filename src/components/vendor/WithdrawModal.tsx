@@ -57,7 +57,7 @@ export default function WithdrawModal({
               </div>
 
               <p className="text-sm text-gray-600 mb-4">
-                Available balance: <span className="font-bold text-gray-900">৳{availableBalance.toLocaleString()}</span>
+                Available balance: <span className="font-bold text-gray-900">${availableBalance.toLocaleString()}</span>
               </p>
 
               <WithdrawForm
@@ -101,7 +101,7 @@ function WithdrawForm({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-xs font-medium text-gray-500 mb-1">Amount (৳)</label>
+        <label className="block text-xs font-medium text-gray-500 mb-1">Amount ($)</label>
         <input
           type="number"
           value={amount || ""}
@@ -120,7 +120,7 @@ function WithdrawForm({
             onClick={() => setAmount(amt > availableBalance ? availableBalance : amt)}
             className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
           >
-            ৳{amt.toLocaleString()}
+            ${amt.toLocaleString()}
           </motion.button>
         ))}
       </div>
@@ -143,7 +143,7 @@ function WithdrawForm({
               >
                 {createElement(IconComp, { size: 20, className: selectedMethod === m.id ? "text-emerald-600" : "text-gray-500" })}
                 <span className="font-medium text-gray-800">{m.label}</span>
-                {m.fee > 0 && <span className="ml-auto text-xs text-gray-500">Fee: ৳{m.fee}</span>}
+                {m.fee > 0 && <span className="ml-auto text-xs text-gray-500">Fee: ${m.fee}</span>}
               </motion.button>
             );
           })}
@@ -189,7 +189,7 @@ function WithdrawForm({
         ) : (
           <>
             <Wallet size={16} />
-            Withdraw ৳{amount.toLocaleString()}
+            Withdraw ${amount.toLocaleString()}
           </>
         )}
       </motion.button>

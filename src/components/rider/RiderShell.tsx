@@ -20,8 +20,11 @@ import {
   X,
   User,
   Star,
+  Globe,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
+import NotificationBell from "@/components/shared/NotificationBell";
+import ThemeToggle from "@/components/shared/ThemeToggle";
 
 // UPDATE (rider-dashboard real-data fix): the sidebar used to hardcode
 // "Afrin" and a fixed "4.9 Rating" on every rider sub-page (orders,
@@ -141,6 +144,19 @@ export default function RiderShell({
                   );
                 })}
 
+                {/* Return to Home */}
+                <motion.a
+                  href="/"
+                  onClick={() => setMobileMenu(false)}
+                  whileHover={{ x: 2 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className="mb-1 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
+                >
+                  <Globe className="h-4 w-4" />
+                  Return to Home
+                </motion.a>
+
                 {/* Logout */}
                 <motion.button
                   type="button"
@@ -172,8 +188,14 @@ export default function RiderShell({
 
           {/* ================= MAIN ================= */}
           <main className="min-w-0 flex-1">
-            {/* Mobile Menu Button */}
-            <MobileMenuButton />
+            {/* Top bar: mobile menu button + notifications */}
+            <div className="flex items-center justify-between gap-2 px-5 pt-5 lg:justify-end lg:px-8">
+              <MobileMenuButton />
+              <div className="flex items-center gap-2">
+                <ThemeToggle className="relative rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 cursor-pointer" />
+                <NotificationBell buttonClassName="relative rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900" />
+              </div>
+            </div>
 
             {/* Content with fade-in */}
             <motion.div
@@ -196,16 +218,14 @@ export default function RiderShell({
 function MobileMenuButton() {
   const { setMobileMenu } = useRiderShell();
   return (
-    <div className="px-5 pt-5 lg:hidden">
-      <motion.button
-        type="button"
-        onClick={() => setMobileMenu(true)}
-        whileTap={{ scale: 0.95 }}
-        className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm transition hover:bg-slate-50"
-        aria-label="Open menu"
-      >
-        <Menu className="h-5 w-5 text-slate-700" />
-      </motion.button>
-    </div>
+    <motion.button
+      type="button"
+      onClick={() => setMobileMenu(true)}
+      whileTap={{ scale: 0.95 }}
+      className="rounded-lg border border-slate-200 bg-white p-2 shadow-sm transition hover:bg-slate-50 lg:hidden"
+      aria-label="Open menu"
+    >
+      <Menu className="h-5 w-5 text-slate-700" />
+    </motion.button>
   );
 }

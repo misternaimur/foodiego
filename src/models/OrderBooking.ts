@@ -13,6 +13,7 @@ export const ORDER_STATUSES = [
   "pending",
   "confirmed",
   "preparing",
+  "ready",
   "out_for_delivery",
   "delivered",
   "cancelled",
@@ -24,6 +25,7 @@ export interface OrderBookingItem {
   name: string;
   price: number;
   quantity: number;
+  specialInstructions?: string;
 }
 
 export interface OrderBookingDocument {
@@ -36,10 +38,23 @@ export interface OrderBookingDocument {
   totalAmount: number;
   deliveryFee: number;
   deliveryAddress: string;
+  deliveryNote?: string;
   city?: string;
   paymentMethod: "cash" | "card" | "online";
   paymentStatus: "pending" | "paid" | "failed";
   status: OrderBookingStatus;
+  // UPDATE (order-lifecycle fix): timestamps for the two rider-triggered
+  // transitions, so delivery time can be reported honestly (was previously
+  // impossible to compute — only createdAt/updatedAt existed, and
+  // updatedAt gets clobbered by every unrelated field edit too).
+  pickedUpAt?: Date;
+  deliveredAt?: Date;
+  // UPDATE (rider-rating fix): the Rider model always had a `rating` field,
+  // but nothing anywhere ever wrote to it - there was no rider-facing
+  // counterpart to the real restaurant/food review system. One rating per
+  // delivered order, set once (see the rider-rating route), used to
+  // recompute Rider.rating as a simple average.
+  riderRating?: number;
   // UPDATE (admin-refunds fix): admin/refunds used to be a fully local
   // mock table with a `handleApprove`/`handleReject` that only updated
   // component state (reset on refresh). There's no dedicated Refund model
@@ -64,16 +79,21 @@ const OrderBookingSchema = new Schema<OrderBookingDocument>(
         name: { type: String },
         price: { type: Number },
         quantity: { type: Number },
+        specialInstructions: { type: String, trim: true },
       },
     ],
     totalAmount: { type: Number, default: 0 },
     deliveryFee: { type: Number, default: 0 },
     deliveryAddress: { type: String },
+    deliveryNote: { type: String, trim: true },
     city: { type: String, trim: true },
     paymentMethod: { type: String, enum: ["cash", "card", "online"], default: "cash" },
     paymentStatus: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
     status: { type: String, enum: ORDER_STATUSES, default: "pending" },
     refundStatus: { type: String, enum: ["pending", "approved", "rejected"] },
+    pickedUpAt: { type: Date },
+    deliveredAt: { type: Date },
+    riderRating: { type: Number, min: 1, max: 5 },
   },
   { timestamps: true, strict: false }
 );

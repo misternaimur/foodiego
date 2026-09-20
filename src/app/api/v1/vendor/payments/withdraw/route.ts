@@ -49,6 +49,6 @@ export async function POST(req: NextRequest) {
     amount,
     method,
     account,
-    message: `Withdrawal of ৳${amount} recorded via ${method}. (No live payment gateway is configured, so this updates your Foodiego balance only.)`,
+    message: `Withdrawal of $${amount} recorded via ${method}. (No live payment gateway is configured, so this updates your Foodiego balance only.)`,
   });
 }

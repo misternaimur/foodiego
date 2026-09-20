@@ -1,7 +1,6 @@
 "use server";
 
 import { verifySession } from "@/lib/dal";
-import cloudinary from "@/lib/cloudinary";
 import { z } from "zod";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -42,35 +41,43 @@ function isSupportedImage(buffer: Buffer, mimeType: string) {
   return false;
 }
 
-function uploadBuffer(buffer: Buffer, folder: string) {
-  return new Promise<{
-    public_id: string;
-    secure_url: string;
-    width: number;
-    height: number;
-    format: string;
-  }>((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: `foodiego/${folder}`,
-        resource_type: "image",
-        transformation: [
-          { width: 1600, height: 1600, crop: "limit" },
-          { quality: "auto", fetch_format: "auto" },
-        ],
-        invalidate: true,
-      },
-      (error, result) => {
-        if (error || !result) {
-          reject(error ?? new Error("Cloudinary did not return an upload result."));
-          return;
-        }
-        resolve(result);
-      },
-    );
+async function uploadToImgBB(buffer: Buffer, fileName: string, mimeType: string) {
+  const apiKey = process.env.IMGBB_API_KEY;
+  if (!apiKey) throw new Error("Missing IMGBB_API_KEY environment variable.");
 
-    stream.end(buffer);
+  const body = new URLSearchParams({
+    key: apiKey,
+    image: buffer.toString("base64"),
+    name: fileName.replace(/\.[^/.]+$/, ""),
   });
+  const response = await fetch("https://api.imgbb.com/1/upload", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  const payload = (await response.json()) as {
+    success?: boolean;
+    error?: { message?: string };
+    data?: {
+      id?: string;
+      url?: string;
+      display_url?: string;
+      width?: number;
+      height?: number;
+      image?: { extension?: string };
+    };
+  };
+
+  if (!response.ok || !payload.success || !payload.data?.url) {
+    throw new Error(payload.error?.message || `ImgBB upload failed (${response.status}).`);
+  }
+  return {
+    id: payload.data.id || fileName,
+    url: payload.data.display_url || payload.data.url,
+    width: payload.data.width || 0,
+    height: payload.data.height || 0,
+    format: payload.data.image?.extension || mimeType.split("/")[1] || "image",
+  };
 }
 
 export async function uploadImage(formData: FormData): Promise<ImageUploadResult> {
@@ -100,13 +107,13 @@ export async function uploadImage(formData: FormData): Promise<ImageUploadResult
       return { success: false, error: "The selected file is not a valid image." };
     }
 
-    const result = await uploadBuffer(buffer, parsedOptions.data.folder);
+    const result = await uploadToImgBB(buffer, fileValue.name, fileValue.type);
     return {
       success: true,
       data: {
-        assetId: result.public_id,
-        publicId: result.public_id,
-        secureUrl: result.secure_url,
+        assetId: result.id,
+        publicId: result.id,
+        secureUrl: result.url,
         width: result.width,
         height: result.height,
         format: result.format,

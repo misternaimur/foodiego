@@ -21,6 +21,7 @@ import {
   MoreHorizontal,
   Phone as PhoneIcon,
   Check,
+  ChefHat,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Order } from "@/hooks/useVendorQueries";
@@ -91,13 +92,14 @@ export default function OrdersManagement() {
     onMutate: async ({ orderId, action }) => {
       await queryClient.cancelQueries({ queryKey: ["orders"] });
       const previous = queryClient.getQueryData<Order[]>(["orders"]);
+      const optimisticStatus: Record<string, Order["status"]> = {
+        accept: "preparing",
+        reject: "rejected",
+        ready: "ready",
+      };
       queryClient.setQueryData(["orders"], (old: Order[] | undefined) =>
         old
-          ? old.map((o) =>
-              o.id === orderId
-                ? { ...o, status: action === "accept" ? "preparing" : action === "reject" ? "rejected" : o.status }
-                : o
-            )
+          ? old.map((o) => (o.id === orderId ? { ...o, status: optimisticStatus[action] ?? o.status } : o))
           : []
       );
       return { previous };
@@ -118,6 +120,15 @@ export default function OrdersManagement() {
     orderMutation.mutate({ orderId: order.id, action: "reject" });
   };
 
+  // UPDATE (order-lifecycle fix): previously there was no way at all to move
+  // an order past "preparing" from the vendor UI — the kitchen finishing
+  // food had no button to press, so orders got stuck. This is the vendor
+  // half of the fix; the rider half (Picked Up / Delivered) lives in
+  // RiderDashboard.tsx / rider/deliveries.
+  const handleMarkReady = (order: Order) => {
+    orderMutation.mutate({ orderId: order.id, action: "ready" });
+  };
+
   useEffect(() => {
     if (!initialOrderSet.current && !selectedOrder && orders.length > 0) {
       initialOrderSet.current = true;
@@ -133,7 +144,7 @@ export default function OrdersManagement() {
 
   const currentOrders = orders.filter((order: Order) => order.status === safeTab);
 
-  const formatCurrency = (value?: number | null) => `৳${(value ?? 0).toLocaleString()}`;
+  const formatCurrency = (value?: number | null) => `$${(value ?? 0).toLocaleString()}`;
 
   const getTabCount = (status: Order["status"]) => orders.filter((o) => o.status === status).length;
 
@@ -304,25 +315,39 @@ export default function OrdersManagement() {
                         </div>
                       </div>
 
-                      {/* Bottom Actions */}
-                      <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                        <motion.button
-                          whileTap={{ scale: 0.97 }}
-                          onClick={(e) => { e.stopPropagation(); handleReject(order); }}
-                          className="flex-1 rounded-xl border border-rose-300 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <X size={14} />
-                          Reject
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.97 }}
-                          onClick={(e) => { e.stopPropagation(); handleAccept(order); }}
-                          className="flex-1 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 transition-colors shadow-sm shadow-emerald-500/20 flex items-center justify-center gap-2"
-                        >
-                          <Check size={14} />
-                          Accept Order
-                        </motion.button>
-                      </div>
+                      {/* Bottom Actions — vary by status; a "ready"/"picked_up"/"delivered"/"rejected" order has nothing left for the vendor to do */}
+                      {order.status === "new" && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                          <motion.button
+                            whileTap={{ scale: 0.97 }}
+                            onClick={(e) => { e.stopPropagation(); handleReject(order); }}
+                            className="flex-1 rounded-xl border border-rose-300 bg-white px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-50 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <X size={14} />
+                            Reject
+                          </motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.97 }}
+                            onClick={(e) => { e.stopPropagation(); handleAccept(order); }}
+                            className="flex-1 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 transition-colors shadow-sm shadow-emerald-500/20 flex items-center justify-center gap-2"
+                          >
+                            <Check size={14} />
+                            Accept Order
+                          </motion.button>
+                        </div>
+                      )}
+                      {order.status === "preparing" && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                          <motion.button
+                            whileTap={{ scale: 0.97 }}
+                            onClick={(e) => { e.stopPropagation(); handleMarkReady(order); }}
+                            className="flex-1 rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-600 transition-colors shadow-sm shadow-blue-500/20 flex items-center justify-center gap-2"
+                          >
+                            <ChefHat size={14} />
+                            Mark Ready for Pickup
+                          </motion.button>
+                        </div>
+                      )}
                     </motion.div>
                   ))}
                 </AnimatePresence>
@@ -423,23 +448,36 @@ export default function OrdersManagement() {
                                   <p className="text-sm font-black text-slate-900">{formatCurrency((item.price ?? 0) * (item.quantity ?? 0))}</p>
                                 </div>
                                 <div className="mt-1 flex items-center gap-2 flex-wrap text-xs text-slate-500">
-                                  <span>{item.quantity ?? 0}x • ৳{(item.price ?? 0).toLocaleString()} each</span>
+                                  <span>{item.quantity ?? 0}x • ${(item.price ?? 0).toLocaleString()} each</span>
                                   {item.addons && item.addons.length > 0 && (
                                     <span className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5">
                                       <span>Add</span>
                                       {item.addons.map((addon) => (
                                         <span key={addon.name} className="font-medium text-emerald-700">
-                                          {addon.name} (+৳{addon.price})
+                                          {addon.name} (+${addon.price})
                                         </span>
                                       ))}
                                     </span>
                                   )}
                                 </div>
+                                {item.specialInstructions && (
+                                  <p className="mt-1.5 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-800">
+                                    <span className="font-semibold">Note:</span> {item.specialInstructions}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           ))}
                         </div>
                       </div>
+
+                      {/* Delivery Instructions — captured at checkout, previously silently dropped */}
+                      {selectedOrder.notes && (
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+                          <h3 className="text-xs font-bold text-amber-700 uppercase tracking-wider mb-2">Delivery Instructions</h3>
+                          <p className="text-sm text-amber-900">{selectedOrder.notes}</p>
+                        </div>
+                      )}
 
                       {/* Payment Summary Box */}
                       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -466,24 +504,48 @@ export default function OrdersManagement() {
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
+                      {/* Action Buttons — vary by status */}
                       <div className="mt-auto flex flex-col gap-3 pt-2">
-                        <motion.button
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleAccept(selectedOrder)}
-                          className="w-full rounded-xl bg-emerald-500 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
-                        >
-                          <CheckCircle size={18} />
-                          Accept Order
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleReject(selectedOrder)}
-                          className="w-full rounded-xl border-2 border-rose-300 bg-white px-6 py-3.5 text-base font-semibold text-rose-700 hover:bg-rose-50 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <X size={18} />
-                          Reject Order
-                        </motion.button>
+                        {selectedOrder.status === "new" && (
+                          <>
+                            <motion.button
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => handleAccept(selectedOrder)}
+                              className="w-full rounded-xl bg-emerald-500 px-6 py-3.5 text-base font-semibold text-white hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                            >
+                              <CheckCircle size={18} />
+                              Accept Order
+                            </motion.button>
+                            <motion.button
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => handleReject(selectedOrder)}
+                              className="w-full rounded-xl border-2 border-rose-300 bg-white px-6 py-3.5 text-base font-semibold text-rose-700 hover:bg-rose-50 transition-colors flex items-center justify-center gap-2"
+                            >
+                              <X size={18} />
+                              Reject Order
+                            </motion.button>
+                          </>
+                        )}
+                        {selectedOrder.status === "preparing" && (
+                          <motion.button
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleMarkReady(selectedOrder)}
+                            className="w-full rounded-xl bg-blue-500 px-6 py-3.5 text-base font-semibold text-white hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+                          >
+                            <ChefHat size={18} />
+                            Mark Ready for Pickup
+                          </motion.button>
+                        )}
+                        {selectedOrder.status === "ready" && (
+                          <p className="w-full rounded-xl border border-blue-200 bg-blue-50 px-6 py-3.5 text-center text-sm font-semibold text-blue-700">
+                            Waiting for a rider to pick this order up.
+                          </p>
+                        )}
+                        {selectedOrder.status === "picked_up" && (
+                          <p className="w-full rounded-xl border border-violet-200 bg-violet-50 px-6 py-3.5 text-center text-sm font-semibold text-violet-700">
+                            Out for delivery.
+                          </p>
+                        )}
                       </div>
                     </motion.div>
                   ) : (

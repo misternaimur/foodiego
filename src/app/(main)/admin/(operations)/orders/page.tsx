@@ -14,6 +14,7 @@ const STATUS_BADGE: Record<OrderBookingStatus, string> = {
   pending: "bg-amber-50 text-amber-700 border-amber-200",
   confirmed: "bg-sky-50 text-sky-700 border-sky-200",
   preparing: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  ready: "bg-blue-50 text-blue-700 border-blue-200",
   out_for_delivery: "bg-violet-50 text-violet-700 border-violet-200",
   delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
   cancelled: "bg-rose-50 text-rose-700 border-rose-200",
@@ -104,7 +105,7 @@ export default async function AdminOrdersPage({
           </div>
           <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs">
             <span className="text-[11px] font-bold tracking-wider text-gray-400 uppercase">Total Revenue</span>
-            <p className="mt-2 text-2xl font-extrabold text-gray-900">৳{revenue.toLocaleString()}</p>
+            <p className="mt-2 text-2xl font-extrabold text-gray-900">${revenue.toLocaleString()}</p>
           </div>
           <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs">
             <span className="text-[11px] font-bold tracking-wider text-gray-400 uppercase">In Progress</span>
@@ -204,7 +205,7 @@ export default async function AdminOrdersPage({
                         <td className="py-4 px-6 text-gray-700">
                           {restaurant?.restaurantName || o.restaurantName || "—"}
                         </td>
-                        <td className="py-4 px-6 font-semibold text-gray-900">৳{o.totalAmount.toLocaleString()}</td>
+                        <td className="py-4 px-6 font-semibold text-gray-900">${o.totalAmount.toLocaleString()}</td>
                         <td className="py-4 px-6">
                           <span className="capitalize text-gray-600">{o.paymentMethod}</span>
                           <span

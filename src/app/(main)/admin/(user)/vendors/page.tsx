@@ -24,6 +24,7 @@ import { verifyRole } from "@/lib/dal";
 import { Restaurant, type RestaurantStatus } from "@/models/Restaurant";
 import { OrderBooking } from "@/models/OrderBooking";
 import VendorModerationActions from "@/components/admin/VendorModerationActions";
+import VendorCommissionInput from "@/components/admin/VendorCommissionInput";
 import InviteLinkButton from "@/components/admin/InviteLinkButton";
 
 export const dynamic = "force-dynamic";
@@ -304,6 +305,7 @@ export default async function AdminVendorsPage({
                     <th className="py-3.5 px-6">Location</th>
                     <th className="py-3.5 px-6">Orders (MTD)</th>
                     <th className="py-3.5 px-6">Revenue (MTD)</th>
+                    <th className="py-3.5 px-6">Commission</th>
                     <th className="py-3.5 px-6">Status</th>
                     <th className="py-3.5 px-6 text-right">Action</th>
                   </tr>
@@ -357,7 +359,11 @@ export default async function AdminVendorsPage({
                         </td>
 
                         <td className="py-4 px-6 font-semibold text-gray-900">
-                          {stats ? `৳${stats.revenue.toLocaleString()}` : "—"}
+                          {stats ? `$${stats.revenue.toLocaleString()}` : "—"}
+                        </td>
+
+                        <td className="py-4 px-6">
+                          <VendorCommissionInput restaurantId={id} commissionRate={r.commissionRate as number | undefined} />
                         </td>
 
                         <td className="py-4 px-6">

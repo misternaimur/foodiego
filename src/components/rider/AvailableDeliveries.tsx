@@ -150,7 +150,7 @@ export default function AvailableDeliveries() {
                 </p>
                 <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-slate-600">
                   <Wallet className="h-3.5 w-3.5" />
-                  ৳{d.totalAmount.toLocaleString()} &middot; {d.paymentMethod === "cash" ? "Cash on delivery" : d.paymentMethod}
+                  ${d.totalAmount.toLocaleString()} &middot; {d.paymentMethod === "cash" ? "Cash on delivery" : d.paymentMethod}
                 </p>
               </div>
               <button

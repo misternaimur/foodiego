@@ -145,6 +145,87 @@ export const useToggleMenuItem = () => {
   });
 };
 
+// UPDATE (menu-edit fix): new mutation backing the item-edit flow — see
+// src/app/api/v1/vendor/menu/[id]/route.ts for the PATCH endpoint this
+// calls. Mirrors useCreateMenuItem's optimistic-update shape but patches
+// the existing item in the cached list instead of prepending a new one.
+export const useUpdateMenuItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: CreateMenuItemInput & { imageFile?: File };
+    }) => {
+      let imageUrl = input.image ?? "";
+
+      if (input.imageFile) {
+        const formData = new FormData();
+        formData.append("file", input.imageFile);
+        formData.append("folder", "menu-items");
+        try {
+          const uploadResult = await uploadImage(formData);
+          if (uploadResult.success) {
+            imageUrl = uploadResult.data.secureUrl;
+          } else {
+            throw new Error(uploadResult.error);
+          }
+        } catch (error) {
+          throw new Error(error instanceof Error ? error.message : "Image upload failed.");
+        }
+      }
+
+      const res = await fetch(`/api/v1/vendor/menu/${id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...input, image: imageUrl }),
+      });
+      if (!res.ok) throw new Error("Failed to update item");
+      const response = await res.json();
+      return response.item ?? response;
+    },
+    onMutate: async ({ id, input }) => {
+      await queryClient.cancelQueries({ queryKey: ["vendor-menu"] });
+
+      const previous = queryClient.getQueryData<PaginatedMenuResponse>(["vendor-menu"]);
+
+      queryClient.setQueryData(["vendor-menu"], (old: PaginatedMenuResponse | undefined) => {
+        if (!old) return old;
+        return {
+          ...old,
+          items: old.items.map((item) =>
+            item._id === id
+              ? {
+                  ...item,
+                  name: input.name,
+                  category: input.category,
+                  price: input.price,
+                  description: input.description || "",
+                  image: input.image ?? item.image,
+                  addons: input.addons || [],
+                }
+              : item
+          ),
+        };
+      });
+
+      return { previous };
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["vendor-menu"], context.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["vendor-menu"] });
+    },
+  });
+};
+
 export const useCreateMenuItem = () => {
   const queryClient = useQueryClient();
 
@@ -160,9 +241,11 @@ export const useCreateMenuItem = () => {
           const uploadResult = await uploadImage(formData);
           if (uploadResult.success) {
             imageUrl = uploadResult.data.secureUrl;
+          } else {
+            throw new Error(uploadResult.error);
           }
-        } catch {
-          imageUrl = `https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=200`;
+        } catch (error) {
+          throw new Error(error instanceof Error ? error.message : "Image upload failed.");
         }
       }
 

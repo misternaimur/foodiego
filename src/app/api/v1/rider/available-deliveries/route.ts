@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOptionalSession } from "@/lib/dal";
-import { getOrCreateRiderProfile } from "@/lib/profile";
-import { dbConnect } from "@/lib/dbConnect";
-import { OrderBooking } from "@/models/OrderBooking";
+import { backendFetchAsUser, BackendError } from "@/lib/backend";
 
 export interface AvailableDelivery {
   _id: string;
@@ -14,41 +12,44 @@ export interface AvailableDelivery {
   createdAt: string;
 }
 
-function escapeRegex(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
+// UPDATE (order-lifecycle fix): this used to query MongoDB directly from
+// Next.js with two real bugs - it listed orders the vendor hadn't even
+// accepted yet ("pending"), and it never checked the rider's own
+// isAvailable toggle (an "offline" rider still saw and could claim every
+// order in their city). Both are fixed server-side now in
+// foodiego-backend's GET /api/orders/available-for-rider (see
+// orderBookingRoutes.js) - this route is a thin proxy to it.
 export async function GET() {
   const session = await getOptionalSession();
   if (!session || session.role !== "rider") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  await dbConnect();
-  const rider = await getOrCreateRiderProfile(session);
+  try {
+    const orders = await backendFetchAsUser<Array<{
+      _id: string;
+      restaurantName?: string;
+      deliveryAddress: string;
+      totalAmount: number;
+      deliveryFee: number;
+      paymentMethod: "cash" | "card" | "online";
+      createdAt: string;
+    }>>(session, "/api/orders/available-for-rider");
 
-  if (!rider || rider.status !== "approved" || !rider.city) {
-    return NextResponse.json({ deliveries: [] });
+    const deliveries: AvailableDelivery[] = orders.map((d) => ({
+      _id: String(d._id),
+      restaurantName: d.restaurantName || "Restaurant",
+      deliveryAddress: d.deliveryAddress,
+      totalAmount: d.totalAmount,
+      deliveryFee: d.deliveryFee,
+      paymentMethod: d.paymentMethod,
+      createdAt: d.createdAt,
+    }));
+
+    return NextResponse.json({ deliveries });
+  } catch (error) {
+    console.error("Failed to load available deliveries:", error);
+    const status = error instanceof BackendError ? error.status : 500;
+    return NextResponse.json({ error: "Failed to load available deliveries" }, { status });
   }
-
-  const deliveries = await OrderBooking.find({
-    $or: [{ riderId: { $exists: false } }, { riderId: null }],
-    status: { $nin: ["delivered", "cancelled"] },
-    city: { $regex: `^${escapeRegex(rider.city)}$`, $options: "i" },
-  })
-    .sort({ createdAt: -1 })
-    .limit(20)
-    .lean();
-
-  const payload: AvailableDelivery[] = deliveries.map((d) => ({
-    _id: String(d._id),
-    restaurantName: d.restaurantName || "Restaurant",
-    deliveryAddress: d.deliveryAddress,
-    totalAmount: d.totalAmount,
-    deliveryFee: d.deliveryFee,
-    paymentMethod: d.paymentMethod,
-    createdAt: d.createdAt.toISOString(),
-  }));
-
-  return NextResponse.json({ deliveries: payload });
 }

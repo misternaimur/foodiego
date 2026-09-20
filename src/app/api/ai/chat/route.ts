@@ -3,6 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 const SYSTEM_PROMPT =
   "You are an AI assistant for FoodieGo, a food delivery website. You can ONLY answer questions related to this website (dishes, orders, delivery, payment methods, etc.). If someone asks anything unrelated to this website, say: \"I'm only able to provide answers related to this website.\" Do not answer any other questions.";
 
+const GROQ_MODELS = [
+  "openai/gpt-oss-120b",
+  "openai/gpt-oss-20b",
+  "gemma2-9b-it",
+  "llama3-70b-8192",
+];
+
+const GEMINI_MODELS = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+
 async function callGroq(
   apiKey: string,
   userMessage: string,
@@ -17,27 +26,51 @@ async function callGroq(
     { role: "user", content: userMessage },
   ];
 
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "openai/gpt-oss-120b",
-      messages,
-      temperature: 0.7,
-      max_tokens: 1024,
-    }),
-  });
+  for (const model of GROQ_MODELS) {
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.7,
+          max_tokens: 1024,
+        }),
+      });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || `Groq API error: ${response.status}`);
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (content) {
+          return content;
+        }
+        throw new Error("Empty response");
+      }
+
+      try {
+        const error = await response.json();
+        const errMsg = error.error?.message || `Groq API error: ${response.status}`;
+        const isKeyError = errMsg.toLowerCase().includes("invalid") || errMsg.toLowerCase().includes("unauthorized");
+        const isRateLimit = response.status === 429 || errMsg.toLowerCase().includes("rate limit");
+        if (isKeyError) throw new Error(errMsg);
+        if (isRateLimit) throw new Error(errMsg);
+        console.warn(`Groq model ${model} failed: ${errMsg}, trying next...`);
+      } catch {
+        throw new Error(`Groq API error: ${response.status}`);
+      }
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : "";
+      const isKeyError = errMsg.toLowerCase().includes("invalid") || errMsg.toLowerCase().includes("unauthorized");
+      if (isKeyError) throw error;
+      console.warn(`Groq model ${model} failed, trying next...`);
+    }
   }
 
-  const data = await response.json();
-  return data.choices[0].message.content;
+  throw new Error("All Groq models failed");
 }
 
 async function callGemini(
@@ -57,22 +90,14 @@ async function callGemini(
     { role: "user", parts: [{ text: userMessage }] },
   ];
 
-  const models = ["gemini-3.8-flash", "gemini-3.6-flash"];
-
-  for (const model of models) {
+  for (const model of GEMINI_MODELS) {
     try {
       const response = await ai.models.generateContent({ model, contents });
       const t = response.text;
       return typeof t === "string" ? t : "";
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : "";
-      const isQuota = errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("quota");
-      const isRateLimit = errMsg.includes("429") || errMsg.includes("high demand");
-      if (isQuota || isRateLimit) {
-        console.error(`Gemini model ${model} failed, trying next...`);
-        continue;
-      }
-      throw error;
+      console.warn(`Gemini model ${model} failed: ${errMsg}, trying next...`);
     }
   }
 
@@ -119,26 +144,28 @@ export async function POST(req: NextRequest) {
     if (groqKey) {
       try {
         const reply = await callGroq(groqKey, message, chatHistory);
-        return NextResponse.json({ reply });
+        if (reply) {
+          return NextResponse.json({ reply, source: "groq" });
+        }
       } catch (error) {
         const errMsg = error instanceof Error ? error.message : "";
         console.error("Groq API Error:", errMsg);
-        // Fall through to Gemini
       }
     }
 
     if (geminiKey) {
       try {
         const reply = await callGemini(geminiKey, message, chatHistory);
-        return NextResponse.json({ reply });
+        if (reply) {
+          return NextResponse.json({ reply, source: "gemini" });
+        }
       } catch (error) {
         const errMsg = error instanceof Error ? error.message : "";
         console.error("Gemini API Error:", errMsg);
-        throw error;
       }
     }
 
-    return NextResponse.json({ reply: getLocalReply(message) });
+    return NextResponse.json({ reply: getLocalReply(message), source: "local" });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";
     console.error("AI Backend Error:", errMsg);

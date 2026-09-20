@@ -40,6 +40,8 @@ export async function POST(req: NextRequest) {
   const ticket = await Ticket.create({
     ticketId: generateTicketId(),
     vendorId: user._id,
+    raisedByRole: "vendor",
+    raisedById: user._id,
     subject,
     category: safeCategory,
     priority,

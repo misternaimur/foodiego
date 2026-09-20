@@ -14,9 +14,10 @@ export interface RiderOrderSummary {
   restaurantName: string;
   customerName: string;
   deliveryAddress: string;
+  deliveryNote?: string;
   totalAmount: number;
   deliveryFee: number;
-  status: "pending" | "confirmed" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
+  status: "pending" | "confirmed" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
   createdAt: string;
   updatedAt: string;
 }
@@ -46,6 +47,7 @@ export async function GET() {
       restaurantName: o.restaurantName || "Restaurant",
       customerName: customer?.name || "Customer",
       deliveryAddress: o.deliveryAddress,
+      deliveryNote: o.deliveryNote || undefined,
       totalAmount: o.totalAmount,
       deliveryFee: o.deliveryFee || 0,
       status: o.status,

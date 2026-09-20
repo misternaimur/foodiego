@@ -1,100 +1,108 @@
 "use client";
 
-import React, { useState } from 'react';
-import { 
-  Bell, 
-  CheckCheck, 
-  Trash2, 
-  AlertCircle, 
-  CheckCircle2, 
-  DollarSign, 
-  UserPlus, 
-  Settings, 
-  ChevronLeft, 
-  ChevronRight, 
-  Filter 
+import React, { useEffect, useState } from 'react';
+import {
+  Bell,
+  CheckCheck,
+  Trash2,
+  AlertCircle,
+  CheckCircle2,
+  DollarSign,
+  UserPlus,
+  Settings,
+  LoaderCircle,
 } from 'lucide-react';
+import Link from 'next/link';
+import type { NotificationItem } from '@/components/shared/NotificationBell';
 
-interface Notification {
-  id: string;
-  title: string;
-  description: string;
-  type: 'alert' | 'success' | 'payment' | 'user' | 'system';
-  timestamp: string;
-  isRead: boolean;
+// UPDATE (notification-system fix): this page used to render a hardcoded
+// local array ("High Failed Payment Rate Detected", a fake "Stripe batch
+// payout" line, etc.) with Mark-all-read/delete buttons that only mutated
+// local state — nothing was ever real or backend-connected. It now reads
+// and manages this admin's actual notifications from foodiego-backend's
+// /api/notifications. The type-based icon design is kept, mapped from the
+// real notification `type` string (e.g. "order_placed", "vendor_approved")
+// onto the same five visual buckets.
+
+type VisualType = 'alert' | 'success' | 'payment' | 'user' | 'system';
+
+function visualTypeOf(type: string): VisualType {
+  if (type.includes('rejected') || type.includes('suspended')) return 'alert';
+  if (type.includes('delivered') || type.includes('approved')) return 'success';
+  if (type.includes('payment')) return 'payment';
+  if (type.includes('vendor') || type.includes('rider') || type.includes('registration')) return 'user';
+  return 'system';
 }
 
-const initialNotifications: Notification[] = [
-  {
-    id: "1",
-    title: "High Failed Payment Rate Detected",
-    description: "Transaction monitoring flagged a 15% spike in failed card authorizations over the last hour.",
-    type: "alert",
-    timestamp: "10 minutes ago",
-    isRead: false
-  },
-  {
-    id: "2",
-    title: "New Vendor Application Submitted",
-    description: "Greenhouse Cafe submitted a new vendor application requiring review and approval.",
-    type: "user",
-    timestamp: "45 minutes ago",
-    isRead: false
-  },
-  {
-    id: "3",
-    title: "Monthly Payout Successfully Processed",
-    description: "Stripe batch payout of $42,500.00 to regional vendors has been completed.",
-    type: "payment",
-    timestamp: "2 hours ago",
-    isRead: true
-  },
-  {
-    id: "4",
-    title: "System Security Update Applied",
-    description: "MongoDB Atlas cluster permissions and database network rules were successfully updated.",
-    type: "system",
-    timestamp: "5 hours ago",
-    isRead: true
-  },
-  {
-    id: "5",
-    title: "Milestone Achieved: 120k Transactions",
-    description: "Your platform crossed 124,000 total recorded transactions this month.",
-    type: "success",
-    timestamp: "Yesterday",
-    isRead: true
-  }
-];
+function timeAgo(iso: string): string {
+  const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (seconds < 60) return 'just now';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+}
+
+const TYPE_ICON: Record<VisualType, React.ReactNode> = {
+  alert: <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center"><AlertCircle size={18} /></div>,
+  success: <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center"><CheckCircle2 size={18} /></div>,
+  payment: <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center"><DollarSign size={18} /></div>,
+  user: <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center"><UserPlus size={18} /></div>,
+  system: <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center"><Settings size={18} /></div>,
+};
 
 export default function AdminNotificationsPage() {
-  // Structured states ready for backend API endpoints (e.g. PATCH /api/notifications/read, DELETE /api/notifications/:id)
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'All' | 'Unread'>('All');
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  // Handler ready for marking all as read via API
-  const handleMarkAllAsRead = () => {
-    setNotifications(prev => prev.map(item => ({ ...item, isRead: true })));
+  const load = async () => {
+    try {
+      const res = await fetch('/api/v1/notifications', { credentials: 'include' });
+      if (!res.ok) return;
+      const data = (await res.json()) as { notifications: NotificationItem[] };
+      setNotifications(data.notifications);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handler ready for deleting/clearing a single notification via API
-  const handleDeleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(item => item.id !== id));
+  useEffect(() => {
+    load();
+  }, []);
+
+  const handleMarkAllAsRead = async () => {
+    setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
+    await fetch('/api/v1/notifications/read-all', { method: 'PATCH', credentials: 'include' }).catch(() => load());
   };
 
-  // Filter list based on active tab
-  const filteredNotifications = notifications.filter(item => {
-    if (activeTab === 'Unread') return !item.isRead;
-    return true;
-  });
+  const handleDeleteNotification = async (id: string) => {
+    setBusyId(id);
+    setNotifications((prev) => prev.filter((item) => item._id !== id));
+    try {
+      await fetch(`/api/v1/notifications/${id}`, { method: 'DELETE', credentials: 'include' });
+    } catch {
+      load();
+    } finally {
+      setBusyId(null);
+    }
+  };
 
-  const unreadCount = notifications.filter(item => !item.isRead).length;
+  const handleOpen = async (item: NotificationItem) => {
+    if (item.read) return;
+    setNotifications((prev) => prev.map((n) => (n._id === item._id ? { ...n, read: true } : n)));
+    await fetch(`/api/v1/notifications/${item._id}`, { method: 'PATCH', credentials: 'include' }).catch(() => {});
+  };
+
+  const filteredNotifications = notifications.filter((item) => (activeTab === 'Unread' ? !item.read : true));
+  const unreadCount = notifications.filter((item) => !item.read).length;
 
   return (
     <main className="flex-1 bg-[#f8fafc] px-4 py-8 sm:px-6 lg:px-8 font-sans">
       <div className="mx-auto w-full max-w-5xl space-y-6">
-        
+
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -111,19 +119,21 @@ export default function AdminNotificationsPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button 
-              onClick={handleMarkAllAsRead}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold shadow-2xs transition-all cursor-pointer"
-            >
-              <CheckCheck size={15} className="text-gray-500" />
-              <span>Mark all as read</span>
-            </button>
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllAsRead}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+              >
+                <CheckCheck size={15} className="text-gray-500" />
+                <span>Mark all as read</span>
+              </button>
+            )}
           </div>
         </div>
 
         {/* Main Content Card Container */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-2xs overflow-hidden">
-          
+
           {/* Navigation Tabs Header */}
           <div className="border-b border-gray-200 px-6 pt-4 flex gap-8 text-xs font-semibold">
             <button
@@ -155,104 +165,59 @@ export default function AdminNotificationsPage() {
 
           {/* Notifications List */}
           <div className="divide-y divide-gray-100">
-            {filteredNotifications.length === 0 ? (
+            {loading ? (
+              <div className="px-6 py-16 text-center text-gray-400">
+                <LoaderCircle size={24} className="mx-auto animate-spin" />
+              </div>
+            ) : filteredNotifications.length === 0 ? (
               <div className="px-6 py-16 text-center text-gray-400 text-xs space-y-2">
                 <Bell size={28} className="mx-auto text-gray-300 stroke-[1.5]" />
                 <p>No notifications found in this view.</p>
               </div>
             ) : (
               filteredNotifications.map((item) => (
-                <div 
-                  key={item.id} 
+                <div
+                  key={item._id}
                   className={`p-5 sm:px-6 flex items-start justify-between gap-4 transition-colors hover:bg-gray-50/60 ${
-                    !item.isRead ? 'bg-emerald-50/20' : 'bg-white'
+                    !item.read ? 'bg-emerald-50/20' : 'bg-white'
                   }`}
                 >
-                  <div className="flex items-start gap-3.5">
-                    
+                  <Link href={item.link || '#'} onClick={() => handleOpen(item)} className="flex items-start gap-3.5 min-w-0">
                     {/* Notification Type Icon */}
-                    <div className="mt-0.5 shrink-0">
-                      {item.type === 'alert' && (
-                        <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center">
-                          <AlertCircle size={18} />
-                        </div>
-                      )}
-                      {item.type === 'success' && (
-                        <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center">
-                          <CheckCircle2 size={18} />
-                        </div>
-                      )}
-                      {item.type === 'payment' && (
-                        <div className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center">
-                          <DollarSign size={18} />
-                        </div>
-                      )}
-                      {item.type === 'user' && (
-                        <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
-                          <UserPlus size={18} />
-                        </div>
-                      )}
-                      {item.type === 'system' && (
-                        <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center">
-                          <Settings size={18} />
-                        </div>
-                      )}
-                    </div>
+                    <div className="mt-0.5 shrink-0">{TYPE_ICON[visualTypeOf(item.type)]}</div>
 
                     {/* Content */}
-                    <div className="space-y-1">
+                    <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h2 className="text-xs font-bold text-gray-900">{item.title}</h2>
-                        {!item.isRead && (
+                        {!item.read && (
                           <span className="w-2 h-2 rounded-full bg-[#059669]"></span>
                         )}
                       </div>
                       <p className="text-xs text-gray-600 leading-relaxed">
-                        {item.description}
+                        {item.message}
                       </p>
                       <span className="text-[11px] font-medium text-gray-400 block pt-0.5">
-                        {item.timestamp}
+                        {timeAgo(item.createdAt)}
                       </span>
                     </div>
-
-                  </div>
+                  </Link>
 
                   {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">
-                    <button 
-                      onClick={() => handleDeleteNotification(item.id)}
-                      className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                    <button
+                      onClick={() => handleDeleteNotification(item._id)}
+                      disabled={busyId === item._id}
+                      className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
                       title="Delete notification"
                     >
-                      <Trash2 size={15} />
+                      {busyId === item._id ? <LoaderCircle size={15} className="animate-spin" /> : <Trash2 size={15} />}
                     </button>
                   </div>
                 </div>
               ))
             )}
           </div>
-
-          {/* Pagination Footer */}
-          <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <span className="text-xs text-gray-500">
-              Showing page {currentPage} of 1
-            </span>
-            <div className="flex items-center gap-1.5">
-              <button 
-                disabled={currentPage === 1}
-                className="p-2 hover:bg-gray-50 rounded-lg border border-gray-200 text-gray-400 transition-all disabled:opacity-40 cursor-pointer"
-              >
-                <ChevronLeft size={14} />
-              </button>
-              <button 
-                disabled
-                className="p-2 hover:bg-gray-50 rounded-lg border border-gray-200 text-gray-400 transition-all opacity-40 cursor-pointer"
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
-
         </div>
 
       </div>

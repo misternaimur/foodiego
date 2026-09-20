@@ -49,6 +49,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ orde
     );
     return NextResponse.json({ messages, selfRole: session.role });
   } catch (error) {
+    console.error("Failed to load chat messages:", error);
     const status = error instanceof BackendError ? error.status : 500;
     const message = error instanceof BackendError ? error.message : "Failed to load messages";
     return NextResponse.json({ error: message }, { status });
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ ord
     });
     return NextResponse.json({ message: saved }, { status: 201 });
   } catch (error) {
+    console.error("Failed to send chat message:", error);
     const status = error instanceof BackendError ? error.status : 500;
     const errorMessage = error instanceof BackendError ? error.message : "Failed to send message";
     return NextResponse.json({ error: errorMessage }, { status });

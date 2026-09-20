@@ -7,15 +7,19 @@ import {
   DollarSign,
   MapPin,
   Package,
+  PackageCheck,
   Phone,
   Search,
+  Truck,
+  LoaderCircle,
   User,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import RiderShell from "@/components/rider/RiderShell";
 import { useRiderOrders } from "@/hooks/useRiderOrders";
 import type { RiderOrderSummary } from "@/app/api/v1/rider/orders/route";
+import { markPickedUp, markDelivered } from "@/app/(main)/actions/rider";
 
 // ============================================================
 // UPDATE (rider-dashboard real-data fix): this page used to render a
@@ -42,7 +46,7 @@ function toDeliveryStatus(status: RiderOrderSummary["status"]): DeliveryStatus |
   }
 }
 
-const STAGES = ["confirmed", "preparing", "out_for_delivery", "delivered"] as const;
+const STAGES = ["confirmed", "preparing", "ready", "out_for_delivery", "delivered"] as const;
 function progressPercent(status: RiderOrderSummary["status"]) {
   const idx = STAGES.indexOf(status as (typeof STAGES)[number]);
   if (idx === -1) return status === "delivered" ? 100 : 0;
@@ -50,8 +54,31 @@ function progressPercent(status: RiderOrderSummary["status"]) {
 }
 
 export default function RiderDeliveriesPage() {
-  const { orders: rawOrders, loading } = useRiderOrders();
+  const { orders: rawOrders, loading, refetch } = useRiderOrders();
   const [search, setSearch] = useState("");
+  const [actionPending, startAction] = useTransition();
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  // UPDATE (order-lifecycle fix): this page used to be entirely read-only —
+  // a rider could see their active delivery here but had no way to advance
+  // it. Mirrors the same two actions on the main /rider dashboard card.
+  const handlePickedUp = (orderId: string) => {
+    setActionError(null);
+    startAction(async () => {
+      const result = await markPickedUp(orderId);
+      if (result.ok) await refetch();
+      else setActionError(result.message ?? "Could not update this delivery.");
+    });
+  };
+
+  const handleDelivered = (orderId: string) => {
+    setActionError(null);
+    startAction(async () => {
+      const result = await markDelivered(orderId);
+      if (result.ok) await refetch();
+      else setActionError(result.message ?? "Could not update this delivery.");
+    });
+  };
 
   const activeOrder = useMemo(
     () => rawOrders.find((o) => o.status !== "delivered" && o.status !== "cancelled"),
@@ -218,12 +245,22 @@ export default function RiderDeliveriesPage() {
               </div>
             </div>
 
+            {activeOrder.deliveryNote && (
+              <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <span className="font-semibold">Delivery note:</span> {activeOrder.deliveryNote}
+              </div>
+            )}
+
             {/* DELIVERY INFO */}
             <div className="mt-5 flex flex-wrap gap-3">
               <div className="flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2.5">
                 <Bike className="h-4 w-4 text-green-500" />
                 <span className="text-sm font-medium text-green-600">
-                  {activeOrder.status === "out_for_delivery" ? "On the way" : "Preparing"}
+                  {activeOrder.status === "out_for_delivery"
+                    ? "On the way"
+                    : activeOrder.status === "ready"
+                    ? "Ready for pickup"
+                    : "Preparing"}
                 </span>
               </div>
             </div>
@@ -245,12 +282,14 @@ export default function RiderDeliveriesPage() {
               <div className="mt-3 flex justify-between text-xs text-slate-400">
                 <span>Accepted</span>
                 <span>Preparing</span>
+                <span>Ready</span>
                 <span>On the Way</span>
                 <span>Delivered</span>
               </div>
             </div>
 
             {/* ACTIONS */}
+            {actionError && <p className="mt-4 text-xs font-medium text-rose-600">{actionError}</p>}
             <div className="mt-6 flex flex-wrap gap-3">
               <a
                 href={`/rider#chat-${activeOrder._id}`}
@@ -259,6 +298,28 @@ export default function RiderDeliveriesPage() {
                 <Phone className="h-4 w-4" />
                 Contact Customer
               </a>
+              {activeOrder.status === "ready" && (
+                <button
+                  type="button"
+                  onClick={() => handlePickedUp(activeOrder._id)}
+                  disabled={actionPending}
+                  className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {actionPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <PackageCheck className="h-4 w-4" />}
+                  Mark Picked Up
+                </button>
+              )}
+              {activeOrder.status === "out_for_delivery" && (
+                <button
+                  type="button"
+                  onClick={() => handleDelivered(activeOrder._id)}
+                  disabled={actionPending}
+                  className="flex items-center gap-2 rounded-lg bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
+                >
+                  {actionPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Truck className="h-4 w-4" />}
+                  Mark Delivered
+                </button>
+              )}
             </div>
           </motion.section>
         )}

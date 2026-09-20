@@ -21,8 +21,10 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-import LogoGreen from "./LogoGreen";
+import LogoText from "./LogoText";
 import CartDrawer from "@/components/client/CartDrawer";
+import NotificationBell from "@/components/shared/NotificationBell";
+import ThemeToggle from "@/components/shared/ThemeToggle";
 
 const springSlow: Transition = { type: "spring", stiffness: 300, damping: 28 };
 const fadeDuration: Transition = { duration: 0.25, ease: "easeOut" };
@@ -127,7 +129,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     pathname?.startsWith("/admin") ||
     pathname?.startsWith("/vendor") ||
     pathname?.startsWith("/rider") ||
-    pathname?.startsWith("/client")
+    pathname?.startsWith("/client") ||
+    pathname?.startsWith("/auth")
   ) {
     return null;
   }
@@ -151,7 +154,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="w-full bg-[#15462D] text-white/90 overflow-hidden"
+              className="w-full bg-[#124734] text-white/90 overflow-hidden"
             >
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3 text-xs">
                 <motion.div
@@ -161,7 +164,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   <Link
                     href="/auth/register/restaurant"
-                    className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#15462D] hover:border-white transition-colors duration-200 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#124734] hover:border-white transition-colors duration-200 cursor-pointer"
                   >
                     <UtensilsCrossed size={13} />
                     <span>Create a restaurant account</span>
@@ -174,7 +177,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   <Link
                     href="/auth/register/rider"
-                    className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#15462D] hover:border-white transition-colors duration-200 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#124734] hover:border-white transition-colors duration-200 cursor-pointer"
                   >
                     <Bike size={13} />
                     <span>Create a rider account</span>
@@ -191,9 +194,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           transition={{ ...springSlow, delay: 0.2 }}
           className="sticky top-0 z-50 w-full transition-all duration-300"
           style={{
-            background: isScrolled
-              ? "rgba(250, 247, 238, 0.85)"
-              : "rgba(250, 247, 238, 0.7)",
+            /* Colour values come from CSS variables (globals.css) so the bar
+               follows the active theme. Inline styles cannot be overridden by a
+               stylesheet, so these cannot be plain utility classes. */
+            background: isScrolled ? "var(--nav-bg-scrolled)" : "var(--nav-bg)",
             backdropFilter: isScrolled
               ? "blur(20px) saturate(1.5)"
               : "blur(12px) saturate(1.2)",
@@ -201,10 +205,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               ? "blur(20px) saturate(1.5)"
               : "blur(12px) saturate(1.2)",
             borderBottom: isScrolled
-              ? "1px solid rgba(232, 226, 213, 0.6)"
-              : "1px solid rgba(232, 226, 213, 0.3)",
+              ? "1px solid var(--nav-border-scrolled)"
+              : "1px solid var(--nav-border)",
             boxShadow: isScrolled
-              ? "0 4px 30px rgba(21, 70, 45, 0.08)"
+              ? "0 4px 30px var(--nav-shadow)"
               : "none",
           }}
         >
@@ -215,7 +219,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 whileHover={{ scale: 1.03 }}
                 transition={{ ...springSlow }}
               >
-                <LogoGreen />
+                  <LogoText />
               </motion.div>
 
               <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
@@ -230,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <Link
                         href={item.href}
-                        className="relative py-6 text-sm font-semibold text-[#15462D] transition-colors duration-200"
+                        className="relative py-6 text-sm font-semibold text-[#124734] transition-colors duration-200"
                       >
                         {item.label}
                         <AnimatePresence>
@@ -263,7 +267,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="relative w-full">
                 <motion.div
                   className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
-                  animate={{ color: isSearchFocused ? "#15462D" : "#9CA3AF" }}
+                  animate={{ color: isSearchFocused ? "#124734" : "#9CA3AF" }}
                   transition={{ duration: 0.2 }}
                 >
                   <Search size={16} strokeWidth={2.2} />
@@ -276,17 +280,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onFocus={() => setIsSearchFocused(true)}
                   onBlur={() => setIsSearchFocused(false)}
                   placeholder="Search food or restaurants..."
-                  className="w-full bg-[#EFEBE0] text-sm text-[#1F2937] placeholder-[#9CA3AF] rounded-full pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#15462D]/15 focus:bg-white transition-all duration-200 border border-transparent focus:border-[#15462D]/20"
+                  className="w-full bg-[#ECE7D9] text-sm text-[#1F2937] placeholder-[#9CA3AF] rounded-full pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#124734]/15 focus:bg-white transition-all duration-200 border border-transparent focus:border-[#124734]/20"
                 />
               </div>
             </motion.form>
 
             {/* Right: Actions */}
             <div className="flex items-center gap-4 sm:gap-5 shrink-0">
+              {/* Light / dark switch */}
+              <ThemeToggle />
+
               {/* Cart */}
               <motion.button
                 onClick={() => setIsCartOpen(true)}
-                className="relative p-2 text-[#6B7280] hover:text-[#15462D] transition-colors duration-200 bg-white/60 hover:bg-white rounded-full border border-gray-200/50 cursor-pointer"
+                className="relative p-2 text-[#6B7280] hover:text-[#124734] transition-colors duration-200 bg-white/60 hover:bg-white rounded-full border border-gray-200/50 cursor-pointer"
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.92 }}
                 aria-label="Cart"
@@ -307,12 +314,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </AnimatePresence>
               </motion.button>
 
+              {/* Notifications — signed-in users only */}
+              {user && (
+                <NotificationBell buttonClassName="relative p-2 text-[#6B7280] hover:text-[#15462D] transition-colors duration-200 bg-white/60 hover:bg-white rounded-full border border-gray-200/50 cursor-pointer" />
+              )}
+
               {/* User Dropdown */}
               {user ? (
                 <div className="relative" ref={dropdownRef}>
                   <motion.button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 text-sm font-semibold text-[#15462D] bg-white border border-[#E8E2D5] hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors duration-200 focus:outline-none cursor-pointer"
+                    className="flex items-center gap-2 text-sm font-semibold text-[#124734] bg-white border border-[#E8E2D5] hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors duration-200 focus:outline-none cursor-pointer"
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                   >
@@ -320,7 +332,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       {user.avatarUrl ? (
                         <Image src={user.avatarUrl} alt="User Avatar" fill className="object-cover" />
                       ) : (
-                        <span className="text-xs font-bold text-[#15462D]">
+                        <span className="text-xs font-bold text-[#124734]">
                           {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                         </span>
                       )}
@@ -350,10 +362,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                         <div className="py-1">
                           {[
-                            { href: "/account", icon: <User size={16} className="text-[#15462D]" />, label: "Profile" },
-                            { href: "/client/cart", icon: <ShoppingBag size={16} className="text-[#15462D]" />, label: "My Cart" },
-                            { href: dashboardHref, icon: <LayoutDashboard size={16} className="text-[#15462D]" />, label: "Dashboard" },
-                            { href: "/settings", icon: <Settings size={16} className="text-[#15462D]" />, label: "Settings" },
+                            { href: "/account", icon: <User size={16} className="text-[#124734]" />, label: "Profile" },
+                            { href: "/client/cart", icon: <ShoppingBag size={16} className="text-[#124734]" />, label: "My Cart" },
+                            { href: dashboardHref, icon: <LayoutDashboard size={16} className="text-[#124734]" />, label: "Dashboard" },
+                            { href: "/settings", icon: <Settings size={16} className="text-[#124734]" />, label: "Settings" },
                           ].map((item, i) => (
                             <motion.div
                               key={item.href}
@@ -405,7 +417,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   <Link
                     href="/auth/login"
-                    className="text-sm font-bold text-[#374151] hover:text-[#15462D] transition-colors duration-200 px-2 py-1 cursor-pointer"
+                    className="text-sm font-bold text-[#374151] hover:text-[#124734] transition-colors duration-200 px-2 py-1 cursor-pointer"
                   >
                     Sign in
                   </Link>
@@ -427,7 +439,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Mobile toggle */}
               <motion.button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden p-2 text-[#374151] hover:text-[#15462D] bg-white/60 rounded-full border border-gray-200/50 cursor-pointer"
+                className="lg:hidden p-2 text-[#374151] hover:text-[#124734] bg-white/60 rounded-full border border-gray-200/50 cursor-pointer"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 aria-label="Toggle menu"
@@ -483,11 +495,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="p-5 border-b border-[#E8E2D5] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-[#F6A429]" />
-                  <span className="font-bold text-[#15462D]">FoodieGo</span>
+                  <span className="font-bold text-[#124734]">FoodieGo</span>
                 </div>
                 <motion.button
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 text-gray-500 hover:text-[#15462D] rounded-full hover:bg-white transition-colors cursor-pointer"
+                  className="p-2 text-gray-500 hover:text-[#124734] rounded-full hover:bg-white transition-colors cursor-pointer"
                   whileHover={{ rotate: 90 }}
                   transition={{ duration: 0.3 }}
                   aria-label="Close menu"
@@ -507,7 +519,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search food or restaurants..."
-                      className="w-full bg-[#EFEBE0] text-sm text-[#1F2937] placeholder-gray-500 rounded-full pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#15462D]/20 focus:bg-white transition-all border border-transparent focus:border-[#15462D]/30"
+                      className="w-full bg-[#ECE7D9] text-sm text-[#1F2937] placeholder-gray-500 rounded-full pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#124734]/20 focus:bg-white transition-all border border-transparent focus:border-[#124734]/30"
                     />
                   </div>
                 </form>
@@ -528,7 +540,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         onClick={() => setIsMobileMenuOpen(false)}
                         className={`flex items-center justify-between py-3 px-4 rounded-xl text-sm font-semibold transition-colors duration-200 cursor-pointer ${
                           isActive
-                            ? "bg-[#15462D] text-white"
+                            ? "bg-[#124734] text-white"
                             : "text-[#374151] hover:bg-white"
                         }`}
                       >
@@ -571,7 +583,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <Link
                         href="/auth/login"
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex-1 text-center py-3 text-sm font-semibold text-white bg-[#15462D] rounded-full hover:bg-[#1a5c3a] transition-colors duration-200 cursor-pointer"
+                        className="flex-1 text-center py-3 text-sm font-semibold text-white bg-[#124734] rounded-full hover:bg-[#1a5c3a] transition-colors duration-200 cursor-pointer"
                       >
                         Sign in
                       </Link>
@@ -594,7 +606,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         key={item.href}
                         href={item.href}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="block py-2.5 text-sm text-[#374151] font-medium hover:text-[#15462D] transition-colors duration-150 cursor-pointer"
+                        className="block py-2.5 text-sm text-[#374151] font-medium hover:text-[#124734] transition-colors duration-150 cursor-pointer"
                       >
                         {item.label}
                       </Link>

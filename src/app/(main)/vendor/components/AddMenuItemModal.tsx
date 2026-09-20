@@ -3,26 +3,55 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Upload, Plus, Trash2, Check } from "lucide-react";
-import { useCreateMenuItem } from "@/hooks/useVendorMenu";
-import type { CreateMenuItemInput, MenuItemAddon } from "@/hooks/useVendorMenu";
+import { useCreateMenuItem, useUpdateMenuItem } from "@/hooks/useVendorMenu";
+import type { CreateMenuItemInput, MenuItemAddon, MenuItem } from "@/hooks/useVendorMenu";
 
 interface AddMenuItemModalProps {
   open: boolean;
   onClose: () => void;
+  /** UPDATE (menu-edit fix): when set, the modal edits this item instead
+   * of creating a new one — the same form pre-filled with its current
+   * values, submitting to useUpdateMenuItem instead of useCreateMenuItem.
+   * This is the only place in the app a vendor can change an existing
+   * item; before this, there was no edit UI at all. */
+  editItem?: MenuItem | null;
 }
 
-export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProps) {
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("Burgers");
-  const [price, setPrice] = useState("");
-  const [description, setDescription] = useState("");
+export default function AddMenuItemModal({ open, onClose, editItem }: AddMenuItemModalProps) {
+  // UPDATE (menu-edit fix): the actual form used to live directly in this
+  // component, reset via a useEffect keyed on `open`/`editItem` — that
+  // tripped the React Compiler's "no setState in an effect body" rule.
+  // The form is now its own component instance, mounted fresh only while
+  // `open` is true (see the AnimatePresence block below), so its useState
+  // calls can just read their initial value straight from `editItem` —
+  // no effect, and it can't show stale data from the previously-edited
+  // item either.
+  return (
+    <AnimatePresence>
+      {open && <ModalBody key={editItem?._id ?? "new"} onClose={onClose} editItem={editItem} />}
+    </AnimatePresence>
+  );
+}
+
+function ModalBody({ onClose, editItem }: { onClose: () => void; editItem?: MenuItem | null }) {
+  const isEditMode = !!editItem;
+
+  const [name, setName] = useState(editItem?.name ?? "");
+  const [category, setCategory] = useState(editItem?.category ?? "Burgers");
+  const [price, setPrice] = useState(editItem ? String(editItem.price) : "");
+  const [description, setDescription] = useState(editItem?.description ?? "");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
-  const [addons, setAddons] = useState<MenuItemAddon[]>([]);
+  const [imagePreview, setImagePreview] = useState<string>(editItem?.image ?? "");
+  const [addons, setAddons] = useState<MenuItemAddon[]>(editItem?.addons ?? []);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { mutateAsync: createItem, isPending: isCreating, isError, error } = useCreateMenuItem();
+  const { mutateAsync: createItem, isPending: isCreating, isError: isCreateError, error: createError } = useCreateMenuItem();
+  const { mutateAsync: updateItem, isPending: isUpdating, isError: isUpdateError, error: updateError } = useUpdateMenuItem();
+
+  const isSaving = isEditMode ? isUpdating : isCreating;
+  const isError = isEditMode ? isUpdateError : isCreateError;
+  const error = isEditMode ? updateError : createError;
 
   const categories = ["Burgers", "Pizza", "Drinks", "Desserts", "Sides", "Snacks"];
   const categoryIcons: Record<string, string> = {
@@ -63,7 +92,11 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
     }
 
     try {
-      await createItem(input);
+      if (isEditMode && editItem) {
+        await updateItem({ id: editItem._id, input });
+      } else {
+        await createItem(input);
+      }
       onClose();
     } catch {
       // error is handled by isError in the UI
@@ -89,23 +122,21 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
   };
 
   return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl"
-          >
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.15, ease: "easeOut" }}
+        className="w-full max-w-2xl rounded-2xl bg-white shadow-2xl"
+      >
             <div className="flex items-center justify-between p-6 border-b border-[#E5E7EB]">
-              <h2 className="text-xl font-bold text-gray-900">Add New Menu Item</h2>
+              <h2 className="text-xl font-bold text-gray-900">{isEditMode ? "Edit Menu Item" : "Add New Menu Item"}</h2>
               <button
                 onClick={onClose}
                 className="rounded-full p-2 text-gray-400 hover:bg-gray-100 transition-colors"
@@ -114,7 +145,15 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+            {/* UPDATE (menu-edit fix): the submit button used to live
+                OUTSIDE this <form> element entirely (as a sibling below),
+                relying only on its own onClick to call handleSubmit — it
+                happened to still work, but it meant pressing Enter in any
+                field did nothing (no in-form submit button to activate)
+                and the structure was misleading. The form now wraps the
+                whole modal body including its footer buttons. */}
+            <form onSubmit={handleSubmit} className="flex max-h-[80vh] flex-col">
+            <div className="p-6 space-y-5 overflow-y-auto">
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
@@ -149,7 +188,7 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                    Price (BDT ৳)
+                    Price (USD $)
                   </label>
                   <input
                     type="number"
@@ -223,7 +262,7 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
 
                 {isError && (
                   <div className="sm:col-span-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
-                    {(error as Error)?.message || "An error occurred while creating the item."}
+                    {(error as Error)?.message || `An error occurred while ${isEditMode ? "updating" : "creating"} the item.`}
                   </div>
                 )}
 
@@ -258,7 +297,7 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
                             placeholder="Add-on name"
                           />
                           <div className="flex items-center gap-1 rounded-xl border border-[#E5E7EB] px-2 py-2">
-                            <span className="text-xs text-gray-400">৳</span>
+                            <span className="text-xs text-gray-400">$</span>
                             <input
                               type="number"
                               value={addon.price || ""}
@@ -282,38 +321,36 @@ export default function AddMenuItemModal({ open, onClose }: AddMenuItemModalProp
                   )}
                 </div>
               </div>
-            </form>
-
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-[#E5E7EB] bg-gray-50/60">
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-xl border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                onClick={handleSubmit}
-                disabled={isCreating || !name || !price}
-                className="rounded-xl bg-[#10B981] px-4 py-2 text-sm font-semibold text-white hover:bg-[#059669] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-              >
-                {isCreating ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Check size={14} />
-                    Create Item
-                  </>
-                )}
-              </button>
             </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-[#E5E7EB] bg-gray-50/60">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="rounded-xl border border-[#E5E7EB] bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving || !name || !price}
+                  className="rounded-xl bg-[#10B981] px-4 py-2 text-sm font-semibold text-white hover:bg-[#059669] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={14} />
+                      {isEditMode ? "Save Changes" : "Create Item"}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -16,7 +16,10 @@ type PaymentMethod = 'card' | 'mobile' | 'bank';
 interface OnlinePaymentModalProps {
   isOpen: boolean;
   amount: number;
+  deliveryFee: number;
   onClose: () => void;
+  /** Called once the (simulated) payment has succeeded — the caller places the real order at this point. */
+  onSuccess: () => void;
 }
 
 const fieldClasses = 'mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10';
@@ -27,7 +30,7 @@ const paymentMethods = [
   { id: 'bank' as const, label: 'Other online payment', description: 'Pay through a supported partner bank', icon: Building2 },
 ];
 
-export default function OnlinePaymentModal({ isOpen, amount, onClose }: OnlinePaymentModalProps) {
+export default function OnlinePaymentModal({ isOpen, amount, deliveryFee, onClose, onSuccess }: OnlinePaymentModalProps) {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('mobile');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -79,7 +82,7 @@ export default function OnlinePaymentModal({ isOpen, amount, onClose }: OnlinePa
         </header>
 
         <div className="overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
-          {isSuccess ? <div className="py-8 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 size={35} strokeWidth={2.5} /></div><h3 className="mt-5 text-xl font-bold text-slate-950">Payment successful</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">Your payment was processed securely. Your transaction is ready.</p><div className="mx-auto mt-6 max-w-sm divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-slate-50 text-left text-sm"><div className="flex justify-between px-4 py-3"><span className="text-slate-500">Transaction ID</span><strong className="font-mono">{transactionId}</strong></div><div className="flex justify-between px-4 py-3"><span className="text-slate-500">Total paid</span><strong className="text-[#15462d]">৳{amount.toLocaleString()}</strong></div></div><button type="button" onClick={onClose} className="mt-6 w-full max-w-sm rounded-xl bg-[#15462d] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#103b26] focus:outline-none focus:ring-4 focus:ring-emerald-500/20">Done</button></div> : <form onSubmit={handlePaymentSubmit}>
+          {isSuccess ? <div className="py-8 text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 size={35} strokeWidth={2.5} /></div><h3 className="mt-5 text-xl font-bold text-slate-950">Payment successful</h3><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500">Your payment was processed securely. Placing your order now.</p><div className="mx-auto mt-6 max-w-sm divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-slate-50 text-left text-sm"><div className="flex justify-between px-4 py-3"><span className="text-slate-500">Transaction ID</span><strong className="font-mono">{transactionId}</strong></div><div className="flex justify-between px-4 py-3"><span className="text-slate-500">Total paid</span><strong className="text-[#15462d]">${amount.toLocaleString()}</strong></div></div><button type="button" onClick={onSuccess} className="mt-6 w-full max-w-sm rounded-xl bg-[#15462d] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#103b26] focus:outline-none focus:ring-4 focus:ring-emerald-500/20">Continue</button></div> : <form onSubmit={handlePaymentSubmit}>
             <fieldset disabled={isProcessing}>
               <legend className="text-sm font-bold text-slate-900">Choose payment method</legend>
               <div className="mt-3 space-y-2.5">{paymentMethods.map(({ id, label, description, icon: Icon }) => <button key={id} type="button" onClick={() => setSelectedMethod(id)} aria-pressed={selectedMethod === id} className={`flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition focus:outline-none focus:ring-4 focus:ring-emerald-500/20 ${selectedMethod === id ? 'border-emerald-500 bg-emerald-50/70 ring-4 ring-emerald-500/10' : 'border-slate-200 hover:border-emerald-300'}`}><span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${selectedMethod === id ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}`}><Icon size={18} /></span><span className="min-w-0 flex-1"><strong className="block text-sm text-slate-900">{label}</strong><span className="mt-0.5 block text-xs text-slate-500">{description}</span></span><span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${selectedMethod === id ? 'border-emerald-600' : 'border-slate-300'}`}>{selectedMethod === id && <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" />}</span></button>)}</div>
@@ -91,9 +94,9 @@ export default function OnlinePaymentModal({ isOpen, amount, onClose }: OnlinePa
               </div>
             </fieldset>
 
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-center justify-between text-sm text-slate-500"><span>Subtotal</span><strong className="text-slate-900">৳{(amount - 80).toLocaleString()}</strong></div><div className="mt-2 flex items-center justify-between text-sm text-slate-500"><span>Delivery fee</span><strong className="text-slate-900">৳80</strong></div><div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3"><span className="font-bold text-slate-900">Total</span><strong className="text-xl text-[#15462d]">৳{amount.toLocaleString()}</strong></div></div>
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4"><div className="flex items-center justify-between text-sm text-slate-500"><span>Subtotal</span><strong className="text-slate-900">${(amount - deliveryFee).toLocaleString()}</strong></div><div className="mt-2 flex items-center justify-between text-sm text-slate-500"><span>Delivery fee</span><strong className="text-slate-900">${deliveryFee.toLocaleString()}</strong></div><div className="mt-3 flex items-center justify-between border-t border-slate-200 pt-3"><span className="font-bold text-slate-900">Total</span><strong className="text-xl text-[#15462d]">${amount.toLocaleString()}</strong></div></div>
             <div className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-500"><Lock className="mt-0.5 shrink-0 text-emerald-700" size={15} /><span><strong className="text-slate-700">Secure payment.</strong> Your payment information is securely processed.</span></div>
-            <button type="submit" disabled={isProcessing} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#15462d] px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-950/10 transition hover:bg-[#103b26] focus:outline-none focus:ring-4 focus:ring-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60">{isProcessing ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Processing payment...</> : <>Pay ৳{amount.toLocaleString()} <ArrowRight size={17} /></>}</button>
+            <button type="submit" disabled={isProcessing} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#15462d] px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-950/10 transition hover:bg-[#103b26] focus:outline-none focus:ring-4 focus:ring-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60">{isProcessing ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Processing payment...</> : <>Pay ${amount.toLocaleString()} <ArrowRight size={17} /></>}</button>
           </form>}
         </div>
       </section>

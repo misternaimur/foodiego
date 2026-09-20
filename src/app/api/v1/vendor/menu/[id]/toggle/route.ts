@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { verifySessionCookie } from "@/lib/session";
 import { dbConnect } from "@/lib/dbConnect";
 import { User } from "@/models/User";
+import { Restaurant } from "@/models/Restaurant";
 import { MenuItem } from "@/models/MenuItem";
 import { Types } from "mongoose";
 
@@ -40,7 +41,14 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid item ID" }, { status: 400 });
   }
 
-  const item = await MenuItem.findOne({ _id: id, vendorId: user._id });
+  // UPDATE (menu-visibility fix): items are linked by Restaurant._id, not
+  // User._id — see the matching comment in vendor/menu/create/route.ts.
+  const restaurant = await Restaurant.findOne({ userId: user._id }).lean();
+  if (!restaurant) {
+    return NextResponse.json({ error: "Restaurant profile not found" }, { status: 404 });
+  }
+
+  const item = await MenuItem.findOne({ _id: id, vendorId: restaurant._id });
   if (!item) {
     return NextResponse.json({ error: "Menu item not found" }, { status: 404 });
   }

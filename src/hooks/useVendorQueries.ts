@@ -38,6 +38,7 @@ export interface OrderItem {
   price: number;
   image: string;
   addons?: { name: string; price: number }[];
+  specialInstructions?: string;
 }
 
 export interface Customer {
@@ -118,12 +119,15 @@ export const useOrderMutation = () => {
 
       const previousOrders = queryClient.getQueryData<Order[]>(["orders"]);
 
+      const optimisticStatus: Record<string, Order["status"]> = {
+        accept: "preparing",
+        reject: "rejected",
+        ready: "ready",
+      };
       queryClient.setQueryData(["orders"], (old: Order[] | undefined) =>
         old
           ? old.map((order) =>
-              order.id === orderId
-                ? { ...order, status: action === "accept" ? "preparing" : action === "reject" ? "rejected" : order.status }
-                : order
+              order.id === orderId ? { ...order, status: optimisticStatus[action] ?? order.status } : order
             )
           : []
       );

@@ -212,7 +212,7 @@ export default async function AdminCustomersPage({
                           </span>
                         </td>
                         <td className="px-6 py-4 text-xs font-semibold text-gray-900">
-                          ৳{(stats?.spent ?? 0).toLocaleString()}
+                          ${(stats?.spent ?? 0).toLocaleString()}
                         </td>
                         <td className="px-6 py-4">
                           {status === "active" ? (

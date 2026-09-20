@@ -1,23 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Bike, Package, Phone, LoaderCircle } from "lucide-react";
+import { CheckCircle2, Package, Phone, LoaderCircle } from "lucide-react";
 import Link from "next/link";
 import { ordersApi, orderRestaurantName, type Order } from "@/lib/clientApi";
 import OrderChatPanel from "@/components/chat/OrderChatPanel";
+import LiveTrackingMap from "@/components/client/LiveTrackingMap";
+import type { OrderTracking } from "@/app/api/v1/client/orders/[orderId]/tracking/route";
 
-const STEP_ORDER: Order["status"][] = ["pending", "confirmed", "preparing", "out_for_delivery", "delivered"];
+const STEP_ORDER: Order["status"][] = ["pending", "confirmed", "preparing", "ready", "out_for_delivery", "delivered"];
 
 const steps = [
-  { key: "placed", label: "Order Placed", statuses: ["pending", "confirmed", "preparing", "out_for_delivery", "delivered"] },
-  { key: "preparing", label: "Preparing", statuses: ["preparing", "out_for_delivery", "delivered"] },
+  { key: "placed", label: "Order Placed", statuses: ["pending", "confirmed", "preparing", "ready", "out_for_delivery", "delivered"] },
+  { key: "preparing", label: "Preparing", statuses: ["preparing", "ready", "out_for_delivery", "delivered"] },
   { key: "way", label: "On the Way", statuses: ["out_for_delivery", "delivered"] },
   { key: "delivered", label: "Delivered", statuses: ["delivered"] },
 ];
 
+function timeAgo(iso: string | null): string {
+  if (!iso) return "";
+  const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  return `${Math.round(minutes / 60)}h ago`;
+}
+
 export default function ClientTrackOrderPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tracking, setTracking] = useState<OrderTracking | null>(null);
 
   useEffect(() => {
     ordersApi
@@ -26,6 +38,32 @@ export default function ClientTrackOrderPage() {
       .catch(() => setOrders([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const activeOrderId = orders.find((o) => o.status !== "delivered" && o.status !== "cancelled")?._id;
+
+  // UPDATE (live-tracking fix): polls the real rider-GPS-backed tracking
+  // endpoint (see src/app/api/v1/client/orders/[orderId]/tracking/route.ts)
+  // every 10s while there's an active order, replacing what used to be a
+  // permanently-static placeholder.
+  useEffect(() => {
+    if (!activeOrderId) return;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/v1/client/orders/${activeOrderId}/tracking`, { credentials: "include" });
+        if (!res.ok || cancelled) return;
+        setTracking(await res.json());
+      } catch {
+        // Next poll retries.
+      }
+    };
+    poll();
+    const interval = setInterval(poll, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [activeOrderId]);
 
   if (loading) {
     return (
@@ -82,16 +120,23 @@ export default function ClientTrackOrderPage() {
           </div>
           <div className="text-left sm:text-right">
             <p className="text-xs text-gray-500">Order Total</p>
-            <p className="text-xl font-extrabold text-gray-900">৳{activeOrder.totalAmount.toLocaleString()}</p>
+            <p className="text-xl font-extrabold text-gray-900">${activeOrder.totalAmount.toLocaleString()}</p>
           </div>
         </div>
 
-        {/* Map placeholder */}
-        <div className="relative mt-6 flex h-52 items-center justify-center overflow-hidden rounded-2xl bg-emerald-50">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,#15462D_0,transparent_25%),radial-gradient(circle_at_70%_55%,#F6A429_0,transparent_25%)] opacity-40" />
-          <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-[#15462D]/10">
-            <Bike size={22} className="text-[#15462D]" />
-          </div>
+        {/* Live tracking map — real rider GPS when the order is out for delivery */}
+        <div className="relative mt-6">
+          <LiveTrackingMap
+            riderLat={tracking?.rider?.lat ?? null}
+            riderLng={tracking?.rider?.lng ?? null}
+            riderName={tracking?.rider?.fullName}
+            className="h-52"
+          />
+          {tracking?.rider?.lat != null && tracking.rider.updatedAt && (
+            <span className="absolute bottom-3 right-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold text-gray-600 shadow-sm">
+              Updated {timeAgo(tracking.rider.updatedAt)}
+            </span>
+          )}
         </div>
 
         {/* Progress steps */}

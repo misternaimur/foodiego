@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
-import { ArrowLeft, ShoppingBag, ShieldCheck, Sparkles, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ShoppingBag, ShieldCheck, Sparkles, Plus, Minus } from 'lucide-react';
 
 export default function CartPage() {
   const { cart, addToCart, removeFromCart } = useApp();
@@ -179,9 +179,13 @@ export default function CartPage() {
               </div>
             </div>
 
-            <button className="relative z-10 w-full bg-[#F6A429] hover:bg-[#e0931f] text-gray-900 font-extrabold py-4 rounded-2xl transition-all shadow-lg shadow-black/20 hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer uppercase text-xs tracking-wider">
+            <Link
+              href="/client/checkout"
+              className="relative z-10 w-full bg-[#F6A429] hover:bg-[#e0931f] text-gray-900 font-extrabold py-4 rounded-2xl transition-all shadow-lg shadow-black/20 hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer uppercase text-xs tracking-wider"
+            >
               <span>Proceed to Checkout</span>
-            </button>
+              <ArrowRight size={16} className="inline" />
+            </Link>
 
             <div className="relative z-10 flex items-center justify-center gap-2 text-xs text-emerald-200/60 pt-2">
               <ShieldCheck className="w-4 h-4 text-[#F6A429]" />

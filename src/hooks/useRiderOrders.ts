@@ -19,22 +19,23 @@ export function useRiderOrders() {
   const [orders, setOrders] = useState<RiderOrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch("/api/v1/rider/orders");
+      if (!res.ok) return;
+      const data = (await res.json()) as { orders: RiderOrderSummary[] };
+      setOrders(data.orders);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/v1/rider/orders");
-        if (!res.ok) return;
-        const data = (await res.json()) as { orders: RiderOrderSummary[] };
-        if (!cancelled) setOrders(data.orders);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    fetchOrders();
   }, []);
 
-  return { orders, loading };
+  // UPDATE (order-lifecycle fix): exposed so pages that trigger a rider
+  // action (Mark Picked Up / Mark Delivered) can refresh this list
+  // afterwards instead of waiting for a full page reload.
+  return { orders, loading, refetch: fetchOrders };
 }

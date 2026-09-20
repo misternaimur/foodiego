@@ -31,7 +31,7 @@ export default function NotSure() {
             {/* User Message */}
             <div className="mb-5 flex justify-end">
               <div className="max-w-[90%] rounded-xl bg-pink-500 px-4 py-3 text-sm font-medium text-white sm:text-base">
-                I want something spicy, under ৳500, and fast.
+                I want something spicy, under $500, and fast.
               </div>
             </div>
 
@@ -118,7 +118,7 @@ export default function NotSure() {
                   </h3>
 
                   <p className="mt-1 text-xs text-slate-500">
-                    ৳450 • 20 min
+                    $450 • 20 min
                   </p>
                 </div>
               </div>
@@ -157,7 +157,7 @@ export default function NotSure() {
                   </h3>
 
                   <p className="mt-1 text-xs text-slate-500">
-                    ৳480 • 25 min
+                    $480 • 25 min
                   </p>
                 </div>
               </div>

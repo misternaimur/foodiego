@@ -465,8 +465,8 @@ export default function RestaurantProfile() {
   const [dishes, setDishes] = useState(() => {
     if (typeof window === "undefined") {
       return [
-        { id: 2, name: "Artisan Wood-Fired Pizza", category: "Signature", price: "৳550", rating: "4.8", image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80", badge: "Chef Choice" },
-        { id: 3, name: "Smoked Salmon Carpaccio", category: "Signature", price: "৳480", rating: "4.7", image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=600&q=80", badge: "Fresh" },
+        { id: 2, name: "Artisan Wood-Fired Pizza", category: "Signature", price: "$550", rating: "4.8", image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80", badge: "Chef Choice" },
+        { id: 3, name: "Smoked Salmon Carpaccio", category: "Signature", price: "$480", rating: "4.7", image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=600&q=80", badge: "Fresh" },
       ];
     }
     try {
@@ -481,8 +481,8 @@ export default function RestaurantProfile() {
       console.warn("Failed to load saved dishes:", err);
     }
     return [
-      { id: 2, name: "Artisan Wood-Fired Pizza", category: "Signature", price: "৳550", rating: "4.8", image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80", badge: "Chef Choice" },
-      { id: 3, name: "Smoked Salmon Carpaccio", category: "Signature", price: "৳480", rating: "4.7", image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=600&q=80", badge: "Fresh" },
+      { id: 2, name: "Artisan Wood-Fired Pizza", category: "Signature", price: "$550", rating: "4.8", image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80", badge: "Chef Choice" },
+      { id: 3, name: "Smoked Salmon Carpaccio", category: "Signature", price: "$480", rating: "4.7", image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=600&q=80", badge: "Fresh" },
     ];
   });
   const [dishImageErrors, setDishImageErrors] = useState<Record<number, boolean>>({});
@@ -701,7 +701,7 @@ export default function RestaurantProfile() {
       setDishes((prev) =>
         prev.map((d) =>
           d.id === editingDish.id
-            ? { ...d, ...dishForm, price: dishForm.price.startsWith("৳") ? dishForm.price : `৳${dishForm.price}` }
+            ? { ...d, ...dishForm, price: dishForm.price.startsWith("$") ? dishForm.price : `$${dishForm.price}` }
             : d
         )
       );
@@ -711,7 +711,7 @@ export default function RestaurantProfile() {
         id: Date.now(),
         name: dishForm.name.trim(),
         category: dishForm.category,
-        price: dishForm.price.startsWith("৳") ? dishForm.price : `৳${dishForm.price}`,
+        price: dishForm.price.startsWith("$") ? dishForm.price : `$${dishForm.price}`,
         rating: dishForm.rating,
         image: dishForm.image,
         badge: dishForm.badge,
@@ -1103,7 +1103,7 @@ export default function RestaurantProfile() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">Price (৳)</label>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">Price ($)</label>
                   <input type="text" value={dishForm.price} onChange={(e) => handleDishFormChange("price", e.target.value)} className="w-full px-4 py-2.5 rounded-xl bg-slate-100 border-none text-xs font-semibold focus:ring-2 focus:ring-amber-500" placeholder="e.g. 450" required />
                 </div>
                 <div>

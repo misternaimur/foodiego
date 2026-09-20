@@ -10,29 +10,39 @@ import {
   Power,
   MapPin,
   TrendingUp,
+  PackageCheck,
+  Truck,
+  LoaderCircle,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import RiderShell from "./RiderShell";
 import AvailableDeliveries from "./AvailableDeliveries";
 import OrderChatPanel from "@/components/chat/OrderChatPanel";
 import { useApp } from "@/context/AppContext";
+import { markPickedUp, markDelivered } from "@/app/(main)/actions/rider";
 
 interface ActiveDelivery {
   _id: string;
   restaurantName: string;
   deliveryAddress: string;
+  deliveryNote?: string;
   totalAmount: number;
-  status: "pending" | "confirmed" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
+  status: "pending" | "confirmed" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
   itemsSummary: string;
   customerName: string;
 }
 
+// UPDATE (order-lifecycle fix): "preparing" used to be mislabeled "Picked
+// Up" here (a purely cosmetic label over a status that actually meant "the
+// kitchen is still cooking") — now that OrderBooking has a real "ready"
+// status, each label matches what's actually true about the order.
 const STEP_LABELS: Record<ActiveDelivery["status"], string> = {
   pending: "Accepted",
   confirmed: "Accepted",
-  preparing: "Picked Up",
-  out_for_delivery: "On the Way",
+  preparing: "Waiting for the kitchen",
+  ready: "Ready — go pick it up",
+  out_for_delivery: "Out for delivery",
   delivered: "Delivered",
   cancelled: "Cancelled",
 };
@@ -54,6 +64,21 @@ export default function RiderDashboard() {
   const [activeDelivery, setActiveDelivery] = useState<ActiveDelivery | null>(null);
   const [loadingDelivery, setLoadingDelivery] = useState(true);
   const [summary, setSummary] = useState<RiderSummary | null>(null);
+  const [actionPending, startAction] = useTransition();
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const loadActiveDelivery = async () => {
+    try {
+      const res = await fetch("/api/v1/rider/active-delivery", { credentials: "include" });
+      if (!res.ok) return;
+      const data = (await res.json()) as { delivery: ActiveDelivery | null };
+      setActiveDelivery(data.delivery);
+    } catch {
+      // Next poll retries.
+    } finally {
+      setLoadingDelivery(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +103,36 @@ export default function RiderDashboard() {
       clearInterval(interval);
     };
   }, []);
+
+  // UPDATE (order-lifecycle fix): the two actions that used to not exist
+  // anywhere in this app. "Mark Picked Up" only appears once the kitchen has
+  // marked the order "ready"; "Mark Delivered" only once it's actually out
+  // for delivery — matching the transitions the backend enforces.
+  const handlePickedUp = () => {
+    if (!activeDelivery) return;
+    setActionError(null);
+    startAction(async () => {
+      const result = await markPickedUp(activeDelivery._id);
+      if (result.ok) {
+        await loadActiveDelivery();
+      } else {
+        setActionError(result.message ?? "Could not update this delivery.");
+      }
+    });
+  };
+
+  const handleDelivered = () => {
+    if (!activeDelivery) return;
+    setActionError(null);
+    startAction(async () => {
+      const result = await markDelivered(activeDelivery._id);
+      if (result.ok) {
+        await loadActiveDelivery();
+      } else {
+        setActionError(result.message ?? "Could not update this delivery.");
+      }
+    });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -213,7 +268,7 @@ export default function RiderDashboard() {
             <StatCard
               icon={<DollarSign className="h-4 w-4" />}
               title="Today's Earnings"
-              value={summary ? `৳${summary.todayEarnings.toLocaleString()}` : "—"}
+              value={summary ? `$${summary.todayEarnings.toLocaleString()}` : "—"}
               text="From delivery fees earned today"
             />
           </motion.div>
@@ -284,24 +339,76 @@ export default function RiderDashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-slate-500">Total</p>
-                    <p className="text-xl font-bold text-slate-900">৳{activeDelivery.totalAmount.toLocaleString()}</p>
+                    <p className="text-xl font-bold text-slate-900">${activeDelivery.totalAmount.toLocaleString()}</p>
                   </div>
                 </div>
+
+                {activeDelivery.deliveryNote && (
+                  <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    <span className="font-semibold">Delivery note:</span> {activeDelivery.deliveryNote}
+                  </div>
+                )}
 
                 {/* Progress */}
                 <div className="space-y-5">
                   <DeliveryStep active title="Accepted" />
                   <DeliveryStep
-                    active={["preparing", "out_for_delivery", "delivered"].includes(activeDelivery.status)}
+                    active={["ready", "out_for_delivery", "delivered"].includes(activeDelivery.status)}
                     current={activeDelivery.status === "preparing"}
-                    title="Picked Up"
+                    title="Ready for pickup"
                   />
                   <DeliveryStep
                     active={["out_for_delivery", "delivered"].includes(activeDelivery.status)}
-                    current={activeDelivery.status === "out_for_delivery"}
-                    title="On the Way"
+                    current={activeDelivery.status === "ready"}
+                    title="Picked up"
                   />
-                  <DeliveryStep active={activeDelivery.status === "delivered"} title="Delivered" />
+                  <DeliveryStep
+                    active={activeDelivery.status === "delivered"}
+                    current={activeDelivery.status === "out_for_delivery"}
+                    title="Delivered"
+                  />
+                </div>
+
+                {actionError && <p className="mt-4 text-xs font-medium text-rose-600">{actionError}</p>}
+
+                {/* UPDATE (order-lifecycle fix): the actual action a rider
+                    takes at each stage — previously there was no way to
+                    advance a delivery past "accepted" anywhere in the app. */}
+                <div className="mt-5">
+                  {activeDelivery.status === "preparing" && (
+                    <div className="flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-700">
+                      <Clock3 className="h-4 w-4" />
+                      Waiting for the kitchen to finish preparing
+                    </div>
+                  )}
+                  {activeDelivery.status === "ready" && (
+                    <button
+                      type="button"
+                      onClick={handlePickedUp}
+                      disabled={actionPending}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-60"
+                    >
+                      {actionPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <PackageCheck className="h-4 w-4" />}
+                      Mark Picked Up
+                    </button>
+                  )}
+                  {activeDelivery.status === "out_for_delivery" && (
+                    <button
+                      type="button"
+                      onClick={handleDelivered}
+                      disabled={actionPending}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#124734] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#0d3527] disabled:opacity-60"
+                    >
+                      {actionPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Truck className="h-4 w-4" />}
+                      Mark Delivered
+                    </button>
+                  )}
+                  {activeDelivery.status === "delivered" && (
+                    <div className="flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Delivered — nice work!
+                    </div>
+                  )}
                 </div>
               </>
             )}

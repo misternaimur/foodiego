@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { verifySessionCookie } from "@/lib/session";
 import { dbConnect } from "@/lib/dbConnect";
 import { User } from "@/models/User";
+import { Restaurant } from "@/models/Restaurant";
 import { MenuItem } from "@/models/MenuItem";
 
 export async function POST(req: NextRequest) {
@@ -49,6 +50,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // UPDATE (menu-visibility fix): menu items must be linked by the
+  // Restaurant document's own _id, not the User document's _id — the
+  // public catalog route (src/app/api/v1/catalog/restaurants/route.ts)
+  // groups menu items by Restaurant._id, matching how foodiego-backend's
+  // seeded catalog links items via `restaurantId`. Writing `user._id` here
+  // instead silently orphaned every vendor-created item from ever showing
+  // to customers, even though it saved to the DB and appeared in the
+  // vendor's own dashboard (which filtered by the same, self-consistent
+  // but wrong, id).
+  const restaurant = await Restaurant.findOne({ userId: user._id }).lean();
+  if (!restaurant) {
+    return NextResponse.json({ error: "Restaurant profile not found" }, { status: 404 });
+  }
+
   const body = await req.json();
   const { name, category, price, description, image, addons } = body;
 
@@ -60,7 +75,7 @@ export async function POST(req: NextRequest) {
   }
 
   const item = await MenuItem.create({
-    vendorId: user._id,
+    vendorId: restaurant._id,
     name,
     category,
     price,

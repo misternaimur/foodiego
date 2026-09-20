@@ -29,6 +29,7 @@ export async function PUT(
     );
     return NextResponse.json({ addresses });
   } catch (error) {
+    console.error("Failed to update address:", error);
     const status = error instanceof BackendError ? error.status : 500;
     return NextResponse.json({ error: "Failed to update address" }, { status });
   }
@@ -53,6 +54,7 @@ export async function DELETE(
     );
     return NextResponse.json({ addresses });
   } catch (error) {
+    console.error("Failed to delete address:", error);
     const status = error instanceof BackendError ? error.status : 500;
     return NextResponse.json({ error: "Failed to delete address" }, { status });
   }
@@ -77,6 +79,7 @@ export async function PATCH(
     );
     return NextResponse.json({ addresses });
   } catch (error) {
+    console.error("Failed to set default address:", error);
     const status = error instanceof BackendError ? error.status : 500;
     return NextResponse.json({ error: "Failed to set default address" }, { status });
   }

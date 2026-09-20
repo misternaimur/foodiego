@@ -29,6 +29,7 @@ export async function GET() {
     const addresses = await backendFetchAsUser<ClientAddress[]>(session, `/api/users/${session.id}/addresses`);
     return NextResponse.json({ addresses });
   } catch (error) {
+    console.error("Failed to load addresses:", error);
     const status = error instanceof BackendError ? error.status : 500;
     return NextResponse.json({ error: "Failed to load addresses" }, { status });
   }
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ addresses }, { status: 201 });
   } catch (error) {
+    console.error("Failed to add address:", error);
     const status = error instanceof BackendError ? error.status : 500;
     return NextResponse.json({ error: "Failed to add address" }, { status });
   }
