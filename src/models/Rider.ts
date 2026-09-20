@@ -1,7 +1,7 @@
 import mongoose, { Schema, models, model } from "mongoose";
 
 // Rider er approval status-gulo ("pending", "approved", "rejected") define korche const array ebong type safety er jonno type.
-export const RIDER_STATUSES = ["pending", "approved", "rejected"] as const;
+export const RIDER_STATUSES = ["pending", "approved", "rejected", "suspended"] as const;
 export type RiderStatus = (typeof RIDER_STATUSES)[number];
 
 // Rider er vehicle types-gulo ("bicycle", "motorcycle", "scooter", "car") define korche strict type safety er jonno.
@@ -24,6 +24,16 @@ export interface RiderDocument {
   isAvailable: boolean;  // Rider ekhon delivery-r jonno available naki tar status (default: false)
   status: RiderStatus;
   rating: number;
+  // UPDATE (rider-GPS fix): real live location, pushed periodically by the
+  // rider's own browser via the Geolocation API (see
+  // src/app/api/v1/rider/location/route.ts and the useEffect in
+  // RiderDashboard.tsx). This is what makes the vendor's live delivery map
+  // (src/app/api/v1/vendor/deliveries/active/route.ts) show real rider
+  // positions instead of fabricated coordinates. Optional because a rider
+  // who hasn't granted location permission, or is offline, has none.
+  currentLat?: number;
+  currentLng?: number;
+  locationUpdatedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +54,9 @@ const RiderSchema = new Schema<RiderDocument>(
     isAvailable: { type: Boolean, default: false },
     status: { type: String, enum: RIDER_STATUSES, default: "pending" },
     rating: { type: Number, default: 0, min: 0, max: 5 },
+    currentLat: { type: Number },
+    currentLng: { type: Number },
+    locationUpdatedAt: { type: Date },
   },
   { timestamps: true } // Automatically createdAt ebong updatedAt field handle korbe
 );

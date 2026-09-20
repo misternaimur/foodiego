@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "@/components/Share/Navbar";
 import Footer from "@/components/Share/Footer";
+import AIAssistantWidget from "@/components/AIAssistantWidget";
 import { getOptionalSession } from "@/lib/dal";
 
 export const metadata: Metadata = {
@@ -21,9 +22,10 @@ export default async function MainLayout({
   return (
     <>
       <Navbar user={session ? { name: session.name, role: session.role } : null} />
-      
+
       {children}
       <Footer />
+      <AIAssistantWidget />
     </>
   );
 }

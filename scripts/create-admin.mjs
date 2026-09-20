@@ -6,7 +6,7 @@ import { stdin, stdout } from "node:process";
 
 // Standalone provisioning script for the static "admin" role, which is never
 // exposed as a choice on the public registration form. Run with:
-//   node --env-file=.env scripts/create-admin.mjs
+//   node --env-file=.env.local scripts/create-admin.mjs
 
 const MONGODB_URL = process.env.MONGODB_URL;
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;

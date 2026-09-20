@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Star, MessageSquare, Send, User } from 'lucide-react';
+import { Star, MessageSquare, Send, User, LoaderCircle } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 
 export interface Review {
@@ -19,25 +19,42 @@ interface RestaurantReviewsProps {
   onRatingUpdate?: (newAvg: number, newCount: number) => void;
 }
 
+// UPDATE (real reviews fix): this component used to keep its whole review
+// list in local `useState` only — nothing ever reached the database, so a
+// submitted review vanished on refresh and never showed up on the vendor's
+// own Reviews dashboard tab. It now reads/writes through
+// src/app/api/v1/catalog/reviews/[restaurantId]/route.ts, which is backed by
+// the same `Review` model the vendor side already uses.
 export const RestaurantReviews: React.FC<RestaurantReviewsProps> = ({
   restaurantId,
   onRatingUpdate,
 }) => {
   const { user } = useApp();
 
-  // Initial reviews array starting with the base feedback
-  const [reviews, setReviews] = useState<Review[]>([
-    {
-      id: 'rev-1',
-      userName: 'Tanvir Hossain',
-      rating: 4.5,
-      date: '2 days ago',
-      comment: 'Delicious quality, delivered fresh and hot!',
-    },
-  ]);
-
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState<number>(5);
   const [comment, setComment] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/v1/catalog/reviews/${restaurantId}`)
+      .then((res) => res.json())
+      .then((data: { reviews: Review[] }) => {
+        setReviews(data.reviews || []);
+        if (onRatingUpdate && data.reviews?.length) {
+          const avg = data.reviews.reduce((sum, r) => sum + r.rating, 0) / data.reviews.length;
+          onRatingUpdate(Number(avg.toFixed(1)), data.reviews.length);
+        }
+      })
+      .catch(() => setReviews([]))
+      .finally(() => setLoading(false));
+    // Only re-fetch when the restaurant changes — onRatingUpdate is a fresh
+    // function identity on every parent render and would otherwise re-run
+    // this on every keystroke elsewhere on the page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurantId]);
 
   // Calculate stats DIRECTLY from the reviews list
   const totalReviews = reviews.length;
@@ -45,34 +62,39 @@ export const RestaurantReviews: React.FC<RestaurantReviewsProps> = ({
     ? Number((reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1))
     : 0;
 
-  const handleSubmitReview = (e: React.FormEvent) => {
+  const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!comment.trim()) return;
+    if (!comment.trim() || submitting) return;
 
-    const newReview: Review = {
-      id: `rev-${Date.now()}`,
-      userName: user?.name || 'anamulhaque0357',
-      userAvatar: user?.avatarUrl,
-      rating,
-      date: 'Just now',
-      comment: comment.trim(),
-    };
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/v1/catalog/reviews/${restaurantId}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, comment: comment.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || 'Failed to submit review');
+      }
 
-    const updatedReviews = [newReview, ...reviews];
-    setReviews(updatedReviews);
+      const updatedReviews = [data.review as Review, ...reviews];
+      setReviews(updatedReviews);
 
-    // Calculate new stats
-    const newCount = updatedReviews.length;
-    const newAvg = Number(
-      (updatedReviews.reduce((sum, r) => sum + r.rating, 0) / newCount).toFixed(1)
-    );
+      const newCount = updatedReviews.length;
+      const newAvg = Number(
+        (updatedReviews.reduce((sum, r) => sum + r.rating, 0) / newCount).toFixed(1)
+      );
+      onRatingUpdate?.(newAvg, newCount);
 
-    // Notify parent page to update top header stats
-    if (onRatingUpdate) {
-      onRatingUpdate(newAvg, newCount);
+      setComment('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit review');
+    } finally {
+      setSubmitting(false);
     }
-
-    setComment('');
   };
 
   return (
@@ -124,22 +146,37 @@ export const RestaurantReviews: React.FC<RestaurantReviewsProps> = ({
 
           <button
             type="submit"
-            className="w-full bg-[#15462D] text-white text-xs font-bold py-3 rounded-full flex items-center justify-center gap-2"
+            disabled={submitting}
+            className="w-full bg-[#15462D] text-white text-xs font-bold py-3 rounded-full flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            <Send size={14} /> Submit
+            {submitting ? <LoaderCircle size={14} className="animate-spin" /> : <Send size={14} />}
+            Submit
           </button>
+          {error && <p className="text-xs font-semibold text-red-600">{error}</p>}
+          {!user && (
+            <p className="text-[11px] text-gray-400">You need to be signed in as a customer to leave a review.</p>
+          )}
         </form>
 
         <div className="lg:col-span-2 space-y-4">
-          {reviews.map((r) => (
-            <div key={r.id} className="bg-white p-5 rounded-3xl border border-gray-200">
-              <div className="flex justify-between mb-2">
-                <span className="font-bold text-slate-900 text-sm">{r.userName}</span>
-                <span className="text-xs text-amber-500 font-bold">★ {r.rating}</span>
-              </div>
-              <p className="text-xs text-gray-600">{r.comment}</p>
+          {loading ? (
+            <div className="flex items-center justify-center py-10 text-gray-300">
+              <LoaderCircle size={22} className="animate-spin" />
             </div>
-          ))}
+          ) : reviews.length === 0 ? (
+            <p className="py-6 text-center text-xs text-gray-400">No reviews yet — be the first to share your experience.</p>
+          ) : (
+            reviews.map((r) => (
+              <div key={r.id} className="bg-white p-5 rounded-3xl border border-gray-200">
+                <div className="flex justify-between mb-2">
+                  <span className="font-bold text-slate-900 text-sm">{r.userName}</span>
+                  <span className="text-xs text-amber-500 font-bold">★ {r.rating}</span>
+                </div>
+                <p className="text-xs text-gray-600">{r.comment}</p>
+                <p className="mt-2 text-[10px] text-gray-400">{new Date(r.date).toLocaleDateString()}</p>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </section>

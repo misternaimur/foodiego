@@ -9,7 +9,7 @@ import { dbConnect } from "@/lib/dbConnect";
 import { User } from "@/models/User";
 import { Rider } from "@/models/Rider";
 import { createSession } from "@/lib/session";
-import { adminAuth } from "@/lib/firebase/admin";
+import { getAdminAuth } from "@/lib/firebase/admin";
 
 export interface RiderRegistrationFields {
   fullName: string;
@@ -30,7 +30,7 @@ export async function registerRider(
 ): Promise<RiderFormState> {
   let decoded;
   try {
-    decoded = await adminAuth.verifyIdToken(idToken);
+    decoded = await getAdminAuth().verifyIdToken(idToken);
   } catch {
     return { message: "Your sign-in could not be verified. Please try again." };
   }
@@ -86,10 +86,11 @@ export async function registerRider(
       vehicleNumber: data.vehicleNumber,
       licenseNumber: data.licenseNumber,
       photoUrl: data.photoUrl,
-      // TEMP: Admin approval disabled — new riders are auto-approved.
-      // Restore `status: "pending"` to re-enable the admin-approval flow.
-      // status: "pending",
-      status: "approved",
+      // UPDATE (admin-approval fix): re-enabled. New riders now start
+      // "pending" and only reach the rider dashboard once an admin approves
+      // them from /admin/riders (see src/app/(main)/rider/page.tsx for the
+      // matching pending/rejected gate on the rider side).
+      status: "pending",
     });
   }
 

@@ -1,20 +1,41 @@
 "use client";
 
-import { useState } from "react";
-import { User, Mail, Phone, Save, CheckCircle2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { User, Mail, Phone, Save, CheckCircle2, LoaderCircle } from "lucide-react";
 import { useApp } from "@/context/AppContext";
+import { profileApi } from "@/lib/clientApi";
 
 export default function ClientProfilePage() {
   const { user } = useApp();
   const [fullName, setFullName] = useState(user?.name || "");
   const [phone, setPhone] = useState("");
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    profileApi
+      .get()
+      .then((data) => {
+        setFullName(data.name);
+        setPhone(data.phone || "");
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // NOTE: এখনো কোনো backend update endpoint নেই — এটি শুধু UI feedback দেখাচ্ছে।
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    setSaving(true);
+    setError(null);
+    try {
+      await profileApi.update({ name: fullName, phone });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch {
+      setError("Could not save your changes. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const initials = fullName ? fullName.charAt(0).toUpperCase() : "U";
@@ -83,15 +104,18 @@ export default function ClientProfilePage() {
           <div className="flex items-center gap-3 pt-2">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#15462D] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#0e3320]"
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#15462D] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#0e3320] disabled:opacity-60"
             >
-              <Save size={15} /> Save Changes
+              {saving ? <LoaderCircle size={15} className="animate-spin" /> : <Save size={15} />}
+              Save Changes
             </button>
             {saved && (
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
                 <CheckCircle2 size={14} /> Saved!
               </span>
             )}
+            {error && <span className="text-xs font-semibold text-red-600">{error}</span>}
           </div>
         </form>
       </div>

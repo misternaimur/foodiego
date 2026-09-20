@@ -8,7 +8,9 @@ export default async function RiderPendingPage() {
 
   const rider = await getOrCreateRiderProfile(session);
 
-  if (!rider || rider.status === "approved") {
+  // "approved" belongs on the dashboard; "suspended" is handled by the
+  // layout's lockout screen, which only renders once we redirect there.
+  if (!rider || rider.status === "approved" || rider.status === "suspended") {
     redirect("/rider");
   }
 

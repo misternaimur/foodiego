@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { Suspense, useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "motion/react";
 import { Mail, Lock, Eye, EyeOff, LoaderCircle, ArrowLeft } from "lucide-react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase/client";
+import { getClientAuth } from "@/lib/firebase/client";
 import { establishSession } from "@/app/(public)/actions/auth";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
 import type { FormState } from "@/lib/definitions";
@@ -23,7 +23,7 @@ async function loginAction(
 
   try {
     const credential = await signInWithEmailAndPassword(
-      auth,
+      getClientAuth(),
       email,
       password
     );

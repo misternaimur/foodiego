@@ -1,26 +1,21 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import FoodCard, { FoodItem } from '@/components/FoodCard';
+import FoodCard from '@/components/FoodCard';
 import { useApp } from '@/context/AppContext';
 
+// UPDATE (real food-catalog fix): this page used to fetch static demo JSON
+// (public/api/foods.json) and cross-reference favorited ids against it —
+// so a favorite saved from the real menu (a real MenuItem id) would never
+// actually show up here, since that id doesn't exist in the demo file.
+// It now filters AppContext's `catalogFoodItems` (the real menu, flattened)
+// instead.
 export default function FavoritesPage() {
-  const { favorites, addToCart, toggleFavorite } = useApp();
-  const [foods, setFoods] = useState<FoodItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { favorites, addToCart, toggleFavorite, catalogFoodItems, isRestaurantsLoading } = useApp();
+  const isLoading = isRestaurantsLoading;
 
-  useEffect(() => {
-    fetch('/api/foods.json')
-      .then((res) => res.json())
-      .then((data: FoodItem[]) => {
-        setFoods(data);
-        setIsLoading(false);
-      })
-      .catch(() => setIsLoading(false));
-  }, []);
-
-  const favoriteFoods = foods.filter((food) => favorites.includes(food.id));
+  const favoriteFoods = catalogFoodItems.filter((food) => favorites.includes(food.id));
 
   return (
     <main className="min-h-screen w-full bg-white flex flex-col">

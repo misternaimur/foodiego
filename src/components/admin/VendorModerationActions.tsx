@@ -1,19 +1,23 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, X, RotateCcw, LoaderCircle } from "lucide-react";
+import { Check, X, RotateCcw, LoaderCircle, Ban, RefreshCcw } from "lucide-react";
 import {
   approveRestaurant,
   rejectRestaurant,
   resetRestaurantStatus,
+  suspendRestaurant,
+  reactivateRestaurant,
 } from "@/app/(main)/actions/admin";
 
-type Action = "approve" | "reject" | "reset";
+type Action = "approve" | "reject" | "reset" | "suspend" | "reactivate";
 
 const RUNNERS: Record<Action, (id: string) => Promise<{ ok: boolean; message?: string }>> = {
   approve: approveRestaurant,
   reject: rejectRestaurant,
   reset: resetRestaurantStatus,
+  suspend: suspendRestaurant,
+  reactivate: reactivateRestaurant,
 };
 
 export default function VendorModerationActions({
@@ -21,7 +25,7 @@ export default function VendorModerationActions({
   status,
 }: {
   restaurantId: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "suspended";
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +47,7 @@ export default function VendorModerationActions({
   return (
     <div className="flex flex-col items-end gap-2">
       <div className="flex flex-wrap items-center justify-end gap-2">
-        {status !== "approved" && (
+        {(status === "pending" || status === "rejected") && (
           <button
             onClick={() => run("approve")}
             disabled={pending}
@@ -58,7 +62,7 @@ export default function VendorModerationActions({
           </button>
         )}
 
-        {status !== "rejected" && (
+        {(status === "pending" || status === "approved") && (
           <button
             onClick={() => run("reject")}
             disabled={pending}
@@ -73,7 +77,37 @@ export default function VendorModerationActions({
           </button>
         )}
 
-        {status !== "pending" && (
+        {status === "approved" && (
+          <button
+            onClick={() => run("suspend")}
+            disabled={pending}
+            className={`${btn} border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100`}
+          >
+            {pending && running === "suspend" ? (
+              <LoaderCircle size={13} className="animate-spin" />
+            ) : (
+              <Ban size={13} />
+            )}
+            Suspend
+          </button>
+        )}
+
+        {status === "suspended" && (
+          <button
+            onClick={() => run("reactivate")}
+            disabled={pending}
+            className={`${btn} bg-emerald-600 text-white hover:bg-emerald-700`}
+          >
+            {pending && running === "reactivate" ? (
+              <LoaderCircle size={13} className="animate-spin" />
+            ) : (
+              <RefreshCcw size={13} />
+            )}
+            Reactivate
+          </button>
+        )}
+
+        {(status === "approved" || status === "rejected") && (
           <button
             onClick={() => run("reset")}
             disabled={pending}

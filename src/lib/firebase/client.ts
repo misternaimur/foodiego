@@ -1,26 +1,48 @@
-import { getApps, initializeApp, type FirebaseOptions } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getStorage } from "firebase/storage";
+import { getApps, initializeApp, type FirebaseApp, type FirebaseOptions } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
-const firebaseConfig: FirebaseOptions = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+let app: FirebaseApp | undefined;
+let auth: Auth | undefined;
+let storage: FirebaseStorage | undefined;
 
-const firebaseApp = getApps()[0] ?? initializeApp(firebaseConfig);
+function getFirebaseConfig(): FirebaseOptions {
+  return {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  };
+}
 
-export const auth = getAuth(firebaseApp);
-export const storage = getStorage(firebaseApp);
+export function getClientApp(): FirebaseApp {
+  if (!app) {
+    const config = getFirebaseConfig();
+    if (!config.apiKey || !config.projectId) {
+      throw new Error("Missing Firebase client configuration");
+    }
 
-// Fail an unreachable upload fast (~12s) instead of the SDK's default 2-minute
-// exponential-backoff retry, which otherwise leaves registration forms stuck on
-// "Submitting...". A browser upload can still fail entirely if the Storage
-// bucket has no CORS policy for web origins — configure that with:
-//   gsutil cors set cors.json gs://team-ultron-3251e.firebasestorage.app
-storage.maxUploadRetryTime = 12_000;
+    app = getApps()[0] ?? initializeApp(config);
+  }
 
-export default firebaseApp;
+  return app;
+}
+
+export function getClientAuth(): Auth {
+  if (!auth) {
+    auth = getAuth(getClientApp());
+  }
+
+  return auth;
+}
+
+export function getClientStorage(): FirebaseStorage {
+  if (!storage) {
+    storage = getStorage(getClientApp());
+    storage.maxUploadRetryTime = 12_000;
+  }
+
+  return storage;
+}

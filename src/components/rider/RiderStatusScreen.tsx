@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Clock, XCircle, MapPin, Calendar, Mail, LogOut, Bike, Sparkles } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 

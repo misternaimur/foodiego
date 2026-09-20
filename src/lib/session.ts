@@ -1,13 +1,13 @@
 import "server-only";
 
 import { cookies } from "next/headers";
-import { adminAuth } from "@/lib/firebase/admin";
+import { getAdminAuth } from "@/lib/firebase/admin";
 import type { DecodedIdToken } from "firebase-admin/auth";
 
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function createSession(idToken: string) {
-  const sessionCookie = await adminAuth.createSessionCookie(idToken, {
+  const sessionCookie = await getAdminAuth().createSessionCookie(idToken, {
     expiresIn: SESSION_DURATION_MS,
   });
   const cookieStore = await cookies();
@@ -25,7 +25,7 @@ export async function verifySessionCookie(session?: string): Promise<DecodedIdTo
   if (!session) return null;
 
   try {
-    return await adminAuth.verifySessionCookie(session, true);
+    return await getAdminAuth().verifySessionCookie(session, true);
   } catch {
     return null;
   }

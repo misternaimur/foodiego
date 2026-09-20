@@ -80,18 +80,18 @@ export const WhatAreYouCraving: React.FC<WhatAreYouCravingProps> = ({
   onSelectCategory,
 }) => {
   return (
-    <section className="w-full bg-[#FAF7EE] py-16 lg:py-24">
+    <section className="w-full bg-transparent py-16 lg:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header Section (Left Aligned) */}
-        <div className="mb-10 text-left">
-          <p className="text-xs font-bold text-emerald-800 tracking-widest uppercase mb-2">
+        <div className="mb-10 text-center">
+          <p className="text-l font-bold text-pink-800 tracking-widest uppercase mb-2">
             {badge}
           </p>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-green-600 tracking-tight mb-3">
             {title}
           </h2>
-          <p className="text-sm sm:text-base text-gray-600 font-normal">
+          <p className="text-sm sm:text-base text-gray-800 font-normal">
             {subtitle}
           </p>
         </div>
@@ -114,7 +114,7 @@ export const WhatAreYouCraving: React.FC<WhatAreYouCravingProps> = ({
 
                 {/* Text Labels below card */}
                 <div className="text-left px-0.5">
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-emerald-800 transition-colors">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-600 group-hover:text-emerald-800 transition-colors">
                     {item.name}
                   </h3>
                   <p className="text-xs text-gray-500 font-medium mt-0.5 leading-tight">

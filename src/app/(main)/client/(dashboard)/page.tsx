@@ -1,39 +1,36 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShoppingBag, Heart, Clock, DollarSign, ArrowRight, MapPin } from "lucide-react";
 import { useApp } from "@/context/AppContext";
-
-interface RecentOrder {
-  id: string;
-  restaurant: string;
-  items: string;
-  total: number;
-  status: "Delivered" | "On the way" | "Preparing" | "Cancelled";
-  date: string;
-}
-
-const recentOrders: RecentOrder[] = [
-  { id: "#FG-10234", restaurant: "Greenhouse Cafe", items: "Truffle Smashburger, Fries", total: 22.5, status: "On the way", date: "Today, 1:45 PM" },
-  { id: "#FG-10229", restaurant: "Sushi Master", items: "Sushi Platter x1", total: 34.0, status: "Delivered", date: "Yesterday, 8:10 PM" },
-  { id: "#FG-10218", restaurant: "Sweet Treats Bakery", items: "Berry Cheesecake", total: 12.0, status: "Delivered", date: "Oct 21, 2026" },
-];
-
-const statusColors: Record<RecentOrder["status"], string> = {
-  Delivered: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  "On the way": "bg-amber-50 text-amber-700 border-amber-100",
-  Preparing: "bg-sky-50 text-sky-700 border-sky-100",
-  Cancelled: "bg-rose-50 text-rose-700 border-rose-100",
-};
+import { ordersApi, orderRestaurantName, toDisplayStatus, type Order } from "@/lib/clientApi";
 
 export default function ClientOverviewPage() {
   const { favorites, user } = useApp();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    ordersApi
+      .list()
+      .then((data) => setOrders(data.orders))
+      .catch(() => setOrders([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const activeOrders = orders.filter((o) => o.status !== "delivered" && o.status !== "cancelled");
+  const totalSpent = orders
+    .filter((o) => o.status !== "cancelled")
+    .reduce((sum, o) => sum + o.totalAmount, 0);
+  const activeOrder = activeOrders[0];
+  const recentOrders = orders.slice(0, 3);
 
   const stats = [
-    { label: "Total Orders", value: "18", icon: ShoppingBag, color: "bg-emerald-50 text-[#15462D]" },
-    { label: "Active Orders", value: "1", icon: Clock, color: "bg-amber-50 text-amber-600" },
+    { label: "Total Orders", value: String(orders.length), icon: ShoppingBag, color: "bg-emerald-50 text-[#15462D]" },
+    { label: "Active Orders", value: String(activeOrders.length), icon: Clock, color: "bg-amber-50 text-amber-600" },
     { label: "Favorites", value: String(favorites.length), icon: Heart, color: "bg-rose-50 text-rose-600" },
-    { label: "Total Spent", value: "$412.80", icon: DollarSign, color: "bg-sky-50 text-sky-600" },
+    { label: "Total Spent", value: `৳${totalSpent.toLocaleString()}`, icon: DollarSign, color: "bg-sky-50 text-sky-600" },
   ];
 
   return (
@@ -52,31 +49,35 @@ export default function ClientOverviewPage() {
             <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${s.color}`}>
               <s.icon size={18} />
             </div>
-            <p className="text-2xl font-extrabold text-gray-900">{s.value}</p>
+            <p className="text-2xl font-extrabold text-gray-900">{loading ? "—" : s.value}</p>
             <p className="mt-0.5 text-xs font-medium text-gray-500">{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* Active order banner */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#15462D] text-white">
-            <MapPin size={19} />
+      {activeOrder && (
+        <div className="flex flex-col gap-4 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#15462D] text-white">
+              <MapPin size={19} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">
+                Order #{activeOrder._id.slice(-6).toUpperCase()} is {toDisplayStatus(activeOrder.status).toLowerCase()}
+              </p>
+              <p className="text-xs text-gray-500">{orderRestaurantName(activeOrder)}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-bold text-gray-900">Order #FG-10234 is on the way</p>
-            <p className="text-xs text-gray-500">Greenhouse Cafe &middot; Arriving in ~15 min</p>
-          </div>
+          <Link
+            href="/client/track"
+            className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#15462D] px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#0e3320]"
+          >
+            Track Order
+            <ArrowRight size={14} />
+          </Link>
         </div>
-        <Link
-          href="/client/track"
-          className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#15462D] px-5 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#0e3320]"
-        >
-          Track Order
-          <ArrowRight size={14} />
-        </Link>
-      </div>
+      )}
 
       {/* Recent Orders */}
       <div className="rounded-2xl border border-gray-200 bg-white shadow-xs">
@@ -87,21 +88,33 @@ export default function ClientOverviewPage() {
           </Link>
         </div>
         <div className="divide-y divide-gray-100">
-          {recentOrders.map((order) => (
-            <div key={order.id} className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-gray-900">{order.restaurant}</p>
-                  <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusColors[order.status]}`}>
-                    {order.status}
-                  </span>
+          {loading ? (
+            [...Array(2)].map((_, i) => <div key={i} className="h-16 animate-pulse bg-gray-50" />)
+          ) : recentOrders.length === 0 ? (
+            <div className="px-6 py-10 text-center text-sm text-gray-500">No orders yet — your history will show up here.</div>
+          ) : (
+            recentOrders.map((order) => {
+              const status = toDisplayStatus(order.status);
+              const itemsSummary = order.items.map((i) => i.name).join(", ");
+              return (
+                <div key={order._id} className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-gray-900">{orderRestaurantName(order)}</p>
+                      <span className="inline-flex items-center rounded-full border border-gray-100 bg-gray-50 px-2 py-0.5 text-[10px] font-bold text-gray-600">
+                        {status}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-gray-500">{itemsSummary}</p>
+                    <p className="text-[11px] text-gray-400">
+                      #{order._id.slice(-6).toUpperCase()} &middot; {new Date(order.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <p className="text-sm font-extrabold text-gray-900">৳{order.totalAmount.toLocaleString()}</p>
                 </div>
-                <p className="mt-0.5 text-xs text-gray-500">{order.items}</p>
-                <p className="text-[11px] text-gray-400">{order.id} &middot; {order.date}</p>
-              </div>
-              <p className="text-sm font-extrabold text-gray-900">${order.total.toFixed(2)}</p>
-            </div>
-          ))}
+              );
+            })
+          )}
         </div>
       </div>
 

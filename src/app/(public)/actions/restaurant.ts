@@ -9,7 +9,7 @@ import { dbConnect } from "@/lib/dbConnect";
 import { User } from "@/models/User";
 import { Restaurant } from "@/models/Restaurant";
 import { createSession } from "@/lib/session";
-import { adminAuth } from "@/lib/firebase/admin";
+import { getAdminAuth } from "@/lib/firebase/admin";
 import { consumeVerifiedRegistrationOtp } from "@/lib/otp";
 
 export interface RestaurantRegistrationFields {
@@ -32,7 +32,7 @@ export async function registerRestaurant(
 ): Promise<RestaurantFormState> {
   let decoded;
   try {
-    decoded = await adminAuth.verifyIdToken(idToken);
+    decoded = await getAdminAuth().verifyIdToken(idToken);
   } catch {
     return { message: "Your sign-in could not be verified. Please try again." };
   }
@@ -95,10 +95,11 @@ export async function registerRestaurant(
       cuisineType: data.cuisineType,
       openingTime: data.openingTime,
       closingTime: data.closingTime,
-      // TEMP: Admin approval disabled — new restaurants are auto-approved.
-      // Restore `status: "pending"` to re-enable the admin-approval flow.
-      // status: "pending",
-      status: "approved",
+      // UPDATE (admin-approval fix): re-enabled. New restaurants now start
+      // "pending" and only reach the vendor dashboard once an admin approves
+      // them from /admin/vendors (see src/app/(main)/vendor/layout.tsx for
+      // the matching pending/rejected gate on the vendor side).
+      status: "pending",
     });
   }
 

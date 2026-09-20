@@ -1,13 +1,31 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useEffect, useSyncExternalStore } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import { Sparkles, User, ShoppingBag, LayoutDashboard, Settings, LogOut, ChevronDown, UtensilsCrossed, Bike } from 'lucide-react';
-import { useApp } from '@/context/AppContext';
-import LogoGreen from './LogoGreen';
-import CartDrawer from '@/components/client/CartDrawer';
+import React, { useState, useRef, useEffect, useCallback, useSyncExternalStore } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { motion, AnimatePresence, useScroll, useTransform, type Transition } from "framer-motion";
+import {
+  User,
+  ShoppingBag,
+  LayoutDashboard,
+  Settings,
+  LogOut,
+  ChevronDown,
+  UtensilsCrossed,
+  Bike,
+  ShoppingCart,
+  Menu,
+  X,
+  Search,
+  Sparkles,
+} from "lucide-react";
+import { useApp } from "@/context/AppContext";
+import LogoGreen from "./LogoGreen";
+import CartDrawer from "@/components/client/CartDrawer";
+
+const springSlow: Transition = { type: "spring", stiffness: 300, damping: 28 };
+const fadeDuration: Transition = { duration: 0.25, ease: "easeOut" };
 
 export interface NavItem {
   label: string;
@@ -16,20 +34,22 @@ export interface NavItem {
 
 export interface NavbarProps {
   navItems?: NavItem[];
-  user?: {
-    name?: string;
-    email?: string;
-    avatarUrl?: string;
-    role?: string;
-  } | null;
+  user?:
+    | {
+        name?: string;
+        email?: string;
+        avatarUrl?: string;
+        role?: string;
+      }
+    | null;
   onSearch?: (query: string) => void;
   onLogout?: () => void;
 }
 
 const defaultNavItems: NavItem[] = [
-  { label: 'Home', href: '/' },
-  { label: 'Discover restaurants', href: '/restaurants' },
-  { label: 'Offers', href: '/offers' },
+  { label: "Home", href: "/" },
+  { label: "Discover restaurants", href: "/restaurants" },
+  { label: "Offers", href: "/offers" },
 ];
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -40,40 +60,47 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const pathname = usePathname();
   const router = useRouter();
-  
-  const [searchQuery, setSearchQuery] = useState('');
+  const { scrollY } = useScroll();
+  const navY = useTransform(scrollY, [0, 80], [0, -4]);
+
+  const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
-  const isMounted = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false
-  );
-
+  const isMounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const { cart, user: contextUser, logoutUser } = useApp();
   const user = propUser ?? contextUser;
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const role = propUser?.role;
   const dashboardHref =
-  role === 'admin'
-    ? '/admin'
-    : role === 'restaurant'
-    ? '/vendor'
-    : role === 'rider'
-    ? '/rider'
-    : '/client';
+    role === "admin"
+      ? "/admin"
+      : role === "restaurant"
+      ? "/vendor"
+      : role === "rider"
+      ? "/rider"
+      : "/client";
 
-  const handleLogout = async () => {
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleLogout = useCallback(async () => {
     if (onLogout) {
       onLogout();
       return;
     }
     await logoutUser();
-  };
+  }, [onLogout, logoutUser]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -81,19 +108,29 @@ export const Navbar: React.FC<NavbarProps> = ({
         setIsDropdownOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Conditionally hide the Navbar on admin, vendor, rider, or client dashboard paths
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsMobileMenuOpen(false);
+        setIsDropdownOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
+
   if (
-  pathname?.startsWith('/admin') ||
-  pathname?.startsWith('/vendor') ||
-  pathname?.startsWith('/rider') ||
-  pathname?.startsWith('/client')
-) {
-  return null;
-}
+    pathname?.startsWith("/admin") ||
+    pathname?.startsWith("/vendor") ||
+    pathname?.startsWith("/rider") ||
+    pathname?.startsWith("/client")
+  ) {
+    return null;
+  }
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,307 +141,482 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
-  if (pathname?.includes('/dashboard')) {
-    return null;
-  }
-
   return (
     <>
-      {/* Restaurant / Rider Partner Sign-up strip — hidden once any role is logged in */}
-      {!user && (
-        <div className="w-full bg-[#15462D] text-white/90">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3 text-xs">
-            <Link
-              href="/auth/register/restaurant"
-              className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#15462D] hover:border-white transition-colors"
+      <motion.div style={{ y: navY }}>
+        <AnimatePresence>
+          {!user && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="w-full bg-[#15462D] text-white/90 overflow-hidden"
             >
-              <UtensilsCrossed size={13} />
-              <span>Create a restaurant account</span>
-            </Link>
-            <Link
-              href="/auth/register/rider"
-              className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#15462D] hover:border-white transition-colors"
-            >
-              <Bike size={13} />
-              <span>Create a rider account</span>
-            </Link>
-          </div>
-        </div>
-      )}
-
-      <header className="sticky top-0 z-50 w-full bg-[#FAF7EE] border-b border-[#E8E2D5]/70 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
-          
-          {/* Left Section: Logo & Nav Links */}
-          <div className="flex items-center gap-6 lg:gap-8">
-            <div>
-              <LogoGreen />
-            </div>
-            <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
-              {navItems.map((item) => {
-                const isActive = pathname === item.href;
-                return (
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3 text-xs">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5, ...springSlow }}
+                >
                   <Link
-                    key={`${item.href}-${item.label}`}
-                    href={item.href}
-                    className={`relative py-6 text-sm font-semibold transition-colors ${
-                      isActive
-                        ? 'text-[#15462D]'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    href="/auth/register/restaurant"
+                    className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#15462D] hover:border-white transition-colors duration-200 cursor-pointer"
                   >
-                    {item.label}
-                    {isActive && (
-                      <span className="absolute bottom-4 left-0 w-full h-0.5 bg-[#15462D] rounded-full" />
-                    )}
+                    <UtensilsCrossed size={13} />
+                    <span>Create a restaurant account</span>
                   </Link>
-                );
-              })}
-
-              {/* AI Assistant Button */}
-              <Link
-                href="/ai-assistant"
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
-                  pathname === '/ai-assistant'
-                    ? 'bg-[#15462D] text-white shadow-sm'
-                    : 'bg-emerald-100/60 text-[#15462D] hover:bg-emerald-100 border border-emerald-200/50'
-                }`}
-              >
-                <Sparkles size={14} className="text-amber-500 animate-pulse" />
-                <span>AI Assistant</span>
-              </Link>
-            </nav>
-          </div>
-
-          {/* Center Section: Search Bar */}
-          <form 
-            onSubmit={handleSearchSubmit} 
-            className="hidden md:flex flex-1 max-w-sm mx-2 lg:mx-4"
-          >
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6, ...springSlow }}
+                >
+                  <Link
+                    href="/auth/register/rider"
+                    className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#15462D] hover:border-white transition-colors duration-200 cursor-pointer"
+                  >
+                    <Bike size={13} />
+                    <span>Create a rider account</span>
+                  </Link>
+                </motion.div>
               </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search food or restaurants..."
-                className="w-full bg-[#EFEBE0] text-sm text-gray-800 placeholder-gray-500 rounded-full pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#15462D]/20 focus:bg-white transition-all border border-transparent focus:border-[#15462D]/30"
-              />
-            </div>
-          </form>
-
-          {/* Right Section: Actions & Conditional Profile / Order Now */}
-          <div className="flex items-center gap-4 sm:gap-5 shrink-0">
-            {/* Cart Trigger Button */}
-            <button 
-              onClick={() => setIsCartOpen(true)}
-              className="relative p-2 text-gray-700 hover:text-[#15462D] transition-colors bg-white/60 hover:bg-white rounded-full border border-gray-200/50 shadow-xs cursor-pointer"
-              aria-label="Cart"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-              </svg>
-              {isMounted && cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#F6A429] text-gray-900 text-[10px] font-extrabold h-4 w-4 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-
-            {user ? (
-              /* Logged In Dropdown */
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2 text-sm font-semibold text-[#15462D] bg-white border border-[#E8E2D5] hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors focus:outline-none shadow-xs cursor-pointer"
-                >
-                  <div className="w-7 h-7 rounded-full bg-emerald-100 overflow-hidden flex items-center justify-center relative border border-emerald-200">
-                    {user.avatarUrl ? (
-                      <Image src={user.avatarUrl} alt="User Avatar" fill className="object-cover" />
-                    ) : (
-                      <span className="text-xs font-bold text-[#15462D]">
-                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                      </span>
-                    )}
-                  </div>
-                  <span className="hidden sm:inline-block max-w-22.5 truncate">{user.name || 'Account'}</span>
-                  <ChevronDown size={14} className={`text-gray-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {/* Dropdown Menu */}
-                {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{user.name || 'User'}</p>
-                      <p className="text-xs text-gray-500 truncate">{user.email || 'user@example.com'}</p>
-                    </div>
-
-                  <div className="py-1">
-                    <Link
-                      href="/account"
-                      onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
-                    >
-                      <User size={16} className="text-[#15462D]" />
-                      <span>Profile</span>
-                    </Link>
-
-                    <Link
-                      href="/client/cart"
-                      onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
-                    >
-                      <ShoppingBag size={16} className="text-[#15462D]" />
-                      <span>My Cart</span>
-                    </Link>
-
-                      <Link
-                        href={dashboardHref}
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
-                      >
-                        <LayoutDashboard size={16} className="text-[#15462D]" />
-                        <span>Dashboard</span>
-                      </Link>
-
-                      <Link
-                        href="/account"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-[#FAF7EE] transition-colors"
-                      >
-                        <Settings size={16} className="text-[#15462D]" />
-                        <span>Settings</span>
-                      </Link>
-                    </div>
-
-                    <div className="pt-1 border-t border-gray-100">
-                      <button
-                        onClick={async () => {
-                          setIsDropdownOpen(false);
-                          await handleLogout();
-                        }}
-                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left font-medium cursor-pointer"
-                      >
-                        <LogOut size={16} className="text-red-500" />
-                        <span>Logout</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* Not Logged In Actions */
-              <div className="flex items-center gap-3">
-                <Link 
-                  href="/auth/login" 
-                  className="text-sm font-bold text-gray-700 hover:text-[#15462D] transition-colors px-2 py-1"
-                >
-                  Sign in
-                </Link>
-                
-                <Link
-                  href="/auth/register"
-                  className="hidden xl:inline-flex items-center justify-center text-xs font-extrabold tracking-wider text-gray-900 bg-[#F6A429] hover:bg-[#e0931f] uppercase px-5 py-2.5 rounded-full transition-colors shadow-xs"
-                >
-                  Order Now
-                </Link>
-              </div>
-            )}
-
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-gray-700 hover:text-[#15462D] bg-white/60 rounded-full border border-gray-200/50"
-              aria-label="Toggle menu"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {isMobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Drawer */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden bg-[#FAF7EE] border-t border-[#E8E2D5] px-4 pt-3 pb-6 space-y-3">
-            <form onSubmit={handleSearchSubmit} className="md:hidden pb-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search food or restaurants..."
-                className="w-full bg-[#EFEBE0] text-sm text-gray-800 placeholder-gray-500 rounded-full pl-4 pr-4 py-2 focus:outline-none border border-transparent focus:border-[#15462D]/30"
-              />
-            </form>
-
-            {navItems.map((item) => (
-              <Link
-                key={`${item.href}-${item.label}`}
-                href={item.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`block text-base font-semibold py-1.5 ${
-                  pathname === item.href ? 'text-[#15462D]' : 'text-gray-700'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-
-            <Link
-              href="/ai-assistant"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-2 text-base font-semibold py-1.5 text-[#15462D]"
-            >
-              <Sparkles size={17} className="text-amber-500" />
-              <span>AI Assistant</span>
-            </Link>
-
-            {!user ? (
-              <>
-                <Link
-                  href="/auth/register"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block text-center w-full py-2.5 mt-2 text-xs font-bold uppercase tracking-wider text-gray-900 bg-[#F6A429] rounded-full shadow-xs"
-                >
-                  Order Now
-                </Link>
-
-              <div className="pt-2 flex gap-3 border-[#E8E2D5]">
-                <Link
-                  href="/auth/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex-1 text-center py-2 text-sm font-semibold text-white bg-[#15462D] rounded-full"
-                >
-                  Sign in 
-                </Link>
-              </div>
-            </>
-          ) : (
-            <div className="pt-3 border-t border-[#E8E2D5] space-y-1">
-              <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Profile</Link>
-              <Link href="/client/cart" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">My Cart</Link>
-              <Link href={dashboardHref} onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Dashboard</Link>
-              <Link href="/settings" onClick={() => setIsMobileMenuOpen(false)} className="block py-2 text-sm text-gray-700 font-medium">Settings</Link>
-              <button 
-                onClick={async () => { setIsMobileMenuOpen(false); await handleLogout(); }} 
-                className="block w-full text-left py-2 text-sm text-red-600 font-medium"
-              >
-                Logout
-              </button>
-            </div>
+            </motion.div>
           )}
-        </div>
-      )}
-    </header>{/* Slide-over Cart Drawer Component */}
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+        </AnimatePresence>
 
+        <motion.header
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ ...springSlow, delay: 0.2 }}
+          className="sticky top-0 z-50 w-full transition-all duration-300"
+          style={{
+            background: isScrolled
+              ? "rgba(250, 247, 238, 0.85)"
+              : "rgba(250, 247, 238, 0.7)",
+            backdropFilter: isScrolled
+              ? "blur(20px) saturate(1.5)"
+              : "blur(12px) saturate(1.2)",
+            WebkitBackdropFilter: isScrolled
+              ? "blur(20px) saturate(1.5)"
+              : "blur(12px) saturate(1.2)",
+            borderBottom: isScrolled
+              ? "1px solid rgba(232, 226, 213, 0.6)"
+              : "1px solid rgba(232, 226, 213, 0.3)",
+            boxShadow: isScrolled
+              ? "0 4px 30px rgba(21, 70, 45, 0.08)"
+              : "none",
+          }}
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+            {/* Left: Logo & Nav */}
+            <div className="flex items-center gap-6 lg:gap-8">
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                transition={{ ...springSlow }}
+              >
+                <LogoGreen />
+              </motion.div>
+
+              <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
+                {navItems.map((item, i) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <motion.div
+                      key={item.href}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 + i * 0.06, ...springSlow }}
+                    >
+                      <Link
+                        href={item.href}
+                        className="relative py-6 text-sm font-semibold text-[#15462D] transition-colors duration-200"
+                      >
+                        {item.label}
+                        <AnimatePresence>
+                          {isActive && (
+                            <motion.span
+                              layoutId="navUnderline"
+                              className="absolute -bottom-0.5 left-0 right-0 h-[2.5px] bg-[#F6A429] rounded-full"
+                              initial={{ scaleX: 0 }}
+                              animate={{ scaleX: 1 }}
+                              exit={{ scaleX: 0 }}
+                              transition={{ ...springSlow }}
+                            />
+                          )}
+                        </AnimatePresence>
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Center: Search */}
+            <motion.form
+              onSubmit={handleSearchSubmit}
+              className="hidden md:flex flex-1 max-w-sm mx-2 lg:mx-4"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5, ...springSlow }}
+            >
+              <div className="relative w-full">
+                <motion.div
+                  className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+                  animate={{ color: isSearchFocused ? "#15462D" : "#9CA3AF" }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Search size={16} strokeWidth={2.2} />
+                </motion.div>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                  placeholder="Search food or restaurants..."
+                  className="w-full bg-[#EFEBE0] text-sm text-[#1F2937] placeholder-[#9CA3AF] rounded-full pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#15462D]/15 focus:bg-white transition-all duration-200 border border-transparent focus:border-[#15462D]/20"
+                />
+              </div>
+            </motion.form>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-4 sm:gap-5 shrink-0">
+              {/* Cart */}
+              <motion.button
+                onClick={() => setIsCartOpen(true)}
+                className="relative p-2 text-[#6B7280] hover:text-[#15462D] transition-colors duration-200 bg-white/60 hover:bg-white rounded-full border border-gray-200/50 cursor-pointer"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.92 }}
+                aria-label="Cart"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                <AnimatePresence>
+                  {isMounted && cartCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                      className="absolute -top-1 -right-1 bg-[#F6A429] text-[#1F2937] text-[10px] font-extrabold h-4 w-4 rounded-full flex items-center justify-center"
+                    >
+                      {cartCount}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+
+              {/* User Dropdown */}
+              {user ? (
+                <div className="relative" ref={dropdownRef}>
+                  <motion.button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-2 text-sm font-semibold text-[#15462D] bg-white border border-[#E8E2D5] hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors duration-200 focus:outline-none cursor-pointer"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-emerald-100 overflow-hidden flex items-center justify-center relative border border-emerald-200">
+                      {user.avatarUrl ? (
+                        <Image src={user.avatarUrl} alt="User Avatar" fill className="object-cover" />
+                      ) : (
+                        <span className="text-xs font-bold text-[#15462D]">
+                          {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                        </span>
+                      )}
+                    </div>
+                    <span className="hidden sm:inline-block max-w-[140px] truncate">{user.name || "Account"}</span>
+                    <motion.div
+                      animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+                      transition={{ duration: 0.25, ease: "easeInOut" }}
+                    >
+                      <ChevronDown size={14} className="text-gray-500" />
+                    </motion.div>
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {isDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.96, transition: { duration: 0.15 } }}
+                        transition={{ ...springSlow }}
+                        className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-[0_10px_40px_rgba(21,70,45,0.12)] border border-[#E8E2D5] py-2 z-50"
+                      >
+                        <div className="px-4 py-3 border-b border-[#E8E2D5]/60">
+                          <p className="text-sm font-semibold text-[#1F2937] truncate">{user.name || "User"}</p>
+                          <p className="text-xs text-[#9CA3AF] truncate">{user.email || "user@example.com"}</p>
+                        </div>
+
+                        <div className="py-1">
+                          {[
+                            { href: "/account", icon: <User size={16} className="text-[#15462D]" />, label: "Profile" },
+                            { href: "/client/cart", icon: <ShoppingBag size={16} className="text-[#15462D]" />, label: "My Cart" },
+                            { href: dashboardHref, icon: <LayoutDashboard size={16} className="text-[#15462D]" />, label: "Dashboard" },
+                            { href: "/settings", icon: <Settings size={16} className="text-[#15462D]" />, label: "Settings" },
+                          ].map((item, i) => (
+                            <motion.div
+                              key={item.href}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.04, ...springSlow }}
+                            >
+                              <Link
+                                href={item.href}
+                                onClick={() => setIsDropdownOpen(false)}
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#374151] hover:bg-[#FAF7EE] transition-colors duration-150 cursor-pointer"
+                              >
+                                {item.icon}
+                                <span className="font-medium">{item.label}</span>
+                              </Link>
+                            </motion.div>
+                          ))}
+                        </div>
+
+                        <div className="pt-1 border-t border-[#E8E2D5]/60">
+                          <motion.button
+                            onClick={async () => {
+                              setIsDropdownOpen(false);
+                              await handleLogout();
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors duration-150 text-left font-medium cursor-pointer"
+                          >
+                            <LogOut size={16} />
+                            <span>Logout</span>
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                // UPDATE (responsive fix): this block had no responsive
+                // class at all, so it rendered at every width — combined
+                // with the "lg:hidden" hamburger button right next to it,
+                // both showed at once below the lg breakpoint and pushed
+                // the header ~125px past the viewport (mobile already has
+                // its own Sign in/Order Now buttons inside the drawer
+                // below, so this is desktop-only now).
+                <motion.div
+                  className="hidden lg:flex items-center gap-3"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6, ...fadeDuration }}
+                >
+                  <Link
+                    href="/auth/login"
+                    className="text-sm font-bold text-[#374151] hover:text-[#15462D] transition-colors duration-200 px-2 py-1 cursor-pointer"
+                  >
+                    Sign in
+                  </Link>
+                  <motion.div
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                    transition={{ ...springSlow }}
+                  >
+                    <Link
+                      href="/auth/register"
+                      className="inline-flex items-center justify-center text-xs font-extrabold tracking-wider text-[#1F2937] bg-[#F6A429] hover:bg-[#e0931f] uppercase px-5 py-2.5 rounded-full transition-colors duration-200 shadow-sm cursor-pointer"
+                    >
+                      Order Now
+                    </Link>
+                  </motion.div>
+                </motion.div>
+              )}
+
+              {/* Mobile toggle */}
+              <motion.button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden p-2 text-[#374151] hover:text-[#15462D] bg-white/60 rounded-full border border-gray-200/50 cursor-pointer"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label="Toggle menu"
+              >
+                <AnimatePresence mode="wait">
+                  {isMobileMenuOpen ? (
+                    <motion.div
+                      key="close"
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <X className="w-5 h-5" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="menu"
+                      initial={{ rotate: 90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: -90, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Menu className="w-5 h-5" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            </div>
+          </div>
+        </motion.header>
+      </motion.div>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="lg:hidden fixed inset-0 bg-black/20 z-40"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%", transition: { duration: 0.25, ease: "easeInOut" } }}
+              transition={{ type: "spring", stiffness: 300, damping: 32 }}
+              className="lg:hidden fixed top-0 right-0 bottom-0 w-[320px] bg-[#FAF7EE] z-50 shadow-2xl flex flex-col overflow-y-auto"
+            >
+              <div className="p-5 border-b border-[#E8E2D5] flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#F6A429]" />
+                  <span className="font-bold text-[#15462D]">FoodieGo</span>
+                </div>
+                <motion.button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 text-gray-500 hover:text-[#15462D] rounded-full hover:bg-white transition-colors cursor-pointer"
+                  whileHover={{ rotate: 90 }}
+                  transition={{ duration: 0.3 }}
+                  aria-label="Close menu"
+                >
+                  <X className="w-5 h-5" />
+                </motion.button>
+              </div>
+
+              <div className="p-4">
+                <form onSubmit={handleSearchSubmit} className="pb-2">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                      <Search size={16} />
+                    </div>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search food or restaurants..."
+                      className="w-full bg-[#EFEBE0] text-sm text-[#1F2937] placeholder-gray-500 rounded-full pl-11 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#15462D]/20 focus:bg-white transition-all border border-transparent focus:border-[#15462D]/30"
+                    />
+                  </div>
+                </form>
+              </div>
+
+              <div className="px-4 space-y-1">
+                {navItems.map((item, i) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <motion.div
+                      key={item.href}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05, ...springSlow }}
+                    >
+                      <Link
+                        href={item.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center justify-between py-3 px-4 rounded-xl text-sm font-semibold transition-colors duration-200 cursor-pointer ${
+                          isActive
+                            ? "bg-[#15462D] text-white"
+                            : "text-[#374151] hover:bg-white"
+                        }`}
+                      >
+                        <span>{item.label}</span>
+                        {isActive && (
+                          <motion.div
+                            layoutId="mobileActiveDot"
+                            className="w-1.5 h-1.5 rounded-full bg-[#F6A429]"
+                            transition={{ type: "spring", stiffness: 500 }}
+                          />
+                        )}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-auto p-4 border-t border-[#E8E2D5] space-y-3">
+                {!user ? (
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3, ...springSlow }}
+                    >
+                      <Link
+                        href="/auth/register"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="block text-center w-full py-3 text-xs font-bold uppercase tracking-wider text-[#1F2937] bg-[#F6A429] rounded-full shadow-sm cursor-pointer hover:bg-[#e0931f] transition-colors duration-200"
+                      >
+                        Order Now
+                      </Link>
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4, ...springSlow }}
+                      className="flex gap-3"
+                    >
+                      <Link
+                        href="/auth/login"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex-1 text-center py-3 text-sm font-semibold text-white bg-[#15462D] rounded-full hover:bg-[#1a5c3a] transition-colors duration-200 cursor-pointer"
+                      >
+                        Sign in
+                      </Link>
+                    </motion.div>
+                  </>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, ...springSlow }}
+                    className="space-y-1 pt-3 border-t border-[#E8E2D5]"
+                  >
+                    {[
+                      { href: "/profile", label: "Profile" },
+                      { href: "/client/cart", label: "My Cart" },
+                      { href: dashboardHref, label: "Dashboard" },
+                      { href: "/settings", label: "Settings" },
+                    ].map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="block py-2.5 text-sm text-[#374151] font-medium hover:text-[#15462D] transition-colors duration-150 cursor-pointer"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                    <button
+                      onClick={async () => {
+                        setIsMobileMenuOpen(false);
+                        await handleLogout();
+                      }}
+                      className="block w-full text-left py-2.5 text-sm text-red-500 font-medium cursor-pointer"
+                    >
+                      Logout
+                    </button>
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </>
   );
 };

@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ArrowUpRight, Mail, Share2, Sparkles } from 'lucide-react';
 import Logo from './LogoWhite';
 
 export interface FooterLink {
@@ -61,85 +62,116 @@ export const Footer: React.FC<FooterProps> = ({
 }) => {
   const pathname = usePathname();
 
-  // Conditionally hide the Footer on admin, vendor, rider, or client dashboard paths
+  // Hide Footer on dashboard paths
   if (
-  pathname?.startsWith('/admin') ||
-  pathname?.startsWith('/vendor') ||
-  pathname?.startsWith('/rider') ||
-  pathname?.startsWith('/client')
-) {
-  return null;
-}
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/vendor') ||
+    pathname?.startsWith('/rider') ||
+    pathname?.startsWith('/client')
+  ) {
+    return null;
+  }
 
   return (
-    <footer className="w-full bg-[#113220] text-emerald-100/70">
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-16 pb-12">
-        
-        {/* Top Grid Area */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8 pb-12">
-          
-          {/* Left Column: Brand Info & Quick Action Icons */}
-          <div className="lg:col-span-2 space-y-5">
-            <div>
+    <footer className="relative w-full overflow-hidden bg-[#103A27] text-emerald-50">
+
+      {/* Subtle Decorative Glows */}
+      <div className="absolute -top-32 right-0 w-72 h-72 rounded-full bg-purple-500/10 blur-[90px]" />
+      <div className="absolute -bottom-32 -left-20 w-72 h-72 rounded-full bg-emerald-400/10 blur-[90px]" />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 pt-8 pb-5">
+
+        {/* Main Footer */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-7 lg:gap-7 pb-6">
+
+          {/* Brand Column */}
+          <div className="lg:col-span-2">
+
+            {/* Logo */}
+            <div className="mb-3">
               <Logo />
             </div>
 
-            <p className="text-sm leading-relaxed max-w-sm text-emerald-100/80">
-              Delivering smarter, faster, and tastier meals straight to your door using advanced AI logistics.
+            {/* Description */}
+            <p className="text-sm leading-relaxed max-w-sm text-emerald-50/60">
+              Delivering smarter, faster, and tastier meals straight to your
+              door using advanced AI logistics.
             </p>
 
-            {/* Social / Action Circle Buttons */}
-            <div className="flex items-center gap-3 pt-2">
+            {/* Brand Message */}
+            <div className="flex items-center gap-2 mt-3">
+              <Sparkles className="w-4 h-4 text-emerald-300 shrink-0" />
+
+              <span className="text-xs font-medium text-emerald-50/55">
+                Delivering happiness, one meal at a time.
+              </span>
+            </div>
+
+            {/* Social / Contact Buttons */}
+            <div className="flex items-center gap-3 mt-4">
+
               <button
                 type="button"
                 aria-label="Share platform"
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="group w-9 h-9 rounded-full bg-white/10 border border-white/5 flex items-center justify-center text-white hover:bg-emerald-300 hover:text-[#103A27] transition-all duration-200"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
+                <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
               </button>
 
               <a
                 href="mailto:support@foodiego.com"
                 aria-label="Email support"
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                className="group w-9 h-9 rounded-full bg-white/10 border border-white/5 flex items-center justify-center text-white hover:bg-emerald-300 hover:text-[#103A27] transition-all duration-200"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+                <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" />
               </a>
+
             </div>
           </div>
 
-          {/* Navigation Link Columns */}
+          {/* Navigation Columns */}
           {columns.map((col, idx) => (
-            <div key={idx} className="space-y-4">
-              <h4 className="text-xs font-extrabold tracking-widest text-[#F6A429] uppercase">
+            <div key={idx} className="space-y-3">
+
+              <h4 className="text-[11px] font-extrabold tracking-[0.18em] text-emerald-300 uppercase">
                 {col.title}
               </h4>
-              <ul className="space-y-3 text-sm font-medium">
+
+              <ul className="space-y-2 text-sm font-medium">
+
                 {col.links.map((link, linkIdx) => (
                   <li key={linkIdx}>
-                    <Link 
+                    <Link
                       href={link.href}
-                      className="hover:text-white transition-colors"
+                      className="group inline-flex items-center gap-1 text-emerald-50/55 hover:text-white transition-colors duration-200"
                     >
                       {link.label}
+
+                      <ArrowUpRight
+                        className="w-3 h-3 opacity-0 -translate-y-0.5 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200"
+                      />
                     </Link>
                   </li>
                 ))}
+
               </ul>
             </div>
           ))}
 
         </div>
 
-        {/* Bottom Bar Divider & Copyright */}
-        <div className="border-t border-emerald-800/40 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-emerald-100/60 font-medium">
+        {/* Bottom Bar */}
+        <div className="border-t border-white/10 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+
+          <p className="text-xs text-emerald-50/40 font-medium text-center sm:text-left">
             {copyrightText}
           </p>
+
+          <div className="flex items-center gap-2 text-xs text-emerald-50/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+            <span>Made with care by Foodiego</span>
+          </div>
+
         </div>
 
       </div>

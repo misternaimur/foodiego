@@ -11,7 +11,6 @@ import {
   Package,
   Settings as SettingsIcon,
   ShieldCheck,
-  Star,
   User,
   X,
   MapPin,
@@ -19,15 +18,80 @@ import {
   Menu,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useApp } from "@/context/AppContext";
+
+// ============================================================
+// UPDATE (rider-dashboard real-data fix): this page used to be entirely
+// static — "Afrin", "afrin@example.com", a fixed "4.9 Rating", and a
+// "Save Changes" button with no handler. Profile Information now loads
+// and saves through /api/v1/rider/profile (GET/PATCH), which reads and
+// writes the real Rider document. Notification/sound-alert toggles have
+// no backing schema anywhere in this codebase (there's no per-rider
+// notification-preferences model), so they remain local-only UI state —
+// that's called out below rather than silently pretending they persist.
+// ============================================================
+
+interface RiderProfile {
+  fullName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  vehicleType: string;
+  vehicleNumber: string;
+  licenseNumber: string;
+  isAvailable: boolean;
+}
 
 export default function RiderSettingsPage() {
+  const { user } = useApp();
   const [mobileMenu, setMobileMenu] = useState(false);
+
+  const [profile, setProfile] = useState<RiderProfile | null>(null);
+  const [form, setForm] = useState({ fullName: "", phone: "", address: "", city: "", vehicleNumber: "" });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const [locationAccess, setLocationAccess] = useState(true);
   const [orderAlerts, setOrderAlerts] = useState(true);
   const [notifications, setNotifications] = useState(true);
   const [soundAlerts, setSoundAlerts] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch("/api/v1/rider/profile");
+      if (!res.ok) return;
+      const data = (await res.json()) as RiderProfile;
+      setProfile(data);
+      setForm({
+        fullName: data.fullName || "",
+        phone: data.phone || "",
+        address: data.address || "",
+        city: data.city || "",
+        vehicleNumber: data.vehicleNumber || "",
+      });
+    })();
+  }, []);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaved(false);
+    try {
+      const res = await fetch("/api/v1/rider/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (res.ok) {
+        setProfile((p) => (p ? { ...p, ...form } : p));
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2500);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900">
@@ -69,18 +133,12 @@ export default function RiderSettingsPage() {
                 <div className="min-w-0">
 
                   <p className="font-semibold text-slate-800">
-                    Afrin
+                    {profile?.fullName || user?.name || "Rider"}
                   </p>
 
                   <p className="mt-0.5 text-xs font-medium text-green-500">
                     Rider
                   </p>
-
-                  {/* Rating - Yellow */}
-                  <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                    <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                    <span>4.9 Rating</span>
-                  </div>
 
                 </div>
               </div>
@@ -251,20 +309,21 @@ export default function RiderSettingsPage() {
                   <p className="mb-2 text-xs font-medium text-slate-500">
                     Full Name
                   </p>
-
-                  <p className="text-sm font-medium text-slate-800">
-                    Afrin
-                  </p>
+                  <input
+                    value={form.fullName}
+                    onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
+                  />
                 </div>
 
-                {/* Email */}
+                {/* Email (read-only, tied to auth account) */}
                 <div>
                   <p className="mb-2 text-xs font-medium text-slate-500">
                     Email Address
                   </p>
 
                   <p className="text-sm font-medium text-slate-800">
-                    afrin@example.com
+                    {profile?.email || "—"}
                   </p>
                 </div>
 
@@ -273,10 +332,11 @@ export default function RiderSettingsPage() {
                   <p className="mb-2 text-xs font-medium text-slate-500">
                     Phone Number
                   </p>
-
-                  <p className="text-sm font-medium text-slate-800">
-                    +880 1XXXXXXXXX
-                  </p>
+                  <input
+                    value={form.phone}
+                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
+                  />
                 </div>
 
                 {/* Account Type */}
@@ -293,23 +353,63 @@ export default function RiderSettingsPage() {
                       Rider
                     </span>
 
-                    <span className="rounded-full bg-green-50 px-2 py-1 text-[10px] font-semibold text-green-600">
-                      Active
+                    <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${profile?.isAvailable ? "bg-green-50 text-green-600" : "bg-slate-100 text-slate-500"}`}>
+                      {profile?.isAvailable ? "Online" : "Offline"}
                     </span>
 
                   </div>
                 </div>
 
+                {/* Address */}
+                <div>
+                  <p className="mb-2 text-xs font-medium text-slate-500">
+                    Address
+                  </p>
+                  <input
+                    value={form.address}
+                    onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
+                  />
+                </div>
+
+                {/* City */}
+                <div>
+                  <p className="mb-2 text-xs font-medium text-slate-500">
+                    City
+                  </p>
+                  <input
+                    value={form.city}
+                    onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
+                  />
+                </div>
+
+                {/* Vehicle Number */}
+                <div>
+                  <p className="mb-2 text-xs font-medium text-slate-500">
+                    Vehicle Number
+                  </p>
+                  <input
+                    value={form.vehicleNumber}
+                    onChange={(e) => setForm((f) => ({ ...f, vehicleNumber: e.target.value }))}
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-800 outline-none focus:border-green-300 focus:ring-2 focus:ring-green-100"
+                  />
+                </div>
+
               </div>
 
               {/* Save */}
-              <div className="flex justify-end border-t border-slate-100 p-5">
+              <div className="flex items-center justify-end gap-3 border-t border-slate-100 p-5">
+
+                {saved && <span className="text-sm font-medium text-green-600">Saved</span>}
 
                 <button
                   type="button"
-                  className="rounded-lg bg-green-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="rounded-lg bg-green-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600 disabled:opacity-60"
                 >
-                  Save Changes
+                  {saving ? "Saving…" : "Save Changes"}
                 </button>
 
               </div>
@@ -372,6 +472,9 @@ export default function RiderSettingsPage() {
 
             {/* =================================================
                 NOTIFICATIONS
+                NOTE: no per-rider notification-preferences schema exists
+                in this codebase yet, so these toggles are local UI state
+                only (not persisted server-side).
             ================================================= */}
 
             <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -464,8 +567,8 @@ export default function RiderSettingsPage() {
 
               <div className="p-6">
 
-                <button
-                  type="button"
+                <a
+                  href="mailto:support@foodiego.com"
                   className="flex w-full items-center gap-4 rounded-xl border border-slate-200 p-4 text-left transition hover:bg-slate-50"
                 >
 
@@ -480,16 +583,13 @@ export default function RiderSettingsPage() {
                     </p>
 
                     <p className="mt-1 text-xs text-slate-500">
-                      Update your account password regularly.
+                      Account is managed via Firebase Authentication — contact
+                      support to reset your password.
                     </p>
 
                   </div>
 
-                  <span className="text-sm font-semibold text-green-500">
-                    Change
-                  </span>
-
-                </button>
+                </a>
 
               </div>
 
@@ -507,28 +607,19 @@ export default function RiderSettingsPage() {
 
                   <div className="flex items-center gap-2">
 
-                    <span className="h-2.5 w-2.5 rounded-full bg-green-500" />
+                    <span className={`h-2.5 w-2.5 rounded-full ${profile?.isAvailable ? "bg-green-500" : "bg-slate-400"}`} />
 
                     <h3 className="font-bold text-slate-900">
-                      Rider Account Active
+                      {profile?.isAvailable ? "Rider Account Online" : "Rider Account Offline"}
                     </h3>
 
                   </div>
 
                   <p className="mt-1 text-sm text-slate-500">
-                    Your account is currently active and available for
-                    deliveries.
+                    {profile?.isAvailable
+                      ? "You are currently online and available for deliveries."
+                      : "You are currently offline. Toggle online from the dashboard to receive delivery requests."}
                   </p>
-
-                </div>
-
-                <div className="flex items-center gap-2 rounded-lg bg-green-50 px-4 py-2.5">
-
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-
-                  <span className="text-sm font-semibold text-green-700">
-                    Active
-                  </span>
 
                 </div>
 
@@ -586,15 +677,31 @@ function SettingRow({
         type="button"
         onClick={onToggle}
         aria-label={`Toggle ${title}`}
-        className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-          enabled ? "bg-green-500" : "bg-slate-300"
+        className={`relative flex h-8 w-[52px] shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ${
+          enabled ? "bg-emerald-500" : "bg-slate-300"
         }`}
       >
         <span
-          className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${
-            enabled ? "left-6" : "left-1"
+          className={`ml-[3px] flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-md transition-all duration-200 ${
+            enabled ? "ml-auto" : "ml-0"
           }`}
-        />
+        >
+          {enabled && (
+            <svg
+              className="h-3.5 w-3.5 text-emerald-500"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          )}
+        </span>
       </button>
 
     </div>

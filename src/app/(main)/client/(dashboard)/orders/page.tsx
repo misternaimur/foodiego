@@ -1,27 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, ShoppingBag, MapPin, RotateCcw } from "lucide-react";
+import { ordersApi, orderRestaurantName, toDisplayStatus, type DisplayOrderStatus, type Order } from "@/lib/clientApi";
+import { useApp } from "@/context/AppContext";
 
-interface Order {
-  id: string;
-  restaurant: string;
-  items: string;
-  total: number;
-  status: "Delivered" | "On the way" | "Preparing" | "Cancelled";
-  date: string;
+// UPDATE (customer-reorder fix): the "Reorder" button used to have no
+// onClick handler at all. It now rebuilds cart items from this past
+// order's real line items (name/price/quantity are the only fields an
+// OrderBooking line actually stores — see OrderBooking.ts) and adds them
+// to the cart via AppContext's addToCart, then sends the customer to
+// /cart to review and check out. Display-only FoodItem fields this order
+// data doesn't have (image, rating, cuisine, delivery time) are left
+// blank/zero rather than fabricated — the cart page doesn't render them.
+function reorder(order: Order, addToCart: ReturnType<typeof useApp>["addToCart"]) {
+  const restaurantName = orderRestaurantName(order);
+  for (const item of order.items) {
+    addToCart(
+      {
+        id: item.menuItemId,
+        name: item.name,
+        description: "",
+        price: item.price,
+        rating: 0,
+        deliveryTime: "",
+        deliveryFee: "",
+        restaurantName,
+        cuisine: "",
+        imageUrl: "",
+      },
+      { quantity: item.quantity }
+    );
+  }
 }
 
-const allOrders: Order[] = [
-  { id: "#FG-10234", restaurant: "Greenhouse Cafe", items: "Truffle Smashburger, Fries", total: 22.5, status: "On the way", date: "Today, 1:45 PM" },
-  { id: "#FG-10229", restaurant: "Sushi Master", items: "Sushi Platter x1", total: 34.0, status: "Delivered", date: "Yesterday, 8:10 PM" },
-  { id: "#FG-10218", restaurant: "Sweet Treats Bakery", items: "Berry Cheesecake", total: 12.0, status: "Delivered", date: "Oct 21, 2026" },
-  { id: "#FG-10199", restaurant: "Spice Route Indian", items: "Chicken Biryani, Naan x2", total: 28.75, status: "Delivered", date: "Oct 18, 2026" },
-  { id: "#FG-10180", restaurant: "Burger Joint Co.", items: "Double Cheeseburger", total: 15.0, status: "Cancelled", date: "Oct 12, 2026" },
-];
-
-const statusColors: Record<Order["status"], string> = {
+const statusColors: Record<DisplayOrderStatus, string> = {
   Delivered: "bg-emerald-50 text-emerald-700 border-emerald-100",
   "On the way": "bg-amber-50 text-amber-700 border-amber-100",
   Preparing: "bg-sky-50 text-sky-700 border-sky-100",
@@ -31,21 +46,36 @@ const statusColors: Record<Order["status"], string> = {
 const tabs = ["All", "Active", "Delivered", "Cancelled"] as const;
 
 export default function ClientOrdersPage() {
+  const router = useRouter();
+  const { addToCart } = useApp();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("All");
   const [search, setSearch] = useState("");
 
-  const filtered = allOrders.filter((order) => {
+  useEffect(() => {
+    ordersApi
+      .list()
+      .then((data) => setOrders(data.orders))
+      .catch(() => setOrders([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = orders.filter((order) => {
+    const status = toDisplayStatus(order.status);
     const matchesTab =
       activeTab === "All" ||
-      (activeTab === "Active" && (order.status === "On the way" || order.status === "Preparing")) ||
-      (activeTab === "Delivered" && order.status === "Delivered") ||
-      (activeTab === "Cancelled" && order.status === "Cancelled");
+      (activeTab === "Active" && (status === "On the way" || status === "Preparing")) ||
+      (activeTab === "Delivered" && status === "Delivered") ||
+      (activeTab === "Cancelled" && status === "Cancelled");
 
+    const restaurantName = orderRestaurantName(order);
+    const itemsSummary = order.items.map((i) => i.name).join(", ");
     const query = search.toLowerCase();
     const matchesSearch =
-      order.restaurant.toLowerCase().includes(query) ||
-      order.id.toLowerCase().includes(query) ||
-      order.items.toLowerCase().includes(query);
+      restaurantName.toLowerCase().includes(query) ||
+      order._id.toLowerCase().includes(query) ||
+      itemsSummary.toLowerCase().includes(query);
 
     return matchesTab && matchesSearch;
   });
@@ -84,44 +114,60 @@ export default function ClientOrdersPage() {
         </div>
 
         <div className="divide-y divide-gray-100">
-          {filtered.length === 0 ? (
+          {loading ? (
+            [...Array(3)].map((_, i) => <div key={i} className="h-20 animate-pulse bg-gray-50" />)
+          ) : filtered.length === 0 ? (
             <div className="px-6 py-16 text-center">
               <ShoppingBag size={30} className="mx-auto text-gray-300" />
               <p className="mt-3 text-sm font-semibold text-gray-700">No orders found</p>
-              <p className="text-xs text-gray-400">Try a different search or filter.</p>
+              <p className="text-xs text-gray-400">
+                {orders.length === 0 ? "You haven't placed any orders yet." : "Try a different search or filter."}
+              </p>
             </div>
           ) : (
-            filtered.map((order) => (
-              <div key={order.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-bold text-gray-900">{order.restaurant}</p>
-                    <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusColors[order.status]}`}>
-                      {order.status}
-                    </span>
+            filtered.map((order) => {
+              const status = toDisplayStatus(order.status);
+              const itemsSummary = order.items.map((i) => `${i.name} x${i.quantity}`).join(", ");
+              return (
+                <div key={order._id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-bold text-gray-900">{orderRestaurantName(order)}</p>
+                      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusColors[status]}`}>
+                        {status}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 truncate text-xs text-gray-500">{itemsSummary}</p>
+                    <p className="text-[11px] text-gray-400">
+                      #{order._id.slice(-6).toUpperCase()} &middot; {new Date(order.createdAt).toLocaleString()}
+                    </p>
                   </div>
-                  <p className="mt-0.5 truncate text-xs text-gray-500">{order.items}</p>
-                  <p className="text-[11px] text-gray-400">{order.id} &middot; {order.date}</p>
-                </div>
 
-                <div className="flex items-center gap-3 sm:shrink-0">
-                  <p className="text-sm font-extrabold text-gray-900">${order.total.toFixed(2)}</p>
-                  {order.status === "On the way" && (
-                    <Link
-                      href="/client/track"
-                      className="inline-flex items-center gap-1.5 rounded-full bg-[#15462D] px-3.5 py-2 text-[11px] font-bold text-white hover:bg-[#0e3320]"
-                    >
-                      <MapPin size={13} /> Track
-                    </Link>
-                  )}
-                  {(order.status === "Delivered" || order.status === "Cancelled") && (
-                    <button className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-3.5 py-2 text-[11px] font-bold text-gray-700 hover:bg-gray-50">
-                      <RotateCcw size={13} /> Reorder
-                    </button>
-                  )}
+                  <div className="flex items-center gap-3 sm:shrink-0">
+                    <p className="text-sm font-extrabold text-gray-900">৳{order.totalAmount.toLocaleString()}</p>
+                    {status === "On the way" && (
+                      <Link
+                        href="/client/track"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[#15462D] px-3.5 py-2 text-[11px] font-bold text-white hover:bg-[#0e3320]"
+                      >
+                        <MapPin size={13} /> Track
+                      </Link>
+                    )}
+                    {(status === "Delivered" || status === "Cancelled") && (
+                      <button
+                        onClick={() => {
+                          reorder(order, addToCart);
+                          router.push("/cart");
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-3.5 py-2 text-[11px] font-bold text-gray-700 hover:bg-gray-50"
+                      >
+                        <RotateCcw size={13} /> Reorder
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

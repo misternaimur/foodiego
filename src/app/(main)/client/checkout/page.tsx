@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import OnlinePaymentModal from '@/components/client/checkout/OnlinePaymentModal';
+import { useApp } from '@/context/AppContext';
+import { ordersApi } from '@/lib/clientApi';
 
 interface CheckoutForm {
   fullName: string;
@@ -33,6 +35,7 @@ const inputClasses =
   'mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10';
 
 export default function CheckoutPage() {
+  const { user, isAuthLoading, cart, clearCart } = useApp();
   const [formData, setFormData] = useState<CheckoutForm>({
     fullName: '',
     email: '',
@@ -45,14 +48,20 @@ export default function CheckoutPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [orderNumber, setOrderNumber] = useState('');
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
-  const cartItems = [
-    { id: '1', name: 'Organic Fresh Honey', price: 1250, quantity: 1, vendor: 'Fresh Farms Co.' },
-    { id: '2', name: 'Natural Green Tea', price: 840, quantity: 2, vendor: 'Daily Grocers' },
-  ];
+  const cartItems = cart.map((item) => ({
+    id: item.cartItemId,
+    menuItemId: item.id,
+    name: item.name,
+    price: item.totalUnitPrice,
+    quantity: item.quantity,
+    vendor: item.restaurantName,
+  }));
   const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const shippingFee = 80;
+  const shippingFee = cartItems.length > 0 ? 80 : 0;
   const total = subtotal + shippingFee;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -60,14 +69,76 @@ export default function CheckoutPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (cartItems.length === 0) return;
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    setSubmitError(null);
+    try {
+      const { order } = await ordersApi.place({
+        restaurantName: cartItems[0].vendor || 'Restaurant',
+        items: cartItems.map((item) => ({
+          menuItemId: item.menuItemId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+        subtotal,
+        deliveryFee: shippingFee,
+        deliveryAddress: `${formData.address}, ${formData.area}, ${formData.city}`,
+        city: formData.city,
+        paymentMethod: formData.paymentMethod,
+      });
+      setOrderNumber(order._id.slice(-8).toUpperCase());
+      clearCart();
       setIsSuccess(true);
-    }, 1500);
+    } catch {
+      setSubmitError('We could not place your order. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (!isAuthLoading && !user) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f7faf8] px-4 py-12 text-slate-900">
+        <section className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-[0_18px_60px_rgba(21,70,45,0.1)]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+            <LockKeyhole size={26} />
+          </div>
+          <h1 className="mt-5 text-xl font-bold tracking-tight text-slate-950">Sign in to check out</h1>
+          <p className="mt-2 text-sm text-slate-500">You need an account so we can attach this order to you and let you track it afterwards.</p>
+          <Link
+            href="/auth/login?redirect=/client/checkout"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#15462d] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#103b26]"
+          >
+            Sign in
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  if (!isSuccess && cartItems.length === 0) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f7faf8] px-4 py-12 text-slate-900">
+        <section className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-[0_18px_60px_rgba(21,70,45,0.1)]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+            <ShoppingBag size={26} />
+          </div>
+          <h1 className="mt-5 text-xl font-bold tracking-tight text-slate-950">Your cart is empty</h1>
+          <p className="mt-2 text-sm text-slate-500">Add a few dishes before heading to checkout.</p>
+          <Link
+            href="/foods"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#15462d] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#103b26]"
+          >
+            Browse foods
+          </Link>
+        </section>
+      </main>
+    );
+  }
 
   if (isSuccess) {
     return (
@@ -78,7 +149,7 @@ export default function CheckoutPage() {
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950">Your order is on its way</h1>
           <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-slate-500">Thanks for ordering{formData.fullName ? `, ${formData.fullName}` : ''}. We have received your order and are getting it ready.</p>
           <div className="mt-7 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-slate-50 text-left text-sm">
-            <div className="flex items-center justify-between px-4 py-3.5"><span className="text-slate-500">Order number</span><strong>#ORD-2026-8942</strong></div>
+            <div className="flex items-center justify-between px-4 py-3.5"><span className="text-slate-500">Order number</span><strong>#{orderNumber}</strong></div>
             <div className="flex items-center justify-between px-4 py-3.5"><span className="text-slate-500">Payment</span><strong>{formData.paymentMethod === 'cod' ? 'Cash on delivery' : 'Online payment'}</strong></div>
             <div className="flex items-center justify-between px-4 py-3.5"><span className="text-slate-500">Estimated delivery</span><strong>2-3 business days</strong></div>
           </div>
@@ -134,6 +205,7 @@ export default function CheckoutPage() {
             <div className="divide-y divide-slate-100 py-2">{cartItems.map((item) => <div key={item.id} className="flex items-start justify-between gap-4 py-4 text-sm"><div><p className="font-semibold text-slate-900">{item.name}</p><p className="mt-1 text-xs text-slate-500">{item.quantity} × ৳{item.price.toLocaleString()} · {item.vendor}</p></div><span className="shrink-0 font-bold text-slate-900">৳{(item.price * item.quantity).toLocaleString()}</span></div>)}</div>
             <div className="space-y-3 border-t border-slate-100 pt-5 text-sm"><div className="flex justify-between text-slate-500"><span>Subtotal</span><strong className="text-slate-900">৳{subtotal.toLocaleString()}</strong></div><div className="flex justify-between text-slate-500"><span>Delivery fee</span><strong className="text-slate-900">৳{shippingFee}</strong></div><div className="mt-4 flex items-end justify-between border-t border-slate-100 pt-5"><span className="font-bold text-slate-900">Total to pay</span><strong className="text-2xl font-bold text-[#15462d]">৳{total.toLocaleString()}</strong></div></div>
             <button type="submit" disabled={isSubmitting} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#15462d] px-5 py-4 text-sm font-bold text-white shadow-lg shadow-emerald-950/10 transition hover:bg-[#103b26] focus:outline-none focus:ring-4 focus:ring-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60">{isSubmitting ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Processing order...</> : <>Place order · ৳{total.toLocaleString()} <Check size={17} /></>}</button>
+            {submitError && <p className="mt-3 text-center text-xs font-semibold text-rose-600">{submitError}</p>}
             <div className="mt-4 flex items-start gap-2 text-xs leading-5 text-slate-500"><ShieldCheck className="mt-0.5 shrink-0 text-emerald-700" size={15} /><span>Your payment information is protected. You can review everything before placing the order.</span></div>
           </section></aside>
         </form>

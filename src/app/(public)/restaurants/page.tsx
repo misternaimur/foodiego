@@ -6,7 +6,6 @@ import Image from 'next/image';
 import { Star, Clock, Heart, Filter, ChevronRight, ChevronLeft, Tag, Sparkles } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 
-// Sample Banner Data
 const PROMO_SLIDES = [
   {
     id: 1,
@@ -43,38 +42,31 @@ const PROMO_SLIDES = [
 export default function RestaurantsPage() {
   const { restaurants, isRestaurantsLoading, favorites, toggleFavorite } = useApp();
 
-  // Banner State
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Filter & Sort States
   const [selectedSort, setSelectedSort] = useState<'relevance' | 'fastest' | 'rating'>('relevance');
   const [minRating, setMinRating] = useState<number>(0);
   const [selectedCuisine, setSelectedCuisine] = useState<string>('All');
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
-  // Auto-slide effect every 5 seconds
   useEffect(() => {
     if (isHovered) return;
-
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % PROMO_SLIDES.length);
     }, 5000);
-
     return () => clearInterval(timer);
   }, [isHovered]);
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % PROMO_SLIDES.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + PROMO_SLIDES.length) % PROMO_SLIDES.length);
 
-  // Extract all unique cuisines
   const allCuisines = useMemo(() => {
     const cuisinesSet = new Set<string>();
     restaurants.forEach((r) => r.cuisines?.forEach((c) => cuisinesSet.add(c)));
     return ['All', ...Array.from(cuisinesSet)];
   }, [restaurants]);
 
-  // Filter & Sort Logic
   const filteredRestaurants = useMemo(() => {
     return restaurants
       .filter((r) => {
@@ -96,8 +88,6 @@ export default function RestaurantsPage() {
   return (
     <div className="min-h-screen bg-[#FAF7EE] py-8 lg:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
@@ -117,10 +107,7 @@ export default function RestaurantsPage() {
           </button>
         </div>
 
-        {/* Grid Container */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-          
-          {/* Left Sidebar Filter */}
           <aside className={`lg:block ${isMobileFilterOpen ? 'block' : 'hidden'} bg-white border border-[#E8E2D5] p-6 rounded-3xl sticky top-24 shadow-xs z-10`}>
             <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
               <h3 className="text-lg font-bold text-slate-900">Filters</h3>
@@ -138,7 +125,6 @@ export default function RestaurantsPage() {
               )}
             </div>
 
-            {/* Sort Options */}
             <div className="mb-6">
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-500 mb-3">
                 Sort By
@@ -165,7 +151,6 @@ export default function RestaurantsPage() {
               </div>
             </div>
 
-            {/* Rating Filter */}
             <div className="mb-6">
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-500 mb-3">
                 Rating
@@ -187,7 +172,6 @@ export default function RestaurantsPage() {
               </div>
             </div>
 
-            {/* Cuisine Filter */}
             <div>
               <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-500 mb-3">
                 Cuisine
@@ -211,10 +195,7 @@ export default function RestaurantsPage() {
             </div>
           </aside>
 
-          {/* Main Area: Banner + Restaurant Grid */}
           <main className="lg:col-span-3">
-            
-            {/* COMPACT AUTO-SLIDER (5 Seconds) */}
             <div
               className="relative w-full rounded-2xl overflow-hidden mb-8 shadow-md group"
               onMouseEnter={() => setIsHovered(true)}
@@ -252,7 +233,6 @@ export default function RestaurantsPage() {
                 ))}
               </div>
 
-              {/* Slider Controls */}
               <button
                 onClick={prevSlide}
                 className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/30 hover:bg-black/50 text-white backdrop-blur-xs transition-colors cursor-pointer"
@@ -268,7 +248,6 @@ export default function RestaurantsPage() {
                 <ChevronRight size={16} />
               </button>
 
-              {/* Dots Indicator */}
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
                 {PROMO_SLIDES.map((_, idx) => (
                   <button
@@ -277,13 +256,11 @@ export default function RestaurantsPage() {
                     className={`h-1.5 rounded-full transition-all cursor-pointer ${
                       currentSlide === idx ? 'w-5 bg-white' : 'w-1.5 bg-white/40'
                     }`}
-                    aria-label={`Go to slide ${idx + 1}`}
                   />
                 ))}
               </div>
             </div>
 
-            {/* Restaurant Cards */}
             {isRestaurantsLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {[1, 2, 3, 4].map((n) => (
@@ -293,34 +270,34 @@ export default function RestaurantsPage() {
             ) : filteredRestaurants.length === 0 ? (
               <div className="text-center py-20 bg-white rounded-3xl border border-[#E8E2D5]">
                 <p className="text-base font-semibold text-gray-700">No restaurants found</p>
-                <p className="text-xs text-gray-500 mt-1">Try resetting your filters or selecting a different cuisine.</p>
+                <p className="text-xs text-gray-500 mt-1">Try resetting your filters.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                 {filteredRestaurants.map((restaurant) => {
-                  const isFav = favorites.includes(restaurant.id);
-                  const validImage = restaurant.image && restaurant.image.trim() !== '' 
-                    ? restaurant.image 
+                  const targetId = (restaurant as any)._id || restaurant.id;
+                  const isFav = favorites.includes(targetId);
+                  const validImage = restaurant.image && restaurant.image.trim() !== ''
+                    ? restaurant.image
                     : '/default-banner.png';
 
                   return (
                     <div
-                      key={restaurant.id}
-                      className="group bg-white rounded-3xl border border-[#E8E2D5] overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                      key={targetId}
+                      className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-[#E8E2D5] bg-white transition-all duration-300 hover:shadow-lg"
                     >
                       <Link href={`/restaurants/${restaurant.slug}`} className="block relative">
-                        <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
+                        <div className="relative aspect-4/3 w-full overflow-hidden bg-gray-100">
                           <Image
                             src={validImage}
                             alt={restaurant.restaurantName}
                             fill
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                           <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent" />
-                          
+
                           {restaurant.badge && (
-                            <span className="absolute top-3 left-3 bg-[#15462D] text-white text-[10px] font-extrabold uppercase px-3 py-1 rounded-full shadow-xs">
+                            <span className="absolute left-2 top-2 rounded-full bg-[#15462D] px-2.5 py-1 text-[10px] font-extrabold uppercase text-white shadow-xs sm:left-3 sm:top-3">
                               {restaurant.badge}
                             </span>
                           )}
@@ -329,45 +306,46 @@ export default function RestaurantsPage() {
                             type="button"
                             onClick={(e) => {
                               e.preventDefault();
-                              toggleFavorite(restaurant.id);
+                              e.stopPropagation();
+                              toggleFavorite(targetId);
                             }}
-                            className="absolute top-3 right-3 p-2 rounded-full bg-white/80 backdrop-blur-md hover:bg-white text-gray-700 transition-colors shadow-xs cursor-pointer"
+                            className="absolute right-2 top-2 rounded-full bg-white/85 p-2 text-gray-700 shadow-xs backdrop-blur-md transition-colors hover:bg-white sm:right-3 sm:top-3 cursor-pointer"
                           >
-                            <Heart size={16} className={isFav ? 'fill-red-500 text-red-500' : ''} />
+                            <Heart size={15} className={isFav ? 'fill-red-500 text-red-500' : ''} />
                           </button>
                         </div>
 
-                        <div className="p-5">
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <h3 className="text-lg font-black text-slate-900 group-hover:text-[#15462D] transition-colors truncate">
+                        <div className="p-3 sm:p-4">
+                          <div className="mb-1 flex items-start justify-between gap-2">
+                            <h3 className="min-w-0 truncate text-sm font-black text-slate-900 transition-colors group-hover:text-[#15462D] sm:text-base">
                               {restaurant.restaurantName}
                             </h3>
-                            <div className="flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/50 shrink-0">
-                              <Star size={13} className="fill-amber-400 text-amber-400" />
+                            <div className="flex shrink-0 items-center gap-1 rounded-full border border-amber-200/50 bg-amber-50 px-2 py-0.5">
+                              <Star size={12} className="fill-amber-400 text-amber-400" />
                               <span className="text-xs font-bold text-gray-900">{restaurant.rating}</span>
                               <span className="text-[10px] text-gray-500">({restaurant.reviewCount})</span>
                             </div>
                           </div>
 
-                          <p className="text-xs text-gray-500 font-medium truncate mb-3">
+                          <p className="mb-2 truncate text-xs font-medium text-gray-500">
                             {restaurant.cuisines?.join(' • ') || 'Various Cuisines'}
                           </p>
 
-                          <div className="flex items-center gap-4 text-xs font-bold text-gray-600 pt-3 border-t border-gray-100">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-gray-100 pt-2 text-[11px] font-bold text-gray-600 sm:text-xs">
                             <span className="flex items-center gap-1">
-                              <Clock size={13} className="text-emerald-800" />
+                              <Clock size={12} className="text-emerald-800" />
                               {restaurant.deliveryTime}
                             </span>
-                            <span>•</span>
+                            <span className="text-gray-300">&middot;</span>
                             <span>Tk {restaurant.deliveryFee} delivery</span>
                           </div>
                         </div>
                       </Link>
 
                       {restaurant.offers && restaurant.offers.length > 0 && (
-                        <div className="bg-[#FAF7EE] px-5 py-2.5 border-t border-[#E8E2D5] flex items-center justify-between text-xs font-bold text-[#15462D]">
-                          <span>🏷️ {restaurant.offers[0].title}</span>
-                          <ChevronRight size={14} />
+                        <div className="flex items-center justify-between gap-2 border-t border-[#E8E2D5] bg-[#FAF7EE] px-3 py-2 text-xs font-bold text-[#15462D] sm:px-4 sm:py-2.5">
+                          <span className="min-w-0 truncate">🏷️ {restaurant.offers[0].title}</span>
+                          <ChevronRight size={14} className="shrink-0" />
                         </div>
                       )}
                     </div>

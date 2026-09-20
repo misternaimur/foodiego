@@ -5,12 +5,16 @@ import { ROLES, type Role } from "@/lib/definitions";
 const ALL_ROLES: Role[] = [...ROLES, "admin"];
 
 // UserDocument interface-ti database theke asha ekta User document er structure ebong TypeScript types define kore.
+export const ACCOUNT_STATUSES = ["active", "suspended"] as const;
+export type AccountStatus = (typeof ACCOUNT_STATUSES)[number];
+
 export interface UserDocument {
   _id: mongoose.Types.ObjectId;
   uid: string; // Firebase Authentication theke pawa unique user ID (Firebase UID)
   name: string;
   email: string;
   role: Role;   // User er role (e.g., customer, vendor, rider, admin)
+  accountStatus: AccountStatus; // Admin-controlled: suspended accounts are blocked from signing in
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,6 +26,7 @@ const UserSchema = new Schema<UserDocument>(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true, lowercase: true, unique: true },
     role: { type: String, enum: ALL_ROLES, required: true }, // Role obosshoi ALL_ROLES array er modhye ekta hote hobe
+    accountStatus: { type: String, enum: ACCOUNT_STATUSES, default: "active" },
   },
   { timestamps: true } // Auto-generates createdAt and updatedAt fields
 );

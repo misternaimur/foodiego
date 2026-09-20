@@ -1,10 +1,11 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { FoodItem } from '@/components/FoodCard';
-import { auth } from '@/lib/firebase/client';
+import { getClientAuth } from '@/lib/firebase/client';
 import { logout } from '@/app/(public)/actions/auth';
+import { favoritesApi } from '@/lib/clientApi';
 
 // Type definition for selected options like size or choice modifiers
 export interface SelectedOption {
@@ -108,6 +109,8 @@ interface AppContextType {
     isAuthLoading: boolean;
     restaurants: Restaurant[];
     isRestaurantsLoading: boolean;
+    /** Every real menu item across all open, approved restaurants, flattened into FoodItem shape. */
+    catalogFoodItems: FoodItem[];
     getRestaurantBySlug: (slug: string) => Restaurant | undefined;
     getRestaurantById: (id: string) => Restaurant | undefined;
     addToCart: (food: FoodItem, customization?: CustomizationOptions) => void;
@@ -173,7 +176,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Effect to monitor Firebase authentication state changes in real-time
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        const unsubscribe = onAuthStateChanged(getClientAuth(), (firebaseUser) => {
             setUser(normalizeAuthUser(firebaseUser));
             setIsAuthLoading(false);
         });
@@ -181,13 +184,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return () => unsubscribe();
     }, []);
 
+    // Fetch user favorites from backend when logged in
+    useEffect(() => {
+        if (!user) return;
+        favoritesApi
+            .list()
+            .then(({ favorites: serverFavorites }) => setFavorites(serverFavorites))
+            .catch(() => {});
+    }, [user]);
+
     // Effect to fetch restaurants from the backend API and map fields correctly
     useEffect(() => {
         const fetchRestaurants = async () => {
             setIsRestaurantsLoading(true);
             try {
-                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-                const res = await fetch(`${API_URL}/api/restaurants`);
+                const res = await fetch('/api/v1/catalog/restaurants');
 
                 if (!res.ok) {
                     throw new Error('Failed to fetch restaurants');
@@ -196,12 +207,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 const data = await res.json();
                 const rawList = Array.isArray(data) ? data : data.data || [];
 
-                // ব্যাকএন্ড ফিল্ডগুলোর সাথে ফ্রন্টএন্ডের প্রপার্টির ম্যাপিং নিশ্চিত করা
+                // Field mapping to preserve structure
                 const formattedRestaurants: Restaurant[] = rawList.map((item: RawRestaurant) => ({
                     id: item._id || item.id || '',
-                    userId: item.userId,
+                    userId: item.userId || '',
                     restaurantName: item.restaurantName || 'Unnamed restaurant',
-                    slug: item.slug || item.restaurantName?.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                    slug: item.slug || item.restaurantName?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || '',
                     ownerName: item.ownerName || '',
                     email: item.email || '',
                     phone: item.phone,
@@ -254,15 +265,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     }, [favorites]);
 
-    // Lookup restaurant by its URL slug
+    // Lookup restaurant by URL slug
     const getRestaurantBySlug = (slug: string) => {
         return restaurants.find((r) => r.slug === slug);
     };
 
-    // Lookup restaurant by its unique database ID
+    // Lookup restaurant by ID
     const getRestaurantById = (id: string) => {
         return restaurants.find((r) => r.id === id);
     };
+
+    // Flatten menu items across all restaurants into catalog food items
+    const catalogFoodItems: FoodItem[] = useMemo(() => {
+        const items: FoodItem[] = [];
+        for (const restaurant of restaurants) {
+            for (const category of restaurant.menuCategories) {
+                for (const item of category.items) {
+                    items.push({
+                        id: item.id,
+                        name: item.name,
+                        description: item.description,
+                        price: item.price,
+                        rating: restaurant.rating || 4.5,
+                        deliveryTime: restaurant.deliveryTime || '30-40 min',
+                        deliveryFee: `Tk ${restaurant.deliveryFee}`,
+                        restaurantName: restaurant.restaurantName,
+                        cuisine: restaurant.cuisines?.[0] || 'General',
+                        imageUrl: item.image,
+                    });
+                }
+            }
+        }
+        return items;
+    }, [restaurants]);
 
     // Add item to cart or increment quantity if custom configuration matches
     const addToCart = (food: FoodItem, customization?: CustomizationOptions) => {
@@ -271,26 +306,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const specialInstructions = customization?.specialInstructions || '';
         const qty = customization?.quantity || 1;
 
-        // Compute aggregate unit price incorporating size and addon costs
+        // Compute unit price
         const addonsPrice = selectedAddons.reduce((sum, item) => sum + item.price, 0);
         const sizePrice = selectedSize ? selectedSize.price : 0;
         const totalUnitPrice = food.price + sizePrice + addonsPrice;
 
-        // Generate a composite unique key identifier based on specific choices
+        // Composite key identifier
         const addonKeys = selectedAddons.map((a) => a.name).sort().join('-');
         const cartItemId = `${food.id}_${selectedSize?.name || 'def'}_${addonKeys}_${specialInstructions}`;
 
         setCart((prev) => {
             const existing = prev.find((item) => item.cartItemId === cartItemId);
             if (existing) {
-                // Increment quantity if identical configured item already exists
                 return prev.map((item) =>
                     item.cartItemId === cartItemId
                         ? { ...item, quantity: item.quantity + qty }
                         : item
                 );
             }
-            // Append new configured item into the cart
             return [
                 ...prev,
                 {
@@ -306,13 +339,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
     };
 
-    // Remove or decrement specific cart item quantity
+    // Remove or decrement cart item
     const removeFromCart = (cartItemId: string) => {
         setCart((prev) => {
             const existing = prev.find((item) => item.cartItemId === cartItemId);
 
             if (existing && existing.quantity > 1) {
-                // Decrement item quantity if count exceeds 1
                 return prev.map((item) =>
                     item.cartItemId === cartItemId
                         ? { ...item, quantity: item.quantity - 1 }
@@ -320,29 +352,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 );
             }
 
-            // Completely filter out the item if quantity drops to 1 or lower
             return prev.filter((item) => item.cartItemId !== cartItemId);
         });
     };
 
-    // Toggle restaurant or item in/out of the user's favorites array
+    // Toggle restaurant or item in user's favorites array
     const toggleFavorite = (id: string) => {
         setFavorites((prevFavorites) =>
             prevFavorites.includes(id)
                 ? prevFavorites.filter((favId) => favId !== id)
                 : [...prevFavorites, id]
         );
+
+        if (!user) return;
+        favoritesApi.toggle(id).catch(() => {
+            setFavorites((prevFavorites) =>
+                prevFavorites.includes(id)
+                    ? prevFavorites.filter((favId) => favId !== id)
+                    : [...prevFavorites, id]
+            );
+        });
     };
 
-    // Completely clear all contents from the shopping cart
+    // Clear cart contents
     const clearCart = () => {
         setCart([]);
     };
 
-    // Securely terminate user session across both Firebase and backend systems
+    // Logout user session
     const logoutUser = async () => {
         try {
-            await signOut(auth);
+            await signOut(getClientAuth());
         } finally {
             await logout();
         }
@@ -357,6 +397,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 isAuthLoading,
                 restaurants,
                 isRestaurantsLoading,
+                catalogFoodItems,
                 getRestaurantBySlug,
                 getRestaurantById,
                 addToCart,
@@ -371,7 +412,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
 };
 
-// Custom React hook for consuming global app state context safely
+// Custom React hook for consuming global app state
 export const useApp = (): AppContextType => {
     const context = useContext(AppContext);
     if (!context) {

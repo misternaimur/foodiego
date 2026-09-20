@@ -268,6 +268,9 @@ yarn install
 
 # Set up environment variables
 cp .env.example .env.local
+# Set MONGODB_URL to your MongoDB Atlas or local MongoDB connection URI.
+# Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY for server-side authentication.
+# Set the NEXT_PUBLIC_FIREBASE_* values from your Firebase web app configuration.
 
 # Run the development server
 npm run dev

@@ -1,106 +1,77 @@
 "use client";
 
-import React, { useState } from 'react';
-import { 
-  RotateCcw, 
-  Search, 
-  Filter, 
-  ChevronLeft, 
-  ChevronRight, 
-  MoreVertical, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  Eye, 
-  Check, 
-  X 
+import React, { useEffect, useState } from 'react';
+import {
+  Search,
+  Check,
+  X,
 } from 'lucide-react';
 
+// UPDATE (admin-refunds fix): see src/app/api/admin/refunds/route.ts for
+// the full explanation — this page used to render 4 hardcoded fake
+// refund rows and its approve/reject buttons only mutated local state
+// (lost on refresh). It now lists real cancelled-and-paid orders as the
+// refund queue and persists approve/reject decisions to the real order.
+
 interface RefundRecord {
-  id: string;
-  refundId: string;
   orderId: string;
   customer: string;
   amount: number;
   reason: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  status: 'pending' | 'approved' | 'rejected';
   requestedDate: string;
 }
 
-const initialRefunds: RefundRecord[] = [
-  {
-    id: "1",
-    refundId: "REF-9012",
-    orderId: "ORD-5541",
-    customer: "Alex Johnson",
-    amount: 125.50,
-    reason: "Damaged item received upon delivery",
-    status: "Pending",
-    requestedDate: "Oct 24, 14:30"
-  },
-  {
-    id: "2",
-    refundId: "REF-9013",
-    orderId: "ORD-5542",
-    customer: "Sarah Williams",
-    amount: 45.00,
-    reason: "Wrong item delivered",
-    status: "Approved",
-    requestedDate: "Oct 24, 15:10"
-  },
-  {
-    id: "3",
-    refundId: "REF-9014",
-    orderId: "ORD-5543",
-    customer: "David Brown",
-    amount: 210.00,
-    reason: "Order cancelled by customer after dispatch",
-    status: "Rejected",
-    requestedDate: "Oct 24, 16:05"
-  },
-  {
-    id: "4",
-    refundId: "REF-9015",
-    orderId: "ORD-5544",
-    customer: "Emma Davis",
-    amount: 89.99,
-    reason: "Missing components from package",
-    status: "Pending",
-    requestedDate: "Oct 24, 17:20"
-  }
-];
+const STATUS_LABEL: Record<RefundRecord["status"], "Pending" | "Approved" | "Rejected"> = {
+  pending: "Pending",
+  approved: "Approved",
+  rejected: "Rejected",
+};
 
 export default function RefundsPage() {
-  // Structured state ready for backend API integration (e.g. GET /api/admin/refunds)
-  const [refunds, setRefunds] = useState<RefundRecord[]>(initialRefunds);
+  const [refunds, setRefunds] = useState<RefundRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'All' | 'Pending' | 'Approved' | 'Rejected'>('All');
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
 
-  // Filter logic ready for backend API query mapping
+  const load = () => {
+    fetch("/api/admin/refunds")
+      .then((res) => res.json())
+      .then((data) => setRefunds(data.refunds || []))
+      .catch(() => setRefunds([]))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
   const filteredRefunds = refunds.filter(item => {
-    const matchesTab = activeTab === 'All' || item.status === activeTab;
-    const matchesSearch = item.refundId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesTab = activeTab === 'All' || STATUS_LABEL[item.status] === activeTab;
+    const matchesSearch = item.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.customer.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
-  const pendingCount = refunds.filter(r => r.status === 'Pending').length;
+  const pendingCount = refunds.filter(r => r.status === 'pending').length;
 
-  // Handlers ready to be connected with backend API mutations (e.g. PATCH /api/admin/refunds/:id)
-  const handleApprove = (id: string) => {
-    setRefunds(prev => prev.map(item => item.id === id ? { ...item, status: 'Approved' } : item));
-  };
-
-  const handleReject = (id: string) => {
-    setRefunds(prev => prev.map(item => item.id === id ? { ...item, status: 'Rejected' } : item));
+  const decide = async (orderId: string, status: 'approved' | 'rejected') => {
+    setRefunds(prev => prev.map(item => item.orderId === orderId ? { ...item, status } : item));
+    try {
+      await fetch(`/api/admin/refunds/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+    } catch {
+      load();
+    }
   };
 
   return (
     <main className="flex-1 bg-[#f8fafc] px-4 py-8 sm:px-6 lg:px-8 font-sans">
       <div className="mx-auto w-full max-w-7xl space-y-6">
-        
+
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -113,14 +84,14 @@ export default function RefundsPage() {
               )}
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              Manage refund requests, review reasons, and process safe transaction reversals.
+              Orders that were cancelled after payment and need a refund decision.
             </p>
           </div>
         </div>
 
         {/* Main Content Card Container */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-2xs overflow-hidden">
-          
+
           {/* Navigation Tabs Header */}
           <div className="border-b border-gray-200 px-6 pt-4 flex gap-8 text-xs font-semibold overflow-x-auto">
             <button
@@ -180,7 +151,7 @@ export default function RefundsPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by Refund ID, Order ID, or Customer..."
+                placeholder="Search by Order ID or Customer..."
                 className="w-full pl-10 pr-4 py-2.5 text-xs bg-white border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#065f46] focus:border-transparent"
               />
             </div>
@@ -191,7 +162,6 @@ export default function RefundsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-gray-50/60 border-b border-gray-100 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                  <th className="px-6 py-3.5">Refund ID</th>
                   <th className="px-6 py-3.5">Order ID</th>
                   <th className="px-6 py-3.5">Customer</th>
                   <th className="px-6 py-3.5">Amount</th>
@@ -202,60 +172,58 @@ export default function RefundsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-xs">
-                {filteredRefunds.length === 0 ? (
+                {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-400 text-xs">
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-400 text-xs">Loading refund records…</td>
+                  </tr>
+                ) : filteredRefunds.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-400 text-xs">
                       No refund records found matching your criteria.
                     </td>
                   </tr>
                 ) : (
                   filteredRefunds.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 font-bold text-gray-900">{item.refundId}</td>
-                      <td className="px-6 py-4 font-medium text-gray-600">{item.orderId}</td>
+                    <tr key={item.orderId} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 font-bold text-gray-900">#{item.orderId.slice(-6).toUpperCase()}</td>
                       <td className="px-6 py-4 font-semibold text-gray-900">{item.customer}</td>
                       <td className="px-6 py-4 font-bold text-gray-900">${item.amount.toFixed(2)}</td>
                       <td className="px-6 py-4 text-gray-600 max-w-xs truncate" title={item.reason}>
                         {item.reason}
                       </td>
                       <td className="px-6 py-4">
-                        {item.status === 'Pending' && (
+                        {item.status === 'pending' && (
                           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 tracking-wider">
                             Pending
                           </span>
                         )}
-                        {item.status === 'Approved' && (
+                        {item.status === 'approved' && (
                           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 tracking-wider">
                             Approved
                           </span>
                         )}
-                        {item.status === 'Rejected' && (
+                        {item.status === 'rejected' && (
                           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-rose-100 text-rose-800 tracking-wider">
                             Rejected
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-gray-500 font-medium">{item.requestedDate}</td>
+                      <td className="px-6 py-4 text-gray-500 font-medium">
+                        {new Date(item.requestedDate).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex items-center justify-center gap-1.5">
-                          <button 
-                            onClick={() => alert(`Viewing details for ${item.refundId}`)}
-                            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                            title="View"
-                          >
-                            <Eye size={15} />
-                          </button>
-                          {item.status === 'Pending' ? (
+                          {item.status === 'pending' ? (
                             <>
-                              <button 
-                                onClick={() => handleApprove(item.id)}
+                              <button
+                                onClick={() => decide(item.orderId, 'approved')}
                                 className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer font-bold"
                                 title="Approve"
                               >
                                 <Check size={15} />
                               </button>
-                              <button 
-                                onClick={() => handleReject(item.id)}
+                              <button
+                                onClick={() => decide(item.orderId, 'rejected')}
                                 className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer font-bold"
                                 title="Reject"
                               >
@@ -274,26 +242,11 @@ export default function RefundsPage() {
             </table>
           </div>
 
-          {/* Pagination Footer */}
+          {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
             <span className="text-xs text-gray-500">
-              Showing 1 to {filteredRefunds.length} of {refunds.length} entries
+              Showing {filteredRefunds.length} of {refunds.length} entries
             </span>
-            <div className="flex items-center gap-1.5">
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 hover:bg-gray-50 rounded-lg border border-gray-200 text-gray-400 transition-all disabled:opacity-40 cursor-pointer"
-              >
-                <ChevronLeft size={14} />
-              </button>
-              <button 
-                onClick={() => setCurrentPage(prev => prev + 1)}
-                className="p-2 hover:bg-gray-50 rounded-lg border border-gray-200 text-gray-600 transition-all cursor-pointer"
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
           </div>
 
         </div>

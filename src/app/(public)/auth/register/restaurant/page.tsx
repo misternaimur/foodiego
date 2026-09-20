@@ -10,7 +10,7 @@ import {
   type ComponentType,
   type FormEvent,
 } from "react";
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants } from "motion/react";
 import {
   User,
   Mail,
@@ -34,7 +34,7 @@ import {
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, storage } from "@/lib/firebase/client";
+import { getClientAuth, getClientStorage } from "@/lib/firebase/client";
 import { registerRestaurant } from "@/app/(public)/actions/restaurant";
 import { sendRegistrationOtp, verifyRegistrationOtp } from "@/app/(public)/actions/otp";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
@@ -217,13 +217,13 @@ function RestaurantRegisterFormContent() {
       let idToken: string;
       let uid: string;
       try {
-        const credential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+        const credential = await createUserWithEmailAndPassword(getClientAuth(), data.email, data.password);
         uid = credential.user.uid;
         idToken = await credential.user.getIdToken();
       } catch (error) {
         if (error instanceof FirebaseError && error.code === "auth/email-already-in-use") {
           try {
-            const credential = await signInWithEmailAndPassword(auth, data.email, data.password);
+            const credential = await signInWithEmailAndPassword(getClientAuth(), data.email, data.password);
             uid = credential.user.uid;
             idToken = await credential.user.getIdToken();
           } catch {
@@ -240,7 +240,7 @@ function RestaurantRegisterFormContent() {
       let logoUrl: string | undefined;
       if (logoFile) {
         try {
-          const logoRef = ref(storage, `restaurant-logos/${uid}/${Date.now()}-${logoFile.name}`);
+          const logoRef = ref(getClientStorage(), `restaurant-logos/${uid}/${Date.now()}-${logoFile.name}`);
           await uploadBytes(logoRef, logoFile);
           logoUrl = await getDownloadURL(logoRef);
         } catch (error) {

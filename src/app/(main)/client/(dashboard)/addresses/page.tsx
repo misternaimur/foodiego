@@ -1,31 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapPin, Plus, Pencil, Trash2, Home, Briefcase, X, Check } from "lucide-react";
-
-interface Address {
-  id: string;
-  label: string;
-  fullName: string;
-  phone: string;
-  addressLine: string;
-  city: string;
-  isDefault: boolean;
-}
-
-const STORAGE_KEY = "foodiego_addresses";
-
-const defaultAddresses: Address[] = [
-  {
-    id: "addr-1",
-    label: "Home",
-    fullName: "Naimur Rahman",
-    phone: "+880 1XXXXXXXXX",
-    addressLine: "House 12, Road 4, Block C",
-    city: "Cox's Bazar",
-    isDefault: true,
-  },
-];
+import { MapPin, Plus, Pencil, Trash2, Home, Briefcase, X, Check, LoaderCircle } from "lucide-react";
+import { addressesApi, type Address } from "@/lib/clientApi";
 
 function getLabelIcon(label: string) {
   return label.toLowerCase() === "work" ? Briefcase : Home;
@@ -33,9 +10,10 @@ function getLabelIcon(label: string) {
 
 export default function ClientAddressesPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState({
     label: "Home",
@@ -45,21 +23,13 @@ export default function ClientAddressesPage() {
     city: "",
   });
 
-//   useEffect(() => {
-//     try {
-//       const saved = localStorage.getItem(STORAGE_KEY);
-//       setAddresses(saved ? JSON.parse(saved) : defaultAddresses);
-//     } catch {
-//       setAddresses(defaultAddresses);
-//     } finally {
-//       setLoaded(true);
-//     }
-//   }, []);
-
   useEffect(() => {
-    if (!loaded) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(addresses));
-  }, [addresses, loaded]);
+    addressesApi
+      .list()
+      .then((data) => setAddresses(data.addresses))
+      .catch(() => setAddresses([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const openAddModal = () => {
     setEditingId(null);
@@ -68,7 +38,7 @@ export default function ClientAddressesPage() {
   };
 
   const openEditModal = (address: Address) => {
-    setEditingId(address.id);
+    setEditingId(address._id);
     setForm({
       label: address.label,
       fullName: address.fullName,
@@ -79,29 +49,47 @@ export default function ClientAddressesPage() {
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.fullName || !form.addressLine || !form.city) return;
 
-    if (editingId) {
-      setAddresses((prev) => prev.map((a) => (a.id === editingId ? { ...a, ...form } : a)));
-    } else {
-      const newAddress: Address = {
-        id: `addr-${Date.now()}`,
-        isDefault: addresses.length === 0,
-        ...form,
-      };
-      setAddresses((prev) => [...prev, newAddress]);
+    setSubmitting(true);
+    try {
+      if (editingId) {
+        const { addresses: updated } = await addressesApi.update(editingId, form);
+        setAddresses(updated);
+      } else {
+        const { addresses: updated } = await addressesApi.create(form);
+        setAddresses(updated);
+      }
+      setIsModalOpen(false);
+    } catch {
+      // keep the modal open so the user can retry
+    } finally {
+      setSubmitting(false);
     }
-    setIsModalOpen(false);
   };
 
-  const handleDelete = (id: string) => {
-    setAddresses((prev) => prev.filter((a) => a.id !== id));
+  const handleDelete = async (id: string) => {
+    const previous = addresses;
+    setAddresses((prev) => prev.filter((a) => a._id !== id));
+    try {
+      const { addresses: updated } = await addressesApi.remove(id);
+      setAddresses(updated);
+    } catch {
+      setAddresses(previous);
+    }
   };
 
-  const handleSetDefault = (id: string) => {
-    setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })));
+  const handleSetDefault = async (id: string) => {
+    const previous = addresses;
+    setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a._id === id })));
+    try {
+      const { addresses: updated } = await addressesApi.setDefault(id);
+      setAddresses(updated);
+    } catch {
+      setAddresses(previous);
+    }
   };
 
   return (
@@ -119,7 +107,13 @@ export default function ClientAddressesPage() {
         </button>
       </div>
 
-      {addresses.length === 0 ? (
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="h-36 animate-pulse rounded-2xl bg-gray-100" />
+          ))}
+        </div>
+      ) : addresses.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-10 text-center">
           <MapPin size={26} className="mx-auto text-gray-300" />
           <p className="mt-3 text-sm text-gray-500">No saved addresses yet.</p>
@@ -129,7 +123,7 @@ export default function ClientAddressesPage() {
           {addresses.map((address) => {
             const Icon = getLabelIcon(address.label);
             return (
-              <div key={address.id} className="relative rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+              <div key={address._id} className="relative rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
                 {address.isDefault && (
                   <span className="absolute right-4 top-4 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-[#15462D]">
                     Default
@@ -153,7 +147,7 @@ export default function ClientAddressesPage() {
                 <div className="mt-4 flex items-center gap-2 border-t border-gray-100 pt-3">
                   {!address.isDefault && (
                     <button
-                      onClick={() => handleSetDefault(address.id)}
+                      onClick={() => handleSetDefault(address._id)}
                       className="inline-flex items-center gap-1 text-[11px] font-bold text-[#15462D] hover:underline"
                     >
                       <Check size={12} /> Set as default
@@ -166,7 +160,7 @@ export default function ClientAddressesPage() {
                     <Pencil size={14} />
                   </button>
                   <button
-                    onClick={() => handleDelete(address.id)}
+                    onClick={() => handleDelete(address._id)}
                     className="inline-flex items-center gap-1 rounded-lg p-1.5 text-gray-400 hover:bg-rose-50 hover:text-rose-600"
                   >
                     <Trash2 size={14} />
@@ -249,8 +243,10 @@ export default function ClientAddressesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-[#15462D] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0e3320]"
+                  disabled={submitting}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#15462D] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#0e3320] disabled:opacity-60"
                 >
+                  {submitting && <LoaderCircle size={14} className="animate-spin" />}
                   Save Address
                 </button>
               </div>

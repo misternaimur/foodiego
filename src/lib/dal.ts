@@ -18,6 +18,7 @@ export const getOptionalSession = cache(async () => {
   await dbConnect();
   const user = await User.findOne({ uid: decoded.uid }).lean();
   if (!user) return null;
+  if (user.accountStatus === "suspended") return null;
 
   return {
     id: user._id.toString(),

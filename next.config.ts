@@ -1,18 +1,27 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // firebase-admin is a server-only Node package — keep it external instead
-  // of bundling. Its transitive deps jose/jwks-rsa must stay bundled: jose
-  // ships ESM-only and jwks-rsa require()s it, which only works if the
-  // bundler handles the interop (externalizing them breaks with
-  // ERR_REQUIRE_ESM at runtime).
   serverExternalPackages: ['firebase-admin'],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
 
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
+      },
+      // UPDATE (responsive/image fix): some real seeded restaurants store
+      // their logo/cover image on ibb.co — without this, next/image throws
+      // an unrecoverable runtime error for that one restaurant, which took
+      // down the ENTIRE /restaurants page (and anywhere else it rendered)
+      // instead of just that one broken image.
+      {
+        protocol: 'https',
+        hostname: 'i.ibb.co',
       },
       {
         protocol: 'https',
@@ -25,8 +34,10 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'i.ibb.co',
-      }
+
+        hostname: 'cdn.britannica.com',
+      },
+
     ],
   },
 };

@@ -5,7 +5,7 @@ import { ProfileSchema, type FormState, type Role } from "@/lib/definitions";
 import { dbConnect } from "@/lib/dbConnect";
 import { User } from "@/models/User";
 import { createSession, deleteSession } from "@/lib/session";
-import { adminAuth } from "@/lib/firebase/admin";
+import { getAdminAuth } from "@/lib/firebase/admin";
 import { consumeVerifiedRegistrationOtp } from "@/lib/otp";
 
 function roleHome(role: Role) {
@@ -49,7 +49,7 @@ export async function establishSession(
 ): Promise<FormState> {
   let decoded;
   try {
-    decoded = await adminAuth.verifyIdToken(idToken);
+    decoded = await getAdminAuth().verifyIdToken(idToken);
   } catch {
     return { message: "Your sign-in could not be verified. Please try again." };
   }

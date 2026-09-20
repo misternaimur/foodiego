@@ -14,7 +14,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
-  UserPlus,
   TrendingUp,
   AlertCircle,
   Ban,
@@ -23,7 +22,9 @@ import {
 import { dbConnect } from "@/lib/dbConnect";
 import { verifyRole } from "@/lib/dal";
 import { Restaurant, type RestaurantStatus } from "@/models/Restaurant";
+import { OrderBooking } from "@/models/OrderBooking";
 import VendorModerationActions from "@/components/admin/VendorModerationActions";
+import InviteLinkButton from "@/components/admin/InviteLinkButton";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,14 @@ function isFilter(value: string | string[] | undefined): value is Filter {
   return typeof value === "string" && (FILTERS as string[]).includes(value);
 }
 
+// UPDATE (admin-pagination fix): the footer below used to render a fixed,
+// non-functional "1 2 3 ... 130" button row (no page ever actually
+// existed past page 1 — every restaurant was already being fetched in
+// one unpaginated query). Real pagination is added here: a `page`
+// searchParam drives `.skip()/.limit()`, and `totalCount` now reflects
+// the active status/search filter instead of the whole collection.
+const PAGE_SIZE = 20;
+
 export default async function AdminVendorsPage({
   searchParams,
 }: {
@@ -52,6 +61,7 @@ export default async function AdminVendorsPage({
   const sp = await searchParams;
   const filter: Filter = isFilter(sp.status) ? sp.status : "all";
   const searchQuery = typeof sp.q === "string" ? sp.q : "";
+  const page = Math.max(1, Number(sp.page) || 1);
 
   await dbConnect();
 
@@ -69,17 +79,46 @@ export default async function AdminVendorsPage({
     ];
   }
 
-  const [restaurants, pendingCount, approvedCount, suspendedCount, totalCount] =
+  const [restaurants, pendingCount, approvedCount, suspendedCount, allCount, filteredCount, revenueByRestaurant] =
     await Promise.all([
-      Restaurant.find(query).sort({ createdAt: -1 }).lean(),
+      Restaurant.find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * PAGE_SIZE)
+        .limit(PAGE_SIZE)
+        .lean(),
       Restaurant.countDocuments({ status: "pending" } as never),
       Restaurant.countDocuments({ status: "approved" } as never),
       Restaurant.countDocuments({ status: "suspended" } as never),
       Restaurant.estimatedDocumentCount(),
+      Restaurant.countDocuments(query),
+      OrderBooking.aggregate([
+        { $match: { restaurantId: { $ne: null }, status: { $ne: "cancelled" } } },
+        { $group: { _id: "$restaurantId", orders: { $sum: 1 }, revenue: { $sum: "$totalAmount" } } },
+      ]),
     ]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE));
+  const firstRow = filteredCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const lastRow = Math.min(page * PAGE_SIZE, filteredCount);
+
+  function pageHref(p: number) {
+    const params = new URLSearchParams();
+    if (filter !== "all") params.set("status", filter);
+    if (searchQuery) params.set("q", searchQuery);
+    if (p > 1) params.set("page", String(p));
+    const qs = params.toString();
+    return qs ? `?${qs}` : "?";
+  }
+
+  const revenueById = new Map(
+    revenueByRestaurant.map((r: { _id: unknown; orders: number; revenue: number }) => [
+      String(r._id),
+      { orders: r.orders, revenue: r.revenue },
+    ])
+  );
+
   const counts: Record<Filter, number> = {
-    all: totalCount,
+    all: allCount,
     pending: pendingCount,
     approved: approvedCount,
     suspended: suspendedCount,
@@ -101,14 +140,14 @@ export default async function AdminVendorsPage({
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-semibold shadow-2xs transition-all">
+            <a
+              href={`/api/admin/export/vendors${filter !== "all" ? `?status=${filter}` : ""}${searchQuery ? `${filter !== "all" ? "&" : "?"}q=${encodeURIComponent(searchQuery)}` : ""}`}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-semibold shadow-2xs transition-all"
+            >
               <Download size={15} className="text-gray-500" />
               <span>Export List</span>
-            </button>
-            <button className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0d9488] hover:bg-[#0b7c72] text-white rounded-xl text-xs font-semibold shadow-2xs transition-all">
-              <UserPlus size={15} />
-              <span>Invite Vendor</span>
-            </button>
+            </a>
+            <InviteLinkButton label="Invite Vendor" path="/auth/register/restaurant" />
           </div>
         </div>
 
@@ -274,6 +313,7 @@ export default async function AdminVendorsPage({
                     const id = String(r._id);
                     const rawStatus = (r.status as string) || "pending";
                     const displayStatus = rawStatus === "approved" ? "active" : rawStatus;
+                    const stats = revenueById.get(id);
 
                     return (
                       <tr key={id} className="hover:bg-gray-50/60 transition-colors">
@@ -313,11 +353,11 @@ export default async function AdminVendorsPage({
                         </td>
 
                         <td className="py-4 px-6 font-medium text-gray-700">
-                          {rawStatus === "approved" ? "1,402" : "—"}
+                          {stats ? stats.orders.toLocaleString() : "—"}
                         </td>
 
                         <td className="py-4 px-6 font-semibold text-gray-900">
-                          {rawStatus === "approved" ? "$24,500.00" : "—"}
+                          {stats ? `৳${stats.revenue.toLocaleString()}` : "—"}
                         </td>
 
                         <td className="py-4 px-6">
@@ -345,30 +385,44 @@ export default async function AdminVendorsPage({
           {/* Footer Pagination Section */}
           <div className="p-4 px-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
             <div>
-              Showing <span className="font-semibold text-gray-800">1</span> to <span className="font-semibold text-gray-800">{restaurants.length}</span> of <span className="font-semibold text-gray-800">1,297</span> entries
+              Showing <span className="font-semibold text-gray-800">{firstRow}</span> to <span className="font-semibold text-gray-800">{lastRow}</span> of <span className="font-semibold text-gray-800">{filteredCount}</span> entries
             </div>
 
-            <div className="flex items-center gap-1">
-              <button className="width-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50 disabled:opacity-40" disabled>
-                <ChevronLeft size={14} />
-              </button>
-              <button className="w-8 h-8 rounded-xl bg-[#0d9488] text-white font-bold flex items-center justify-center shadow-2xs">
-                1
-              </button>
-              <button className="w-8 h-8 rounded-xl border border-gray-200 hover:bg-gray-50 font-semibold text-gray-700 flex items-center justify-center">
-                2
-              </button>
-              <button className="w-8 h-8 rounded-xl border border-gray-200 hover:bg-gray-50 font-semibold text-gray-700 flex items-center justify-center">
-                3
-              </button>
-              <span className="px-1 text-gray-400">...</span>
-              <button className="w-8 h-8 rounded-xl border border-gray-200 hover:bg-gray-50 font-semibold text-gray-700 flex items-center justify-center">
-                130
-              </button>
-              <button className="w-8 h-8 rounded-xl border border-gray-200 hover:bg-gray-50 font-semibold text-gray-700 flex items-center justify-center">
-                <ChevronRight size={14} />
-              </button>
-            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <Link
+                  href={pageHref(Math.max(1, page - 1))}
+                  aria-disabled={page === 1}
+                  className={`w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 ${page === 1 ? "pointer-events-none opacity-40" : ""}`}
+                >
+                  <ChevronLeft size={14} />
+                </Link>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                  .map((p, i, arr) => (
+                    <span key={p} className="flex items-center gap-1">
+                      {i > 0 && arr[i - 1] !== p - 1 && <span className="px-1 text-gray-400">...</span>}
+                      <Link
+                        href={pageHref(p)}
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center font-semibold ${
+                          p === page
+                            ? "bg-[#0d9488] text-white shadow-2xs"
+                            : "border border-gray-200 text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {p}
+                      </Link>
+                    </span>
+                  ))}
+                <Link
+                  href={pageHref(Math.min(totalPages, page + 1))}
+                  aria-disabled={page === totalPages}
+                  className={`w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 ${page === totalPages ? "pointer-events-none opacity-40" : ""}`}
+                >
+                  <ChevronRight size={14} />
+                </Link>
+              </div>
+            )}
           </div>
 
         </div>

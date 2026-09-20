@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useActionState, type ComponentType } from "react";
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants } from "motion/react";
 import {
   User,
   Mail,
@@ -24,7 +24,7 @@ import {
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { auth, storage } from "@/lib/firebase/client";
+import { getClientAuth, getClientStorage } from "@/lib/firebase/client";
 import { registerRider } from "@/app/(public)/actions/rider";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
 import {
@@ -83,7 +83,7 @@ async function registerRiderAction(
   let uid: string;
   try {
     const credential = await createUserWithEmailAndPassword(
-      auth,
+      getClientAuth(),
       validatedFields.data.email,
       validatedFields.data.password
     );
@@ -93,7 +93,7 @@ async function registerRiderAction(
     if (error instanceof FirebaseError && error.code === "auth/email-already-in-use") {
       try {
         const credential = await signInWithEmailAndPassword(
-          auth,
+          getClientAuth(),
           validatedFields.data.email,
           validatedFields.data.password
         );
@@ -112,7 +112,7 @@ async function registerRiderAction(
   // leaving the form stuck. The photo can be added later from the profile page.
   let photoUrl: string | undefined;
   try {
-    const photoRef = ref(storage, `rider-photos/${uid}/${Date.now()}-${photoFile.name}`);
+    const photoRef = ref(getClientStorage(), `rider-photos/${uid}/${Date.now()}-${photoFile.name}`);
     await uploadBytes(photoRef, photoFile);
     photoUrl = await getDownloadURL(photoRef);
   } catch (error) {

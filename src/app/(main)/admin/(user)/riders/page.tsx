@@ -1,398 +1,400 @@
-"use client";
-
-import React, { useState } from 'react';
-import { 
-  UserPlus, 
-  Filter, 
-  Download, 
-  Search, 
-  Star, 
-  MoreVertical, 
-  ChevronLeft, 
-  ChevronRight,
+import Link from "next/link";
+import Image from "next/image";
+import {
+  Bike,
+  MapPin,
+  Mail,
+  Phone,
+  IdCard,
+  Star,
+  Inbox,
+  Search,
+  Download,
   TrendingUp,
-  Clock,
-  UserX,
-  Users
-} from 'lucide-react';
+  AlertCircle,
+  Ban,
+  FileText,
+  User,
+} from "lucide-react";
+import { dbConnect } from "@/lib/dbConnect";
+import { verifyRole } from "@/lib/dal";
+import { Rider, type RiderStatus } from "@/models/Rider";
+import { OrderBooking } from "@/models/OrderBooking";
+import RiderModerationActions from "@/components/admin/RiderModerationActions";
+import InviteLinkButton from "@/components/admin/InviteLinkButton";
 
-interface Rider {
-  id: string;
-  name: string;
-  phone: string;
-  totalDeliveries: string | number;
-  rating: string | number;
-  status: 'Online' | 'Offline' | 'Suspended' | 'Pending';
-  joined: string;
-  avatarType: 'image' | 'initials';
-  avatarUrl?: string;
-  initials?: string;
+export const dynamic = "force-dynamic";
+
+type Filter = RiderStatus | "all";
+const FILTERS: Filter[] = ["all", "pending", "approved", "suspended"];
+
+const STATUS_BADGE: Record<string, string> = {
+  pending: "bg-amber-50 text-amber-700 border-amber-200",
+  approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  rejected: "bg-red-50 text-red-700 border-red-200",
+  suspended: "bg-rose-50 text-rose-700 border-rose-200",
+  active: "bg-emerald-50 text-emerald-700 border-emerald-200",
+};
+
+function isFilter(value: string | string[] | undefined): value is Filter {
+  return typeof value === "string" && (FILTERS as string[]).includes(value);
 }
 
-const initialRiders: Rider[] = [
-  {
-    id: "1",
-    name: "Marcus Johnson",
-    phone: "+1 (555) 019-2834",
-    totalDeliveries: 1432,
-    rating: 4.9,
-    status: "Online",
-    joined: "Oct 12, 2022",
-    avatarType: "image",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-  },
-  {
-    id: "2",
-    name: "Elena Smith",
-    phone: "+1 (555) 847-3920",
-    totalDeliveries: 856,
-    rating: 4.7,
-    status: "Offline",
-    joined: "Jan 05, 2023",
-    avatarType: "initials",
-    initials: "ES"
-  },
-  {
-    id: "3",
-    name: "David Chen",
-    phone: "+1 (555) 293-8475",
-    totalDeliveries: 342,
-    rating: 3.2,
-    status: "Suspended",
-    joined: "Mar 15, 2023",
-    avatarType: "image",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80"
-  },
-  {
-    id: "4",
-    name: "Sarah Williams",
-    phone: "+1 (555) 938-1029",
-    totalDeliveries: "New",
-    rating: "N/A",
-    status: "Pending",
-    joined: "Today",
-    avatarType: "initials",
-    initials: "SW"
+// UPDATE (admin-pagination fix): this page used to fetch every matching
+// rider in one unpaginated query and show "of {totalCount} entries" where
+// totalCount was the WHOLE rider collection, not the active filter's
+// count — misleading once a status filter or search narrowed the table.
+// Real pagination + a filter-aware total are added the same way as the
+// vendors page (src/app/(main)/admin/(user)/vendors/page.tsx).
+const PAGE_SIZE = 20;
+
+export default async function AdminRidersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  await verifyRole("admin");
+
+  const sp = await searchParams;
+  const filter: Filter = isFilter(sp.status) ? sp.status : "all";
+  const searchQuery = typeof sp.q === "string" ? sp.q : "";
+  const page = Math.max(1, Number(sp.page) || 1);
+
+  await dbConnect();
+
+  const query: Record<string, unknown> = {};
+  if (filter !== "all") query.status = filter;
+
+  if (searchQuery) {
+    query.$or = [
+      { fullName: { $regex: searchQuery, $options: "i" } },
+      { email: { $regex: searchQuery, $options: "i" } },
+      { phone: { $regex: searchQuery, $options: "i" } },
+      { city: { $regex: searchQuery, $options: "i" } },
+    ];
   }
-];
 
-export default function RiderManagementPage() {
-  // Structured state ready for backend API integration (e.g. useEffect fetch)
-  const [riders, setRiders] = useState<Rider[]>(initialRiders);
-  const [activeTab, setActiveTab] = useState<'All' | 'Pending Approval' | 'Active' | 'Suspended'>('All');
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const totalRidersCount = 1248;
+  const [riders, pendingCount, approvedCount, suspendedCount, allCount, filteredCount, deliveriesByRider] =
+    await Promise.all([
+      Rider.find(query)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * PAGE_SIZE)
+        .limit(PAGE_SIZE)
+        .lean(),
+      Rider.countDocuments({ status: "pending" }),
+      Rider.countDocuments({ status: "approved" }),
+      Rider.countDocuments({ status: "suspended" }),
+      Rider.estimatedDocumentCount(),
+      Rider.countDocuments(query),
+      OrderBooking.aggregate([
+        { $match: { riderId: { $ne: null } } },
+        {
+          $group: {
+            _id: "$riderId",
+            deliveries: { $sum: 1 },
+            completed: { $sum: { $cond: [{ $eq: ["$status", "delivered"] }, 1, 0] } },
+          },
+        },
+      ]),
+    ]);
 
-  // Filter logic ready to map to backend query parameters later
-  const filteredRiders = riders.filter(rider => {
-    const matchesSearch = rider.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          rider.phone.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    if (activeTab === 'Pending Approval') return matchesSearch && rider.status === 'Pending';
-    if (activeTab === 'Active') return matchesSearch && (rider.status === 'Online' || rider.status === 'Offline');
-    if (activeTab === 'Suspended') return matchesSearch && rider.status === 'Suspended';
-    return matchesSearch;
-  });
+  const deliveriesById = new Map(
+    deliveriesByRider.map((d: { _id: unknown; deliveries: number; completed: number }) => [
+      String(d._id),
+      d,
+    ])
+  );
+
+  const totalPages = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE));
+  const firstRow = filteredCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const lastRow = Math.min(page * PAGE_SIZE, filteredCount);
+
+  function pageHref(p: number) {
+    const params = new URLSearchParams();
+    if (filter !== "all") params.set("status", filter);
+    if (searchQuery) params.set("q", searchQuery);
+    if (p > 1) params.set("page", String(p));
+    const qs = params.toString();
+    return qs ? `?${qs}` : "?";
+  }
+
+  const counts: Record<Filter, number> = {
+    all: allCount,
+    pending: pendingCount,
+    approved: approvedCount,
+    suspended: suspendedCount,
+    rejected: 0,
+  };
 
   return (
-    <main className="flex-1 bg-[#f8fafc] px-4 py-8 sm:px-6 lg:px-8 font-sans">
-      <div className="mx-auto w-full max-w-7xl space-y-6">
-        
+    <main className="flex-1 bg-gray-50/60 px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl">
         {/* Top Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-              Rider Management
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+              Riders
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              Monitor and manage delivery fleet operations.
+              Manage the delivery fleet, monitor status, and review applications.
             </p>
           </div>
-          <div>
-            <button className="inline-flex items-center gap-2 px-4 py-2 bg-[#065f46] hover:bg-[#044e38] text-white rounded-xl text-xs font-semibold shadow-2xs transition-all cursor-pointer">
-              <UserPlus size={16} />
-              <span>Invite Rider</span>
-            </button>
+          <div className="flex items-center gap-3">
+            <a
+              href={`/api/admin/export/riders${filter !== "all" ? `?status=${filter}` : ""}${searchQuery ? `${filter !== "all" ? "&" : "?"}q=${encodeURIComponent(searchQuery)}` : ""}`}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-semibold shadow-2xs transition-all"
+            >
+              <Download size={15} className="text-gray-500" />
+              <span>Export List</span>
+            </a>
+            <InviteLinkButton label="Invite Rider" path="/auth/register/rider" className="bg-[#065f46] hover:bg-[#044e38]" />
           </div>
         </div>
 
-        {/* Metric Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          
-          {/* Card 1: Total Active */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs flex flex-col justify-between space-y-3">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-              Total Active
-            </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-gray-900">1,248</span>
-              <span className="inline-flex items-center text-xs font-semibold text-emerald-600 gap-0.5">
-                <TrendingUp size={12} />
-                +12%
+        {/* Top Statistics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold tracking-wider text-gray-400 uppercase">TOTAL ACTIVE</span>
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <Bike size={16} />
+              </div>
+            </div>
+            <div className="mt-4 flex items-baseline justify-between">
+              <span className="text-3xl font-extrabold text-gray-900">{approvedCount.toLocaleString()}</span>
+              <span className="text-xs font-semibold text-emerald-600 flex items-center gap-0.5">
+                <TrendingUp size={13} />
               </span>
             </div>
           </div>
 
-          {/* Card 2: Pending Approval */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs flex flex-col justify-between space-y-3">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-              Pending Approval
-            </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-gray-900">42</span>
-              <span className="text-xs text-gray-400 font-medium">requires action</span>
+          <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold tracking-wider text-gray-400 uppercase">PENDING APPROVAL</span>
+              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <FileText size={16} />
+              </div>
+            </div>
+            <div className="mt-4 flex items-baseline justify-between">
+              <span className="text-3xl font-extrabold text-gray-900">{pendingCount}</span>
+              <span className="text-xs font-medium text-gray-400">Requires review</span>
             </div>
           </div>
 
-          {/* Card 3: Avg Delivery Time */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs flex flex-col justify-between space-y-3">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-              Avg Delivery Time
-            </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-gray-900">24m</span>
-              <span className="inline-flex items-center text-xs font-semibold text-emerald-600 gap-0.5">
-                <TrendingUp size={12} className="rotate-180" />
-                -2m
+          <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold tracking-wider text-gray-400 uppercase">SUSPENDED</span>
+              <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                <Ban size={16} />
+              </div>
+            </div>
+            <div className="mt-4 flex items-baseline justify-between">
+              <span className="text-3xl font-extrabold text-gray-900">{suspendedCount}</span>
+              <span className="text-xs font-semibold text-rose-600 flex items-center gap-1">
+                <AlertCircle size={13} /> Action needed
               </span>
             </div>
           </div>
 
-          {/* Card 4: Suspended */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs flex flex-col justify-between space-y-3">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-              Suspended
-            </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-rose-600">15</span>
-              <span className="text-xs text-gray-400 font-medium">this week</span>
+          <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold tracking-wider text-gray-400 uppercase">TOTAL RIDERS</span>
+              <div className="w-8 h-8 rounded-xl bg-teal-50 text-[#065f46] flex items-center justify-center">
+                <User size={16} />
+              </div>
+            </div>
+            <div className="mt-4 flex items-baseline justify-between">
+              <span className="text-3xl font-extrabold text-gray-900">{allCount.toLocaleString()}</span>
             </div>
           </div>
-
         </div>
 
         {/* Main Content Card Container */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-2xs overflow-hidden">
-          
-          {/* Tabs & Action Bar */}
-          <div className="px-6 pt-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            
-            {/* Navigation Tabs */}
-            <div className="flex gap-8 text-xs font-semibold overflow-x-auto">
-              <button
-                onClick={() => setActiveTab('All')}
-                className={`pb-3.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-                  activeTab === 'All'
-                    ? 'border-[#065f46] text-[#065f46]'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setActiveTab('Pending Approval')}
-                className={`pb-3.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-                  activeTab === 'Pending Approval'
-                    ? 'border-[#065f46] text-[#065f46]'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                Pending Approval
-              </button>
-              <button
-                onClick={() => setActiveTab('Active')}
-                className={`pb-3.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-                  activeTab === 'Active'
-                    ? 'border-[#065f46] text-[#065f46]'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                Active
-              </button>
-              <button
-                onClick={() => setActiveTab('Suspended')}
-                className={`pb-3.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-                  activeTab === 'Suspended'
-                    ? 'border-[#065f46] text-[#065f46]'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                Suspended
-              </button>
+          {/* Tabs & Search Filter Bar */}
+          <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto text-xs font-semibold text-gray-500">
+              {FILTERS.map((f) => {
+                const isActive = filter === f;
+                return (
+                  <Link
+                    key={f}
+                    href={f === "all" ? "/admin/riders" : `/admin/riders?status=${f}${searchQuery ? `&q=${searchQuery}` : ""}`}
+                    className={`px-3.5 py-2 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 capitalize ${
+                      isActive ? "bg-gray-100 text-gray-900 font-bold" : "hover:bg-gray-50 hover:text-gray-800"
+                    }`}
+                  >
+                    <span>{f === "approved" ? "Active" : f}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-md text-[10px] ${
+                        isActive ? "bg-gray-200/80 text-gray-700" : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {counts[f]}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
 
-            {/* Filter & Export Buttons */}
-            <div className="flex items-center gap-3 pb-3 sm:pb-0">
-              <button 
-                onClick={() => alert("Open Filter Modal")}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold shadow-2xs transition-all cursor-pointer"
-              >
-                <Filter size={14} className="text-gray-500" />
-                <span>Filter</span>
-              </button>
-              <button 
-                onClick={() => alert("Exporting data...")}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 rounded-xl text-xs font-semibold shadow-2xs transition-all cursor-pointer"
-              >
-                <Download size={14} className="text-gray-500" />
-                <span>Export</span>
-              </button>
-            </div>
-
+            <form method="GET" className="flex items-center gap-3">
+              {filter !== "all" && <input type="hidden" name="status" value={filter} />}
+              <div className="relative w-full sm:w-64">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                  <Search size={15} />
+                </span>
+                <input
+                  type="text"
+                  name="q"
+                  defaultValue={searchQuery}
+                  placeholder="Search riders..."
+                  className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#065f46] transition-all"
+                />
+              </div>
+            </form>
           </div>
 
-          {/* Riders Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50/60 border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  <th className="px-6 py-3.5">Rider</th>
-                  <th className="px-6 py-3.5">Phone</th>
-                  <th className="px-6 py-3.5">Total Deliveries</th>
-                  <th className="px-6 py-3.5">Rating</th>
-                  <th className="px-6 py-3.5">Status</th>
-                  <th className="px-6 py-3.5">Joined</th>
-                  <th className="px-6 py-3.5 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 text-sm">
-                {filteredRiders.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-gray-400 text-xs">
-                      No riders found.
-                    </td>
+          {riders.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <Inbox className="text-gray-300" size={42} />
+              <p className="mt-3 text-sm font-semibold text-gray-700">
+                No {filter === "all" ? "" : filter} riders found
+              </p>
+              <p className="text-xs text-gray-400">Try adjusting your search or filter parameters.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase bg-gray-50/50">
+                    <th className="py-3.5 px-6">Rider</th>
+                    <th className="py-3.5 px-6">Contact</th>
+                    <th className="py-3.5 px-6">Vehicle</th>
+                    <th className="py-3.5 px-6">Deliveries</th>
+                    <th className="py-3.5 px-6">Rating</th>
+                    <th className="py-3.5 px-6">Status</th>
+                    <th className="py-3.5 px-6 text-right">Action</th>
                   </tr>
-                ) : (
-                  filteredRiders.map((rider) => (
-                    <tr key={rider.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {rider.avatarType === 'image' ? (
-                            <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
-                              <img src={rider.avatarUrl} alt={rider.name} className="w-full h-full object-cover" />
+                </thead>
+                <tbody className="divide-y divide-gray-100 text-xs">
+                  {riders.map((r) => {
+                    const id = String(r._id);
+                    const rawStatus = (r.status as string) || "pending";
+                    const displayStatus = rawStatus === "approved" ? "active" : rawStatus;
+                    const stats = deliveriesById.get(id);
+
+                    return (
+                      <tr key={id} className="hover:bg-gray-50/60 transition-colors">
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-gray-200/70">
+                              {r.photoUrl ? (
+                                <Image src={r.photoUrl} alt={r.fullName} fill className="object-cover" />
+                              ) : (
+                                <User size={18} />
+                              )}
                             </div>
-                          ) : (
-                            <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs shrink-0">
-                              {rider.initials}
+                            <div className="min-w-0">
+                              <p className="font-bold text-gray-900 truncate">{r.fullName}</p>
+                              <p className="flex items-center gap-1 text-[11px] text-gray-400 truncate">
+                                <MapPin size={11} /> {r.city}
+                              </p>
                             </div>
-                          )}
-                          <span className="font-semibold text-gray-900 text-xs">{rider.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-xs text-gray-600">
-                        {rider.phone}
-                      </td>
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-900">
-                        {rider.totalDeliveries}
-                      </td>
-                      <td className="px-6 py-4 text-xs font-medium text-gray-700">
-                        {typeof rider.rating === 'number' ? (
-                          <div className="flex items-center gap-1">
-                            <span className="text-emerald-600">★</span>
-                            <span className="font-semibold text-gray-900">{rider.rating.toFixed(1)}</span>
                           </div>
-                        ) : (
-                          <span className="text-gray-400">{rider.rating}</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {rider.status === 'Online' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            Online
-                          </span>
-                        )}
-                        {rider.status === 'Offline' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-gray-100 text-gray-600 border border-gray-200">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-                            Offline
-                          </span>
-                        )}
-                        {rider.status === 'Suspended' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-rose-50 text-rose-700 border border-rose-100">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                            Suspended
-                          </span>
-                        )}
-                        {rider.status === 'Pending' && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
-                            Pending
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-xs text-gray-500 whitespace-nowrap">
-                        {rider.joined}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {rider.status === 'Pending' ? (
-                          <button 
-                            onClick={() => alert(`Reviewing rider ${rider.name}`)}
-                            className="px-3 py-1 bg-[#065f46] hover:bg-[#044e38] text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer shadow-2xs"
-                          >
-                            REVIEW
-                          </button>
-                        ) : (
-                          <button 
-                            onClick={() => alert(`Actions for rider ${rider.name}`)}
-                            className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors inline-block rounded-lg hover:bg-gray-100 cursor-pointer"
-                            title="Actions"
-                          >
-                            <MoreVertical size={16} />
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                        </td>
 
-          {/* Pagination Footer */}
-          <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <span className="text-xs text-gray-500">
-              Showing 1 to 4 of {totalRidersCount}
-            </span>
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="p-2 hover:bg-gray-50 rounded-lg border border-gray-200 text-gray-400 transition-all disabled:opacity-40 cursor-pointer"
-              >
-                <ChevronLeft size={14} />
-              </button>
-              
-              <button 
-                onClick={() => setCurrentPage(1)}
-                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all cursor-pointer ${currentPage === 1 ? 'bg-[#065f46] text-white shadow-2xs' : 'border border-gray-200 text-gray-700 hover:bg-gray-50'}`}
-              >
-                1
-              </button>
-              <button 
-                onClick={() => setCurrentPage(2)}
-                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all cursor-pointer ${currentPage === 2 ? 'bg-[#065f46] text-white shadow-2xs' : 'border border-gray-200 text-gray-700 hover:bg-gray-50'}`}
-              >
-                2
-              </button>
-              <button 
-                onClick={() => setCurrentPage(3)}
-                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all cursor-pointer ${currentPage === 3 ? 'bg-[#065f46] text-white shadow-2xs' : 'border border-gray-200 text-gray-700 hover:bg-gray-50'}`}
-              >
-                3
-              </button>
-              <span className="px-1.5 text-gray-400 text-xs">...</span>
-              <button 
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, 3))}
-                className="p-2 hover:bg-gray-50 rounded-lg border border-gray-200 text-gray-600 transition-all cursor-pointer"
-              >
-                <ChevronRight size={14} />
-              </button>
+                        <td className="py-4 px-6">
+                          <p className="flex items-center gap-1.5 font-semibold text-gray-800">
+                            <Phone size={11} className="text-gray-400" /> {r.phone}
+                          </p>
+                          <p className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                            <Mail size={11} /> {r.email}
+                          </p>
+                        </td>
+
+                        <td className="py-4 px-6">
+                          <p className="capitalize text-gray-700">{r.vehicleType}</p>
+                          <p className="flex items-center gap-1 text-[11px] text-gray-400">
+                            <IdCard size={11} /> {r.licenseNumber}
+                          </p>
+                        </td>
+
+                        <td className="py-4 px-6 font-medium text-gray-700">
+                          {stats ? `${stats.completed}/${stats.deliveries}` : "—"}
+                        </td>
+
+                        <td className="py-4 px-6">
+                          <span className="inline-flex items-center gap-1 font-semibold text-gray-800">
+                            <Star size={12} className="fill-amber-400 text-amber-400" /> {r.rating?.toFixed?.(1) ?? "0.0"}
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-6">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold capitalize ${
+                              STATUS_BADGE[displayStatus] || STATUS_BADGE.pending
+                            }`}
+                          >
+                            {displayStatus}
+                          </span>
+                        </td>
+
+                        <td className="py-4 px-6 text-right">
+                          <RiderModerationActions riderId={id} status={rawStatus as RiderStatus} />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
+          )}
+
+          {/* Footer */}
+          <div className="p-4 px-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+            <div>
+              Showing <span className="font-semibold text-gray-800">{firstRow}</span> to{" "}
+              <span className="font-semibold text-gray-800">{lastRow}</span> of{" "}
+              <span className="font-semibold text-gray-800">{filteredCount}</span> entries
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <Link
+                  href={pageHref(Math.max(1, page - 1))}
+                  aria-disabled={page === 1}
+                  className={`w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 ${page === 1 ? "pointer-events-none opacity-40" : ""}`}
+                >
+                  ‹
+                </Link>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                  .map((p, i, arr) => (
+                    <span key={p} className="flex items-center gap-1">
+                      {i > 0 && arr[i - 1] !== p - 1 && <span className="px-1 text-gray-400">...</span>}
+                      <Link
+                        href={pageHref(p)}
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center font-semibold ${
+                          p === page
+                            ? "bg-emerald-600 text-white shadow-2xs"
+                            : "border border-gray-200 text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {p}
+                      </Link>
+                    </span>
+                  ))}
+                <Link
+                  href={pageHref(Math.min(totalPages, page + 1))}
+                  aria-disabled={page === totalPages}
+                  className={`w-8 h-8 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 ${page === totalPages ? "pointer-events-none opacity-40" : ""}`}
+                >
+                  ›
+                </Link>
+              </div>
+            )}
           </div>
-
         </div>
-
       </div>
     </main>
   );

@@ -1,20 +1,24 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { motion } from "framer-motion";
-import { Check, X, RotateCcw, LoaderCircle } from "lucide-react";
+import { motion } from "motion/react";
+import { Check, X, RotateCcw, LoaderCircle, Ban, RefreshCcw } from "lucide-react";
 import {
   approveRider,
   rejectRider,
   resetRiderStatus,
+  suspendRider,
+  reactivateRider,
 } from "@/app/(main)/actions/admin";
 
-type Action = "approve" | "reject" | "reset";
+type Action = "approve" | "reject" | "reset" | "suspend" | "reactivate";
 
 const RUNNERS: Record<Action, (id: string) => Promise<{ ok: boolean; message?: string }>> = {
   approve: approveRider,
   reject: rejectRider,
   reset: resetRiderStatus,
+  suspend: suspendRider,
+  reactivate: reactivateRider,
 };
 
 export default function RiderModerationActions({
@@ -22,7 +26,7 @@ export default function RiderModerationActions({
   status,
 }: {
   riderId: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "suspended";
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +52,7 @@ export default function RiderModerationActions({
       className="flex flex-col items-end gap-2"
     >
       <div className="flex flex-wrap items-center justify-end gap-2">
-        {status !== "approved" && (
+        {(status === "pending" || status === "rejected") && (
           <motion.button
             whileHover={{ scale: 1.03, y: -2, boxShadow: "0 20px 35px -10px rgba(16, 185, 129, 0.5)" }}
             whileTap={{ scale: 0.97, y: 1, boxShadow: "0 5px 15px -5px rgba(16, 185, 129, 0.4)" }}
@@ -66,7 +70,7 @@ export default function RiderModerationActions({
           </motion.button>
         )}
 
-        {status !== "rejected" && (
+        {(status === "pending" || status === "approved") && (
           <motion.button
             whileHover={{ scale: 1.03, y: -2, boxShadow: "0 20px 35px -10px rgba(246, 164, 41, 0.5)" }}
             whileTap={{ scale: 0.97, y: 1, boxShadow: "0 5px 15px -5px rgba(246, 164, 41, 0.4)" }}
@@ -84,7 +88,43 @@ export default function RiderModerationActions({
           </motion.button>
         )}
 
-        {status !== "pending" && (
+        {status === "approved" && (
+          <motion.button
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.97, y: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 18 }}
+            onClick={() => run("suspend")}
+            disabled={pending}
+            className={`${baseBtn} border-2 border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100`}
+          >
+            {pending && running === "suspend" ? (
+              <LoaderCircle size={13} className="animate-spin" />
+            ) : (
+              <Ban size={13} />
+            )}
+            Suspend
+          </motion.button>
+        )}
+
+        {status === "suspended" && (
+          <motion.button
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.97, y: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 18 }}
+            onClick={() => run("reactivate")}
+            disabled={pending}
+            className={`${baseBtn} bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700 text-white hover:from-emerald-400 hover:via-emerald-500 hover:to-emerald-600`}
+          >
+            {pending && running === "reactivate" ? (
+              <LoaderCircle size={13} className="animate-spin" />
+            ) : (
+              <RefreshCcw size={13} />
+            )}
+            Reactivate
+          </motion.button>
+        )}
+
+        {(status === "approved" || status === "rejected") && (
           <motion.button
             whileHover={{ scale: 1.03, y: -2, boxShadow: "0 20px 35px -10px rgba(148, 163, 184, 0.5)" }}
             whileTap={{ scale: 0.97, y: 1, boxShadow: "0 5px 15px -5px rgba(148, 163, 184, 0.4)" }}
@@ -98,7 +138,7 @@ export default function RiderModerationActions({
             ) : (
               <RotateCcw size={13} />
             )}
-            Move to pending wait for review
+            Move to pending
           </motion.button>
         )}
       </div>

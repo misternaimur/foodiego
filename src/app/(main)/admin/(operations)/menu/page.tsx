@@ -55,6 +55,13 @@ const initialFoodItems: FoodItem[] = [
   }
 ];
 
+const MENU_TABS = [
+  { key: 'All Items', label: 'All Items' },
+  { key: 'Categories', label: 'Categories' },
+  { key: 'Pending Items', label: 'Pending Items' },
+  { key: 'Reported Items', label: 'Reported Items' },
+];
+
 export default function MenuManagementPage() {
   // Structured state ready for backend API integration / data fetching
   const [items, setItems] = useState<FoodItem[]>(initialFoodItems);
@@ -63,6 +70,10 @@ export default function MenuManagementPage() {
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const totalItemsCount = 124; // Real total count from API later
+
+  const handleTabClick = (tabKey: string) => {
+    if (tabKey) setActiveTab(tabKey as 'All Items' | 'Categories' | 'Pending Items' | 'Reported Items');
+  };
 
   // Filtering logic ready to be replaced/handled via API query params
   const filteredItems = items.filter(item => {
@@ -104,49 +115,24 @@ export default function MenuManagementPage() {
           
           {/* Navigation Tabs */}
           <div className="border-b border-gray-200 px-6 pt-4 flex gap-8 text-xs font-semibold overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('All Items')}
-              className={`pb-3.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-                activeTab === 'All Items'
-                  ? 'border-[#065f46] text-[#065f46]'
-                  : 'border-transparent text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              All Items
-            </button>
-            <button
-              onClick={() => setActiveTab('Categories')}
-              className={`pb-3.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-                activeTab === 'Categories'
-                  ? 'border-[#065f46] text-[#065f46]'
-                  : 'border-transparent text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              Categories
-            </button>
-            <button
-              onClick={() => setActiveTab('Pending Items')}
-              className={`pb-3.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'Pending Items'
-                  ? 'border-[#065f46] text-[#065f46]'
-                  : 'border-transparent text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              <span>Pending Items</span>
-              <span className="px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold border border-rose-100">
-                12
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab('Reported Items')}
-              className={`pb-3.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-                activeTab === 'Reported Items'
-                  ? 'border-[#065f46] text-[#065f46]'
-                  : 'border-transparent text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              Reported Items
-            </button>
+            {MENU_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => handleTabClick(tab.key)}
+                className={`pb-3.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+                  activeTab === tab.key
+                    ? 'border-[#065f46] text-[#065f46]'
+                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {tab.label}
+                {tab.key === 'Pending Items' && (
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[10px] font-bold border border-rose-100">
+                    12
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
 
           {/* Filters Bar */}

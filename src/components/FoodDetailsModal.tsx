@@ -68,8 +68,15 @@ export const FoodDetailsModal: React.FC<FoodDetailsModalProps> = ({ food, onClos
 
         <div className="overflow-y-auto flex-1 p-6 space-y-6">
           <div className="space-y-4">
+            {/* UPDATE (real food-catalog fix): same fix as FoodCard.tsx —
+                most real menu items have no image URL, so this only
+                renders next/image when a real URL exists. */}
             <div className="relative w-full h-56 rounded-2xl overflow-hidden bg-gray-100">
-              <Image src={food.imageUrl} alt={food.name} fill className="object-cover" />
+              {food.imageUrl ? (
+                <Image src={food.imageUrl} alt={food.name} fill className="object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-5xl">🍽️</div>
+              )}
             </div>
             <div>
               <div className="flex items-center justify-between">
