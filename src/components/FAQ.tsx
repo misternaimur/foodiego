@@ -45,7 +45,10 @@ export default function FAQSection() {
 
   return (
     <section className="w-full bg-transparent py-20 lg:py-28">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* max-w-7xl, matching every other homepage section. This was max-w-6xl,
+          which rendered 1152px against their 1280px and sat 64px in from the
+          shared left edge. */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Main FAQ Container */}
         <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#ECFDF3] via-white to-[#F3E8FF] border border-white/70 shadow-xl px-5 sm:px-8 lg:px-12 py-12 lg:py-16">

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback, useSyncExternalStore }
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence, useScroll, useTransform, type Transition } from "framer-motion";
+import { motion, AnimatePresence, type Transition } from "framer-motion";
 import {
   User,
   ShoppingBag,
@@ -62,8 +62,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { scrollY } = useScroll();
-  const navY = useTransform(scrollY, [0, 80], [0, -4]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -146,31 +144,32 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <motion.div style={{ y: navY }}>
-        <AnimatePresence>
-          {!user && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="w-full bg-[#124734] text-white/90 overflow-hidden"
-            >
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3 text-xs">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5, ...springSlow }}
+      {/* Announcement banner. Sits outside the sticky group on purpose: it should
+          scroll away with the page while the nav bar stays pinned. */}
+      <AnimatePresence>
+        {!user && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="w-full bg-[#124734] text-white/90 overflow-hidden"
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3 text-xs">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5, ...springSlow }}
+              >
+                <Link
+                  href="/auth/register/restaurant"
+                  className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#124734] hover:border-white transition-colors duration-200 cursor-pointer"
                 >
-                  <Link
-                    href="/auth/register/restaurant"
-                    className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#124734] hover:border-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <UtensilsCrossed size={13} />
-                    <span>Create a restaurant account</span>
-                  </Link>
-                </motion.div>
-                <motion.div
+                  <UtensilsCrossed size={13} />
+                  <span>Create a restaurant account</span>
+                </Link>
+              </motion.div>
+              <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.6, ...springSlow }}
@@ -185,14 +184,23 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </motion.div>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+        )}
+      </AnimatePresence>
 
+      {/* The sticky element is this wrapper, not the header inside it. Sticky is
+          clamped to the parent's box: when the header itself was sticky here, its
+          only travel was the height of its own wrapper, so it scrolled straight
+          off the page. As a direct child of the layout, this wrapper's containing
+          block spans the page, so the bar stays pinned all the way down.
+
+          The scroll-linked y offset was dropped with it — nudging a pinned bar to
+          -4px would clip it against the top edge instead of easing it out of view. */}
+      <motion.div className="sticky top-0 z-50 w-full">
         <motion.header
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ ...springSlow, delay: 0.2 }}
-          className="sticky top-0 z-50 w-full transition-all duration-300"
+          className="w-full transition-all duration-300"
           style={{
             /* Colour values come from CSS variables (globals.css) so the bar
                follows the active theme. Inline styles cannot be overridden by a
