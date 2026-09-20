@@ -122,8 +122,10 @@ export default function StatusToggle() {
         onClick={() => setIsOnline(!isOnline)}
         className="mt-4 w-full py-2.5 rounded-full text-xs font-semibold transition-colors duration-300 cursor-pointer"
         style={{
-          backgroundColor: isOnline ? "#124734" : "#ECE7D9",
-          color: isOnline ? "#FAF7EE" : "#0F172A",
+          /* Read from globals.css so the button follows the active theme; an
+             inline style cannot be overridden by a stylesheet. */
+          backgroundColor: isOnline ? "var(--toggle-on-bg)" : "var(--toggle-off-bg)",
+          color: isOnline ? "var(--toggle-on-fg)" : "var(--toggle-off-fg)",
         }}
       >
         {isOnline ? "Go Offline" : "Go Online"}

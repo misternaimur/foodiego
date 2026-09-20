@@ -2,16 +2,411 @@
 
 @import "tailwindcss";
 
+/* Class-based dark mode, so a toggle can drive it. Tailwind v4 defaults the
+   `dark:` variant to `prefers-color-scheme`, which a toggle cannot control. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================================
+   Theme tokens
+   ----------------------------------------------------------------------------
+   The app paints with hardcoded utility colours (~4.9k standard + ~130
+   arbitrary-hex usages across 101 files), so dark mode is implemented by
+   retargeting colour *values* rather than editing components:
+
+     1. standard palette utilities (bg-white, text-gray-900, ...) compile to
+        var(--color-*), so remapping those variables under .dark flips them;
+     2. arbitrary-hex utilities compile to literals and cannot be remapped, so
+        they get explicit `.dark .<escaped>` rules (see the bottom of this file).
+
+   Rationale for the value choices: a token like `white` or `emerald-600` is used
+   both as a surface and as a foreground, which need opposite treatment. So the
+   ramp is inverted by *role* — low tints (50-200) become dark surfaces, mid tones
+   (300-500) already read on dark and stay, high tones (600-950) are overwhelmingly
+   text and become light. Solid fills that carry white text, and decorative glows
+   that sit on already-dark panels, are then pinned explicitly further down.
+   ========================================================================== */
+
 :root {
   --background: #faf7ee;
   --foreground: #171717;
+
+  /* The navbar paints itself with inline styles (rgba literals in Navbar.tsx),
+     and inline styles beat stylesheet rules — so those values live here as
+     variables the component reads instead of hardcoding them. */
+  --nav-bg: rgba(250, 247, 238, 0.7);
+  --nav-bg-scrolled: rgba(250, 247, 238, 0.85);
+  --nav-border: rgba(232, 226, 213, 0.3);
+  --nav-border-scrolled: rgba(232, 226, 213, 0.6);
+  --nav-shadow: rgba(21, 70, 45, 0.08);
+
+  /* Dark palette. Green-tinted neutrals so the brand's cream/green identity
+     survives the switch rather than turning into a generic grey theme. */
+  --d-page: #0f1713;
+  --d-page-soft: #131c17;
+  --d-surface: #161f1a;
+  --d-surface-2: #1c2822;
+  --d-surface-3: #22302a;
+  --d-border: #2a362e;
+  --d-text: #eff3f0;
+  --d-brand: #1e6b4a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Applied to <html>. Set before first paint by the script in layout.tsx. */
+.dark {
+  color-scheme: dark;
+
+  --background: var(--d-page);
+  --foreground: var(--d-text);
+
+  --nav-bg: rgba(15, 23, 19, 0.72);
+  --nav-bg-scrolled: rgba(15, 23, 19, 0.88);
+  --nav-border: rgba(42, 54, 46, 0.45);
+  --nav-border-scrolled: rgba(42, 54, 46, 0.75);
+  --nav-shadow: rgba(0, 0, 0, 0.5);
+
+  /* --- Neutral ramps: surfaces below, text above ------------------------- */
+  --color-gray-50: #131c17;
+  --color-gray-100: #18231d;
+  --color-gray-200: #263229;
+  --color-gray-300: #33413a;
+  --color-gray-400: #7c8a83;
+  --color-gray-500: #9ba8a1;
+  --color-gray-600: #b3c0b9;
+  --color-gray-700: #c3cdc7;
+  --color-gray-800: #dce3de;
+  --color-gray-900: #eff3f0;
+  --color-gray-950: #f7faf8;
+
+  --color-slate-50: #131c17;
+  --color-slate-100: #18231d;
+  --color-slate-200: #263229;
+  --color-slate-300: #33413a;
+  --color-slate-400: #7c8a83;
+  --color-slate-500: #9ba8a1;
+  --color-slate-600: #b3c0b9;
+  --color-slate-700: #c3cdc7;
+  --color-slate-800: #dce3de;
+  --color-slate-900: #eff3f0;
+  --color-slate-950: #f7faf8;
+
+  /* --- Emerald / green (the brand's neighbourhood) ----------------------- */
+  --color-emerald-50: #12241b;
+  --color-emerald-100: #17301f;
+  --color-emerald-200: #1f4230;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #34d399;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-800: #a7f3d0;
+  --color-emerald-900: #d1fae5;
+  --color-emerald-950: #ecfdf5;
+
+  --color-green-50: #12241b;
+  --color-green-100: #17301f;
+  --color-green-200: #1f4230;
+  --color-green-300: #86efac;
+  --color-green-400: #4ade80;
+  --color-green-500: #22c55e;
+  --color-green-600: #4ade80;
+  --color-green-700: #86efac;
+  --color-green-800: #bbf7d0;
+  --color-green-900: #d1fae5;
+
+  --color-teal-50: #122220;
+  --color-teal-200: #1f4340;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #2dd4bf;
+  --color-teal-700: #5eead4;
+
+  --color-cyan-600: #22d3ee;
+
+  /* --- Amber / yellow / orange (accent family) -------------------------- */
+  --color-amber-50: #2a2113;
+  --color-amber-100: #33280f;
+  --color-amber-200: #4a3a15;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #fbbf24;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
+  --color-amber-900: #fef3c7;
+
+  --color-yellow-50: #2a2413;
+  --color-yellow-200: #4d4218;
+  --color-yellow-300: #fde047;
+  --color-yellow-400: #facc15;
+  --color-yellow-600: #facc15;
+  --color-yellow-700: #fde047;
+
+  --color-orange-50: #2a1c13;
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #fb923c;
+  --color-orange-700: #fdba74;
+
+  /* --- Danger: rose / red ---------------------------------------------- */
+  --color-rose-50: #2a1518;
+  --color-rose-100: #331a1d;
+  --color-rose-200: #4d2429;
+  --color-rose-300: #fda4af;
+  --color-rose-400: #fb7185;
+  --color-rose-500: #f43f5e;
+  --color-rose-600: #fb7185;
+  --color-rose-700: #fda4af;
+  --color-rose-800: #fecdd3;
+  --color-rose-900: #ffe4e6;
+
+  --color-red-50: #2a1517;
+  --color-red-100: #331a1c;
+  --color-red-200: #4d2427;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #f87171;
+  --color-red-700: #fca5a5;
+  --color-red-800: #fecaca;
+
+  /* --- Informational: blue / sky / indigo / violet / purple ------------- */
+  --color-blue-50: #131f2e;
+  --color-blue-100: #182639;
+  --color-blue-200: #21344d;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #60a5fa;
+  --color-blue-700: #93c5fd;
+  --color-blue-800: #bfdbfe;
+  --color-blue-900: #dbeafe;
+
+  --color-sky-50: #12222c;
+  --color-sky-100: #172b38;
+  --color-sky-200: #204257;
+  --color-sky-600: #38bdf8;
+  --color-sky-700: #7dd3fc;
+
+  --color-indigo-50: #181a2e;
+  --color-indigo-100: #1d2039;
+  --color-indigo-200: #282c4d;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #818cf8;
+  --color-indigo-700: #a5b4fc;
+
+  --color-violet-50: #1c1a2e;
+  --color-violet-200: #2f2a4d;
+  --color-violet-600: #a78bfa;
+  --color-violet-700: #c4b5fd;
+
+  --color-purple-50: #1e162e;
+  --color-purple-100: #251b39;
+  --color-purple-200: #33254d;
+  --color-purple-300: #d8b4fe;
+  --color-purple-400: #c084fc;
+  --color-purple-500: #a855f7;
+  --color-purple-600: #c084fc;
+  --color-purple-900: #e9d5ff;
+
+  --color-pink-500: #ec4899;
+  --color-pink-600: #f472b6;
+  --color-pink-800: #fbcfe8;
+}
+
+/* ============================================================================
+   Pinned surfaces and fills
+   ----------------------------------------------------------------------------
+   The ramps above are tuned for the common case. These are the exceptions that
+   the ramp gets backwards, each one pinned deliberately.
+   ========================================================================== */
+
+/* `white` is the single most-used token (432 backgrounds vs 189 foregrounds), and
+   the two roles need opposite values — so it is not remapped. Instead the surface
+   usages are retargeted here and `text-white` / `border-white` are left alone,
+   which is already correct in dark mode.
+   Note the split: /5 through /20 are translucent washes layered on brand-coloured
+   panels (heroes, AI cards) and must stay light, while /40 and above are real
+   surfaces and flip. */
+.dark .bg-white {
+  background-color: var(--d-surface);
+}
+.dark .bg-white\/40 {
+  background-color: color-mix(in oklab, var(--d-surface) 40%, transparent);
+}
+.dark .bg-white\/50 {
+  background-color: color-mix(in oklab, var(--d-surface) 50%, transparent);
+}
+.dark .bg-white\/60 {
+  background-color: color-mix(in oklab, var(--d-surface) 60%, transparent);
+}
+.dark .bg-white\/70 {
+  background-color: color-mix(in oklab, var(--d-surface) 70%, transparent);
+}
+.dark .bg-white\/75 {
+  background-color: color-mix(in oklab, var(--d-surface) 75%, transparent);
+}
+.dark .bg-white\/80 {
+  background-color: color-mix(in oklab, var(--d-surface) 80%, transparent);
+}
+.dark .bg-white\/85 {
+  background-color: color-mix(in oklab, var(--d-surface) 85%, transparent);
+}
+.dark .bg-white\/90 {
+  background-color: color-mix(in oklab, var(--d-surface) 90%, transparent);
+}
+.dark .bg-white\/95 {
+  background-color: color-mix(in oklab, var(--d-surface) 95%, transparent);
+}
+
+/* Dark neutral fills already intended as panels/buttons/scrims. The neutral ramp
+   above lightens these tokens for *text*, so the background role is restored. */
+.dark .bg-gray-500 {
+  background-color: #4a5751;
+}
+.dark .bg-gray-800 {
+  background-color: #22302a;
+}
+.dark .bg-gray-900 {
+  background-color: #18231d;
+}
+.dark .bg-slate-700 {
+  background-color: #33413a;
+}
+.dark .bg-slate-800 {
+  background-color: #22302a;
+}
+.dark .bg-slate-900 {
+  background-color: #18231d;
+}
+.dark .bg-slate-900\/50 {
+  background-color: color-mix(in oklab, #0c1310 50%, transparent);
+}
+.dark .bg-slate-900\/60 {
+  background-color: color-mix(in oklab, #0c1310 60%, transparent);
+}
+.dark .bg-slate-900\/80 {
+  background-color: color-mix(in oklab, #0c1310 80%, transparent);
+}
+.dark .bg-slate-900\/90 {
+  background-color: color-mix(in oklab, #0c1310 90%, transparent);
+}
+.dark .bg-slate-950\/50 {
+  background-color: color-mix(in oklab, #060a08 50%, transparent);
+}
+.dark .bg-slate-950\/55 {
+  background-color: color-mix(in oklab, #060a08 55%, transparent);
+}
+.dark .bg-slate-950\/60 {
+  background-color: color-mix(in oklab, #060a08 60%, transparent);
+}
+.dark .bg-slate-950\/70 {
+  background-color: color-mix(in oklab, #060a08 70%, transparent);
+}
+.dark .bg-slate-950\/80 {
+  background-color: color-mix(in oklab, #060a08 80%, transparent);
+}
+.dark .from-slate-950\/80 {
+  --tw-gradient-from: color-mix(in oklab, #060a08 80%, transparent);
+}
+.dark .via-slate-950\/30 {
+  --tw-gradient-via: color-mix(in oklab, #060a08 30%, transparent);
+}
+
+/* Saturated solid fills that carry `text-white`. The families above were lightened
+   for legibility as text, which would strand white text on a pale chip. */
+.dark .bg-emerald-600 {
+  background-color: #0e7a55;
+}
+.dark .bg-emerald-700 {
+  background-color: #0b6b4a;
+}
+.dark .bg-emerald-800 {
+  background-color: #095a3e;
+}
+.dark .bg-emerald-900 {
+  background-color: #084b34;
+}
+.dark .bg-green-600 {
+  background-color: #16a34a;
+}
+.dark .bg-green-700 {
+  background-color: #15803d;
+}
+.dark .bg-green-900 {
+  background-color: #14532d;
+}
+.dark .bg-blue-600 {
+  background-color: #2563eb;
+}
+.dark .bg-blue-700 {
+  background-color: #1d4ed8;
+}
+.dark .bg-pink-600 {
+  background-color: #db2777;
+}
+
+/* Emerald low tints used as text / glows / hairlines on panels that are dark in
+   both themes (bg-[#15462D] heroes, AI cards). The emerald ramp turns 50-200 into
+   dark surfaces for the 100+ `bg-emerald-50` cards, so the on-dark foregrounds
+   have to be restored individually. Emerald is the only family with this pattern. */
+.dark .text-emerald-50\/40 {
+  color: color-mix(in oklab, #ecfdf5 40%, transparent);
+}
+.dark .text-emerald-50\/55 {
+  color: color-mix(in oklab, #ecfdf5 55%, transparent);
+}
+.dark .text-emerald-50\/60 {
+  color: color-mix(in oklab, #ecfdf5 60%, transparent);
+}
+.dark .text-emerald-50\/65 {
+  color: color-mix(in oklab, #ecfdf5 65%, transparent);
+}
+.dark .text-emerald-50\/70 {
+  color: color-mix(in oklab, #ecfdf5 70%, transparent);
+}
+.dark .text-emerald-50\/75 {
+  color: color-mix(in oklab, #ecfdf5 75%, transparent);
+}
+.dark .text-emerald-50\/80 {
+  color: color-mix(in oklab, #ecfdf5 80%, transparent);
+}
+.dark .text-emerald-50\/85 {
+  color: color-mix(in oklab, #ecfdf5 85%, transparent);
+}
+.dark .text-emerald-100\/70 {
+  color: color-mix(in oklab, #d1fae5 70%, transparent);
+}
+.dark .text-emerald-100\/80 {
+  color: color-mix(in oklab, #d1fae5 80%, transparent);
+}
+.dark .text-emerald-100\/90 {
+  color: color-mix(in oklab, #d1fae5 90%, transparent);
+}
+.dark .text-emerald-200\/60 {
+  color: color-mix(in oklab, #a7f3d0 60%, transparent);
+}
+.dark .bg-emerald-300\/10 {
+  background-color: color-mix(in oklab, #6ee7b7 10%, transparent);
+}
+.dark .bg-emerald-300\/15 {
+  background-color: color-mix(in oklab, #6ee7b7 15%, transparent);
+}
+.dark .bg-emerald-300\/20 {
+  background-color: color-mix(in oklab, #6ee7b7 20%, transparent);
+}
+.dark .bg-emerald-400\/10 {
+  background-color: color-mix(in oklab, #34d399 10%, transparent);
+}
+.dark .border-emerald-200\/10 {
+  border-color: color-mix(in oklab, #a7f3d0 10%, transparent);
+}
+.dark .border-emerald-300\/10 {
+  border-color: color-mix(in oklab, #6ee7b7 10%, transparent);
+}
+.dark .border-emerald-300\/20 {
+  border-color: color-mix(in oklab, #6ee7b7 20%, transparent);
+}
+.dark .border-emerald-300\/40 {
+  border-color: color-mix(in oklab, #6ee7b7 40%, transparent);
 }
 
 @font-face {
@@ -25,6 +420,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: "font01";
+  /* Only the page canvas animates; transitioning every element would fight the
+     framer-motion colour animations used across the app. */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 @keyframes fadeSlideIn {
@@ -53,4 +451,824 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* The generated `.dark` overrides for arbitrary-hex utilities follow. */
+.dark .accent-\[\#15462D\] { accent-color: #1e6b4a; }
+.dark .bg-\[\#044e38\] { background-color: #0e7a55; }
+.dark .bg-\[\#047857\] { background-color: #0e7a55; }
+.dark .bg-\[\#059669\] { background-color: #0e7a55; }
+.dark .bg-\[\#065f46\] { background-color: #0e7a55; }
+.dark .bg-\[\#071B4A\] { background-color: #0d2450; }
+.dark .bg-\[\#0b7c72\] { background-color: #0f8a7d; }
+.dark .bg-\[\#0d3527\] { background-color: #11402e; }
+.dark .bg-\[\#0d9488\] { background-color: #0f8a7d; }
+.dark .bg-\[\#0e3320\] { background-color: #123a26; }
+.dark .bg-\[\#103A27\] { background-color: #123a26; }
+.dark .bg-\[\#103b26\] { background-color: #123a26; }
+.dark .bg-\[\#10B981\] { background-color: #10b981; }
+.dark .bg-\[\#113220\] { background-color: #11402e; }
+.dark .bg-\[\#113220\]\/10 { background-color: color-mix(in oklab, #11402e 10%, transparent); }
+.dark .bg-\[\#124734\] { background-color: #1e6b4a; }
+.dark .bg-\[\#124734\]\/8 { background-color: color-mix(in oklab, #1e6b4a 8%, transparent); }
+.dark .bg-\[\#14532D\] { background-color: #1a6b3c; }
+.dark .bg-\[\#15462D\] { background-color: #1e6b4a; }
+.dark .bg-\[\#15462d\] { background-color: #1e6b4a; }
+.dark .bg-\[\#176044\] { background-color: #22764f; }
+.dark .bg-\[\#1B5A3A\] { background-color: #24805a; }
+.dark .bg-\[\#1B5A3A\]\/80 { background-color: color-mix(in oklab, #24805a 80%, transparent); }
+.dark .bg-\[\#1a4d31\] { background-color: #22764f; }
+.dark .bg-\[\#1a5c3a\] { background-color: #24805a; }
+.dark .bg-\[\#1d6b48\] { background-color: #22764f; }
+.dark .bg-\[\#1f2223\] { background-color: #0c1310; }
+.dark .bg-\[\#2b2e2f\] { background-color: #1a211d; }
+.dark .bg-\[\#9CA3AF\] { background-color: #22302a; }
+.dark .bg-\[\#D1FAE5\] { background-color: #12241b; }
+.dark .bg-\[\#E8E2D5\] { background-color: #1c2822; }
+.dark .bg-\[\#ECE7D9\] { background-color: #1c2822; }
+.dark .bg-\[\#ECE7D9\]\/60 { background-color: color-mix(in oklab, #1c2822 60%, transparent); }
+.dark .bg-\[\#F0FDF4\] { background-color: #12241b; }
+.dark .bg-\[\#F49D37\] { background-color: #f6a429; }
+.dark .bg-\[\#F49D37\]\/20 { background-color: color-mix(in oklab, #f6a429 20%, transparent); }
+.dark .bg-\[\#F6A429\] { background-color: #f6a429; }
+.dark .bg-\[\#FAF7EE\] { background-color: #131c17; }
+.dark .bg-\[\#FAF7EE\]\/50 { background-color: color-mix(in oklab, #131c17 50%, transparent); }
+.dark .bg-\[\#FAF7EE\]\/60 { background-color: color-mix(in oklab, #131c17 60%, transparent); }
+.dark .bg-\[\#FAF7EE\]\/90 { background-color: color-mix(in oklab, #131c17 90%, transparent); }
+.dark .bg-\[\#FAF7EE\]\/95 { background-color: color-mix(in oklab, #131c17 95%, transparent); }
+.dark .bg-\[\#FAF8F5\] { background-color: #131c17; }
+.dark .bg-\[\#a6280f\] { background-color: #c0391f; }
+.dark .bg-\[\#a82a11\] { background-color: #c0391f; }
+.dark .bg-\[\#c83214\] { background-color: #c0391f; }
+.dark .bg-\[\#e0931f\] { background-color: #e0931f; }
+.dark .bg-\[\#f7faf8\] { background-color: #131c17; }
+.dark .bg-\[\#f8fafc\] { background-color: #131c17; }
+.dark .bg-\[\#f9fafb\] { background-color: #131c17; }
+.dark .bg-\[\#fdf2f0\] { background-color: #2c1a18; }
+.dark .border-\[\#065f46\] { border-color: #0e7a55; }
+.dark .border-\[\#0d9488\] { border-color: #0f8a7d; }
+.dark .border-\[\#10B981\] { border-color: #10b981; }
+.dark .border-\[\#113220\] { border-color: #11402e; }
+.dark .border-\[\#124734\] { border-color: #2a4a38; }
+.dark .border-\[\#124734\]\/10 { border-color: color-mix(in oklab, #2a4a38 10%, transparent); }
+.dark .border-\[\#124734\]\/20 { border-color: color-mix(in oklab, #2a4a38 20%, transparent); }
+.dark .border-\[\#124734\]\/30 { border-color: color-mix(in oklab, #2a4a38 30%, transparent); }
+.dark .border-\[\#15462D\] { border-color: #2a4a38; }
+.dark .border-\[\#15462D\]\/30 { border-color: color-mix(in oklab, #2a4a38 30%, transparent); }
+.dark .border-\[\#15462d\] { border-color: #2a4a38; }
+.dark .border-\[\#2e3132\] { border-color: #3a4740; }
+.dark .border-\[\#E5E7EB\] { border-color: #2a362e; }
+.dark .border-\[\#E8E2D5\] { border-color: #2a362e; }
+.dark .border-\[\#E8E2D5\]\/60 { border-color: color-mix(in oklab, #2a362e 60%, transparent); }
+.dark .border-\[\#E8E2D5\]\/80 { border-color: color-mix(in oklab, #2a362e 80%, transparent); }
+.dark .border-\[\#ECE7D9\] { border-color: #2a362e; }
+.dark .border-\[\#c83214\] { border-color: #c0391f; }
+.dark .fill-\[\#F49D37\] { fill: #f6a429; }
+.dark .fill-\[\#F49D37\]\/20 { fill: color-mix(in oklab, #f6a429 20%, transparent); }
+.dark .from-\[\#103A27\] { --tw-gradient-from: #123a26; }
+.dark .from-\[\#124734\] { --tw-gradient-from: #1e6b4a; }
+.dark .from-\[\#15462D\] { --tw-gradient-from: #1e6b4a; }
+.dark .from-\[\#ECFDF3\] { --tw-gradient-from: #12241b; }
+.dark .placeholder-\[\#9CA3AF\]::placeholder { color: #7c8a83; }
+.dark .ring-\[\#065f46\] { --tw-ring-color: #0e7a55; }
+.dark .ring-\[\#0d9488\] { --tw-ring-color: #0f8a7d; }
+.dark .ring-\[\#10B981\] { --tw-ring-color: #10b981; }
+.dark .ring-\[\#10B981\]\/20 { --tw-ring-color: color-mix(in oklab, #10b981 20%, transparent); }
+.dark .ring-\[\#124734\] { --tw-ring-color: #1e6b4a; }
+.dark .ring-\[\#124734\]\/10 { --tw-ring-color: color-mix(in oklab, #1e6b4a 10%, transparent); }
+.dark .ring-\[\#124734\]\/15 { --tw-ring-color: color-mix(in oklab, #1e6b4a 15%, transparent); }
+.dark .ring-\[\#124734\]\/20 { --tw-ring-color: color-mix(in oklab, #1e6b4a 20%, transparent); }
+.dark .ring-\[\#124734\]\/30 { --tw-ring-color: color-mix(in oklab, #1e6b4a 30%, transparent); }
+.dark .ring-\[\#15462D\] { --tw-ring-color: #1e6b4a; }
+.dark .ring-\[\#15462D\]\/10 { --tw-ring-color: color-mix(in oklab, #1e6b4a 10%, transparent); }
+.dark .ring-\[\#c83214\] { --tw-ring-color: #c0391f; }
+.dark .ring-\[\#c83214\]\/30 { --tw-ring-color: color-mix(in oklab, #c0391f 30%, transparent); }
+.dark .shadow-\[\#10B981\] { --tw-shadow-color: #10b981; }
+.dark .shadow-\[\#10B981\]\/20 { --tw-shadow-color: color-mix(in oklab, #10b981 20%, transparent); }
+.dark .shadow-\[\#113220\] { --tw-shadow-color: #11402e; }
+.dark .shadow-\[\#113220\]\/20 { --tw-shadow-color: color-mix(in oklab, #11402e 20%, transparent); }
+.dark .shadow-\[\#124734\] { --tw-shadow-color: #1e6b4a; }
+.dark .shadow-\[\#124734\]\/30 { --tw-shadow-color: color-mix(in oklab, #1e6b4a 30%, transparent); }
+.dark .text-\[\#059669\] { color: #6ee7b7; }
+.dark .text-\[\#065f46\] { color: #34d399; }
+.dark .text-\[\#0F172A\] { color: #c3cdc7; }
+.dark .text-\[\#0d9488\] { color: #5eead4; }
+.dark .text-\[\#103A27\] { color: #7fd9a6; }
+.dark .text-\[\#10B981\] { color: #34d399; }
+.dark .text-\[\#113220\] { color: #7fd9a6; }
+.dark .text-\[\#123B27\] { color: #7fd9a6; }
+.dark .text-\[\#124734\] { color: #7fd9a6; }
+.dark .text-\[\#124734\]\/40 { color: color-mix(in oklab, #7fd9a6 40%, transparent); }
+.dark .text-\[\#124734\]\/70 { color: color-mix(in oklab, #7fd9a6 70%, transparent); }
+.dark .text-\[\#15462D\] { color: #7fd9a6; }
+.dark .text-\[\#15462D\]\/50 { color: color-mix(in oklab, #7fd9a6 50%, transparent); }
+.dark .text-\[\#15462d\] { color: #7fd9a6; }
+.dark .text-\[\#1F2937\] { color: #c3cdc7; }
+.dark .text-\[\#1a4d31\] { color: #7fd9a6; }
+.dark .text-\[\#374151\] { color: #c3cdc7; }
+.dark .text-\[\#6B7280\] { color: #9ba8a1; }
+.dark .text-\[\#9CA3AF\] { color: #9ba8a1; }
+.dark .text-\[\#F49D37\] { color: #fbbf5c; }
+.dark .text-\[\#F6A429\] { color: #f6a429; }
+.dark .text-\[\#c83214\] { color: #f98a6e; }
+.dark .text-\[\#f87171\] { color: #f98a6e; }
+.dark .to-\[\#1d6b48\] { --tw-gradient-to: #22764f; }
+.dark .to-\[\#1e5d3c\] { --tw-gradient-to: #22764f; }
+.dark .to-\[\#4C2678\] { --tw-gradient-to: #241c33; }
+.dark .to-\[\#F3E8FF\] { --tw-gradient-to: #241c33; }
+.dark .to-\[\#F6A429\] { --tw-gradient-to: #f6a429; }
+.dark .via-\[\#15462D\] { --tw-gradient-via: #1e6b4a; }
+.dark .via-\[\#176044\] { --tw-gradient-via: #22764f; }
+.dark .via-\[\#1d6b48\] { --tw-gradient-via: #22764f; }
+
+/* ============================================================================
+   Light-filled accents
+   ----------------------------------------------------------------------------
+   Amber CTAs and mint step badges keep their light fill in dark mode, so their
+   foregrounds must stay dark. The ramps above lighten those text tokens because
+   they are overwhelmingly body copy on dark surfaces; inside a light fill the
+   opposite is required. These come last so equal-specificity rules win on
+   source order.
+   ========================================================================== */
+.dark .bg-\[\#F6A429\],
+.dark .bg-\[\#F6A429\] *,
+.dark .bg-\[\#F49D37\],
+.dark .bg-\[\#F49D37\] *,
+.dark .bg-\[\#e0931f\],
+.dark .bg-\[\#e0931f\] *,
+.dark .bg-emerald-300,
+.dark .bg-emerald-300 *,
+.dark .bg-emerald-400,
+.dark .bg-emerald-400 * {
+  color: #12211a;
+}
+
+/* Emerald low tints are used as text on the dark green panels (the bg-[#15462D]
+   hero, AI cards) that are dark in both themes, so they stay light either way. */
+.dark .text-emerald-50 {
+  color: #ecfdf5;
+}
+.dark .text-emerald-100 {
+  color: #d1fae5;
+}
+.dark .text-emerald-200 {
+  color: #a7f3d0;
+}
+
+/* Recharts passes tooltip and axis colours as inline styles and presentation
+   attributes, which the utility ramps cannot reach, so they are set directly. */
+.dark .recharts-default-tooltip {
+  background-color: var(--d-surface-2) !important;
+  border-color: var(--d-border) !important;
+}
+.dark .recharts-cartesian-axis-tick-value {
+  fill: #9ba8a1;
+}
+
+/* ============================================================================
+   Saturated fills and gradient stops
+   ----------------------------------------------------------------------------
+   Promo cards and CTAs are built as `bg-gradient-to-r from-amber-600 to-amber-800
+   text-white`. The dark ramp lightens high shades for legibility as body text,
+   which would leave that white text on a pale yellow fill. Fills and gradient
+   stops keep their original values instead; text and border roles still follow
+   the ramp. Values come from the Tailwind theme layer so they cannot drift.
+   ========================================================================== */
+.dark .bg-amber-500 {
+  background-color: oklch(76.9% 0.188 70.08);
+}
+.dark .bg-blue-500 {
+  background-color: oklch(62.3% 0.214 259.815);
+}
+.dark .bg-blue-600 {
+  background-color: oklch(54.6% 0.245 262.881);
+}
+.dark .bg-blue-700 {
+  background-color: oklch(48.8% 0.243 264.376);
+}
+.dark .bg-emerald-500 {
+  background-color: oklch(69.6% 0.17 162.48);
+}
+.dark .bg-emerald-600 {
+  background-color: oklch(59.6% 0.145 163.225);
+}
+.dark .bg-emerald-700 {
+  background-color: oklch(50.8% 0.118 165.612);
+}
+.dark .bg-emerald-800 {
+  background-color: oklch(43.2% 0.095 166.913);
+}
+.dark .bg-emerald-900 {
+  background-color: oklch(37.8% 0.077 168.94);
+}
+.dark .bg-emerald-950 {
+  background-color: oklch(26.2% 0.051 172.552);
+}
+.dark .bg-green-500 {
+  background-color: oklch(72.3% 0.219 149.579);
+}
+.dark .bg-green-600 {
+  background-color: oklch(62.7% 0.194 149.214);
+}
+.dark .bg-green-700 {
+  background-color: oklch(52.7% 0.154 150.069);
+}
+.dark .bg-green-900 {
+  background-color: oklch(39.3% 0.095 152.535);
+}
+.dark .bg-orange-500 {
+  background-color: oklch(70.5% 0.213 47.604);
+}
+.dark .bg-pink-500 {
+  background-color: oklch(65.6% 0.241 354.308);
+}
+.dark .bg-pink-600 {
+  background-color: oklch(59.2% 0.249 0.584);
+}
+.dark .bg-purple-500 {
+  background-color: oklch(62.7% 0.265 303.9);
+}
+.dark .bg-red-500 {
+  background-color: oklch(63.7% 0.237 25.331);
+}
+.dark .bg-rose-500 {
+  background-color: oklch(64.5% 0.246 16.439);
+}
+.dark .bg-teal-500 {
+  background-color: oklch(70.4% 0.14 182.503);
+}
+.dark .from-amber-400 {
+  --tw-gradient-from: oklch(82.8% 0.189 84.429);
+}
+.dark .from-amber-500 {
+  --tw-gradient-from: oklch(76.9% 0.188 70.08);
+}
+.dark .from-amber-600 {
+  --tw-gradient-from: oklch(66.6% 0.179 58.318);
+}
+.dark .from-blue-400 {
+  --tw-gradient-from: oklch(70.7% 0.165 254.624);
+}
+.dark .from-blue-500 {
+  --tw-gradient-from: oklch(62.3% 0.214 259.815);
+}
+.dark .from-emerald-400 {
+  --tw-gradient-from: oklch(76.5% 0.177 163.223);
+}
+.dark .from-emerald-500 {
+  --tw-gradient-from: oklch(69.6% 0.17 162.48);
+}
+.dark .from-emerald-600 {
+  --tw-gradient-from: oklch(59.6% 0.145 163.225);
+}
+.dark .from-emerald-900 {
+  --tw-gradient-from: oklch(37.8% 0.077 168.94);
+}
+.dark .from-indigo-500 {
+  --tw-gradient-from: oklch(58.5% 0.233 277.117);
+}
+.dark .from-orange-500 {
+  --tw-gradient-from: oklch(70.5% 0.213 47.604);
+}
+.dark .from-orange-600 {
+  --tw-gradient-from: oklch(64.6% 0.222 41.116);
+}
+.dark .from-pink-500 {
+  --tw-gradient-from: oklch(65.6% 0.241 354.308);
+}
+.dark .from-rose-500 {
+  --tw-gradient-from: oklch(64.5% 0.246 16.439);
+}
+.dark .from-teal-400 {
+  --tw-gradient-from: oklch(77.7% 0.152 181.912);
+}
+.dark .from-teal-500 {
+  --tw-gradient-from: oklch(70.4% 0.14 182.503);
+}
+.dark .from-yellow-400 {
+  --tw-gradient-from: oklch(85.2% 0.199 91.936);
+}
+.dark .to-amber-400 {
+  --tw-gradient-to: oklch(82.8% 0.189 84.429);
+}
+.dark .to-amber-500 {
+  --tw-gradient-to: oklch(76.9% 0.188 70.08);
+}
+.dark .to-amber-600 {
+  --tw-gradient-to: oklch(66.6% 0.179 58.318);
+}
+.dark .to-amber-800 {
+  --tw-gradient-to: oklch(47.3% 0.137 46.201);
+}
+.dark .to-blue-500 {
+  --tw-gradient-to: oklch(62.3% 0.214 259.815);
+}
+.dark .to-cyan-600 {
+  --tw-gradient-to: oklch(60.9% 0.126 221.723);
+}
+.dark .to-emerald-400 {
+  --tw-gradient-to: oklch(76.5% 0.177 163.223);
+}
+.dark .to-emerald-600 {
+  --tw-gradient-to: oklch(59.6% 0.145 163.225);
+}
+.dark .to-emerald-700 {
+  --tw-gradient-to: oklch(50.8% 0.118 165.612);
+}
+.dark .to-emerald-950 {
+  --tw-gradient-to: oklch(26.2% 0.051 172.552);
+}
+.dark .to-indigo-600 {
+  --tw-gradient-to: oklch(51.1% 0.262 276.966);
+}
+.dark .to-orange-500 {
+  --tw-gradient-to: oklch(70.5% 0.213 47.604);
+}
+.dark .to-orange-600 {
+  --tw-gradient-to: oklch(64.6% 0.222 41.116);
+}
+.dark .to-pink-600 {
+  --tw-gradient-to: oklch(59.2% 0.249 0.584);
+}
+.dark .to-purple-600 {
+  --tw-gradient-to: oklch(55.8% 0.288 302.321);
+}
+.dark .to-red-500 {
+  --tw-gradient-to: oklch(63.7% 0.237 25.331);
+}
+.dark .to-red-600 {
+  --tw-gradient-to: oklch(57.7% 0.245 27.325);
+}
+.dark .to-rose-600 {
+  --tw-gradient-to: oklch(58.6% 0.253 17.585);
+}
+.dark .to-teal-600 {
+  --tw-gradient-to: oklch(60% 0.118 184.704);
+}
+.dark .to-teal-700 {
+  --tw-gradient-to: oklch(51.1% 0.096 186.391);
+}
+.dark .via-amber-400 {
+  --tw-gradient-via: oklch(82.8% 0.189 84.429);
+}
+.dark .via-amber-500 {
+  --tw-gradient-via: oklch(76.9% 0.188 70.08);
+}
+.dark .via-emerald-500 {
+  --tw-gradient-via: oklch(69.6% 0.17 162.48);
+}
+.dark .via-emerald-600 {
+  --tw-gradient-via: oklch(59.6% 0.145 163.225);
+}
+.dark .via-orange-500 {
+  --tw-gradient-via: oklch(70.5% 0.213 47.604);
+}
+
+/* Neutral gradient stops (dark grey panels built to carry white text). */
+.dark .from-gray-900 {
+  --tw-gradient-from: oklch(21% 0.034 264.665);
+}
+.dark .from-slate-700 {
+  --tw-gradient-from: oklch(37.2% 0.044 257.287);
+}
+.dark .from-slate-950 {
+  --tw-gradient-from: oklch(12.9% 0.042 264.695);
+}
+.dark .to-gray-900 {
+  --tw-gradient-to: oklch(21% 0.034 264.665);
+}
+.dark .to-slate-900 {
+  --tw-gradient-to: oklch(20.8% 0.042 265.755);
+}
+.dark .via-gray-800 {
+  --tw-gradient-via: oklch(27.8% 0.033 256.848);
+}
+.dark .via-slate-900 {
+  --tw-gradient-via: oklch(20.8% 0.042 265.755);
+}
+.dark .via-slate-950 {
+  --tw-gradient-via: oklch(12.9% 0.042 264.695);
+}
+
+/* `white` is deliberately not remapped (so `text-white` keeps working), which
+   leaves white *gradient stops* white. All four in the app are surface panels or
+   surface fade-outs, so they take the dark surface like `bg-white` does:
+   `from-white to-emerald-50/70` panels, the FAQ panel's `via-white` midpoint, and
+   the `from-white via-white to-transparent` scroll fade in PaymentsDashboard. */
+.dark .from-white {
+  --tw-gradient-from: var(--d-surface);
+}
+.dark .to-white {
+  --tw-gradient-to: var(--d-surface);
+}
+.dark .via-white {
+  --tw-gradient-via: var(--d-surface);
+}
+
+/* ============================================================================
+   Component-local variables
+   ----------------------------------------------------------------------------
+   A few components set colours through inline styles — framer-motion's animated
+   values and hand-written `style={{...}}` objects — which no stylesheet rule can
+   override. Where those are static (StatusToggle's button, the vendor 3D scene's
+   backdrop) the value is exposed here so it follows the theme instead of staying
+   frozen at its light-mode literal.
+   ========================================================================== */
+:root {
+  --toggle-on-bg: #124734;
+  --toggle-on-fg: #faf7ee;
+  --toggle-off-bg: #ece7d9;
+  --toggle-off-fg: #0f172a;
+
+  --i3d-dashboard: #faf8f5;
+  --i3d-profile: #fffaf0;
+  --i3d-menu: #fff7ed;
+  --i3d-orders: #f0fdfa;
+  --i3d-support: #faf5ff;
+}
+
+.dark {
+  --toggle-on-bg: #1e6b4a;
+  --toggle-on-fg: #eff3f0;
+  --toggle-off-bg: #22302a;
+  --toggle-off-fg: #c3cdc7;
+
+  /* Slightly tinted near-blacks, keeping each section's hue like the originals. */
+  --i3d-dashboard: #131c17;
+  --i3d-profile: #221a13;
+  --i3d-menu: #231512;
+  --i3d-orders: #10201f;
+  --i3d-support: #1c1526;
+}
+
+/* ============================================================================
+   `text-black` in the auth forms
+   ----------------------------------------------------------------------------
+   `black` is not remapped with the rest of the palette because bg-black/20-50 are
+   modal scrims that must stay dark. But `text-black` is used in exactly one place
+   — the auth input fields — which sit on `bg-white` cards that turn dark, leaving
+   black text invisible. Retargeting it here also fixes the caret, since
+   caret-color defaults to currentColor and the app sets no explicit caret colour.
+   ========================================================================== */
+.dark .text-black {
+  color: var(--d-text);
+}
+
+/* Entrance animation for the 404 page, reusing the fadeSlideIn keyframe above.
+   The reduced-motion opt-out is written here rather than as a Tailwind variant
+   because unlayered rules beat @layer utilities. */
+.animate-fade-slide-in {
+  animation: fadeSlideIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-slide-in {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   Colorblind-safe theme
+   ----------------------------------------------------------------------------
+   Green/amber brand colours are the hardest pair for red-green colour vision
+   deficiency, the most common form. This theme keeps the light theme's layout,
+   surfaces and contrast structure but swaps the brand pair for blue/orange,
+   which stays separable under deuteranopia, protanopia and tritanopia.
+
+   The `dark` ramp and this block are independent: `.dark` is stripped when
+   colorblind mode is applied, so only one set of overrides is ever active.
+   Like the dark overrides, this must come after the utility layers to win on
+   source order.
+   ========================================================================== */
+.colorblind {
+  color-scheme: light;
+
+  /* Greens become blues, keeping the same lightness ramp so the tint/shade
+     relationships the UI relies on (soft chip vs solid button) still hold. */
+  --color-emerald-50: #eff6ff;
+  --color-emerald-100: #dbeafe;
+  --color-emerald-200: #bfdbfe;
+  --color-emerald-300: #93c5fd;
+  --color-emerald-400: #60a5fa;
+  --color-emerald-500: #3b82f6;
+  --color-emerald-600: #2563eb;
+  --color-emerald-700: #1d4ed8;
+  --color-emerald-800: #1e40af;
+  --color-emerald-900: #1e3a8a;
+  --color-emerald-950: #172554;
+
+  --color-green-50: #eff6ff;
+  --color-green-100: #dbeafe;
+  --color-green-200: #bfdbfe;
+  --color-green-300: #93c5fd;
+  --color-green-400: #60a5fa;
+  --color-green-500: #3b82f6;
+  --color-green-600: #2563eb;
+  --color-green-700: #1d4ed8;
+  --color-green-800: #1e40af;
+  --color-green-900: #1e3a8a;
+
+  --color-teal-50: #ecfeff;
+  --color-teal-200: #a5f3fc;
+  --color-teal-400: #22d3ee;
+  --color-teal-500: #06b6d4;
+  --color-teal-600: #0891b2;
+  --color-teal-700: #0e7490;
+
+  /* Ambers become oranges — warmer, and further from the new blue primary. */
+  --color-amber-50: #fff7ed;
+  --color-amber-100: #ffedd5;
+  --color-amber-200: #fed7aa;
+  --color-amber-300: #fdba74;
+  --color-amber-400: #fb923c;
+  --color-amber-500: #f97316;
+  --color-amber-600: #ea580c;
+  --color-amber-700: #c2410c;
+  --color-amber-800: #9a3412;
+  --color-amber-900: #7c2d12;
+
+  --color-yellow-200: #fde68a;
+  --color-yellow-300: #fcd34d;
+  --color-yellow-400: #fbbf24;
+  --color-yellow-600: #d97706;
+  --color-yellow-700: #b45309;
+
+  --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+  --color-orange-700: #c2410c;
+
+  /* The nav bar paints itself from variables (it cannot use utility classes
+     because inline styles beat them) — keep those in step with the theme. */
+  --nav-bg: rgba(250, 247, 238, 0.7);
+  --nav-bg-scrolled: rgba(250, 247, 238, 0.85);
+  --nav-border: rgba(232, 226, 213, 0.3);
+  --nav-border-scrolled: rgba(232, 226, 213, 0.6);
+  --nav-shadow: rgba(30, 58, 138, 0.08);
+}
+
+/* Arbitrary-hex brand colours actually in use (86 utilities). */
+.colorblind .accent-\[\#15462D\] {
+  accent-color: #1e3a8a;
+}
+.colorblind .bg-\[\#059669\] {
+  background-color: #3b82f6;
+}
+.colorblind .bg-\[\#065f46\] {
+  background-color: #1e40af;
+}
+.colorblind .bg-\[\#0d9488\] {
+  background-color: #3b82f6;
+}
+.colorblind .bg-\[\#103A27\] {
+  background-color: #172554;
+}
+.colorblind .bg-\[\#10B981\] {
+  background-color: #60a5fa;
+}
+.colorblind .bg-\[\#113220\] {
+  background-color: #172554;
+}
+.colorblind .bg-\[\#124734\] {
+  background-color: #1e3a8a;
+}
+.colorblind .bg-\[\#14532D\] {
+  background-color: #1e40af;
+}
+.colorblind .bg-\[\#15462D\] {
+  background-color: #1e3a8a;
+}
+.colorblind .bg-\[\#15462d\] {
+  background-color: #1e3a8a;
+}
+.colorblind .bg-\[\#1B5A3A\] {
+  background-color: #1e40af;
+}
+.colorblind .bg-\[\#D1FAE5\] {
+  background-color: #dbeafe;
+}
+.colorblind .bg-\[\#F0FDF4\] {
+  background-color: #eff6ff;
+}
+.colorblind .bg-\[\#F49D37\] {
+  background-color: #ea580c;
+}
+.colorblind .bg-\[\#F6A429\] {
+  background-color: #fb923c;
+}
+.colorblind .border-\[\#065f46\] {
+  border-color: #1e40af;
+}
+.colorblind .border-\[\#0d9488\] {
+  border-color: #3b82f6;
+}
+.colorblind .border-\[\#10B981\] {
+  border-color: #60a5fa;
+}
+.colorblind .border-\[\#113220\] {
+  border-color: #172554;
+}
+.colorblind .border-\[\#124734\] {
+  border-color: #1e3a8a;
+}
+.colorblind .border-\[\#15462D\] {
+  border-color: #1e3a8a;
+}
+.colorblind .border-\[\#15462d\] {
+  border-color: #1e3a8a;
+}
+.colorblind .fill-\[\#F49D37\] {
+  fill: #ea580c;
+}
+.colorblind .focus-visible\:ring-\[\#124734\]:focus-visible {
+  --tw-ring-color: #1e3a8a;
+}
+.colorblind .focus\:border-\[\#065f46\]:focus {
+  border-color: #1e40af;
+}
+.colorblind .focus\:border-\[\#0d9488\]:focus {
+  border-color: #3b82f6;
+}
+.colorblind .focus\:border-\[\#10B981\]:focus {
+  border-color: #60a5fa;
+}
+.colorblind .focus\:border-\[\#124734\]:focus {
+  border-color: #1e3a8a;
+}
+.colorblind .focus\:border-\[\#15462D\]:focus {
+  border-color: #1e3a8a;
+}
+.colorblind .focus\:ring-\[\#065f46\]:focus {
+  --tw-ring-color: #1e40af;
+}
+.colorblind .focus\:ring-\[\#0d9488\]:focus {
+  --tw-ring-color: #3b82f6;
+}
+.colorblind .focus\:ring-\[\#10B981\]:focus {
+  --tw-ring-color: #60a5fa;
+}
+.colorblind .focus\:ring-\[\#124734\]:focus {
+  --tw-ring-color: #1e3a8a;
+}
+.colorblind .focus\:ring-\[\#15462D\]:focus {
+  --tw-ring-color: #1e3a8a;
+}
+.colorblind .from-\[\#103A27\] {
+  --tw-gradient-from: #172554;
+}
+.colorblind .from-\[\#124734\] {
+  --tw-gradient-from: #1e3a8a;
+}
+.colorblind .from-\[\#15462D\] {
+  --tw-gradient-from: #1e3a8a;
+}
+.colorblind .from-\[\#ECFDF3\] {
+  --tw-gradient-from: #eff6ff;
+}
+.colorblind .group:hover .group-hover\:bg-\[\#15462D\] {
+  background-color: #1e3a8a;
+}
+.colorblind .group:hover .group-hover\:text-\[\#15462D\] {
+  color: #1e3a8a;
+}
+.colorblind .hover\:bg-\[\#044e38\]:hover {
+  background-color: #1e3a8a;
+}
+.colorblind .hover\:bg-\[\#047857\]:hover {
+  background-color: #2563eb;
+}
+.colorblind .hover\:bg-\[\#059669\]:hover {
+  background-color: #3b82f6;
+}
+.colorblind .hover\:bg-\[\#0b7c72\]:hover {
+  background-color: #2563eb;
+}
+.colorblind .hover\:bg-\[\#0d3527\]:hover {
+  background-color: #172554;
+}
+.colorblind .hover\:bg-\[\#0e3320\]:hover {
+  background-color: #172554;
+}
+.colorblind .hover\:bg-\[\#103b26\]:hover {
+  background-color: #172554;
+}
+.colorblind .hover\:bg-\[\#124734\]:hover {
+  background-color: #1e3a8a;
+}
+.colorblind .hover\:bg-\[\#15462D\]:hover {
+  background-color: #1e3a8a;
+}
+.colorblind .hover\:bg-\[\#176044\]:hover {
+  background-color: #1d4ed8;
+}
+.colorblind .hover\:bg-\[\#1a4d31\]:hover {
+  background-color: #1e3a8a;
+}
+.colorblind .hover\:bg-\[\#1a5c3a\]:hover {
+  background-color: #1e40af;
+}
+.colorblind .hover\:bg-\[\#1d6b48\]:hover {
+  background-color: #1d4ed8;
+}
+.colorblind .hover\:bg-\[\#e0931f\]:hover {
+  background-color: #f97316;
+}
+.colorblind .hover\:border-\[\#10B981\]:hover {
+  border-color: #60a5fa;
+}
+.colorblind .hover\:border-\[\#124734\]:hover {
+  border-color: #1e3a8a;
+}
+.colorblind .hover\:border-\[\#15462D\]:hover {
+  border-color: #1e3a8a;
+}
+.colorblind .hover\:shadow-\[\#124734\]:hover {
+  --tw-shadow-color: #1e3a8a;
+}
+.colorblind .hover\:text-\[\#059669\]:hover {
+  color: #3b82f6;
+}
+.colorblind .hover\:text-\[\#103A27\]:hover {
+  color: #172554;
+}
+.colorblind .hover\:text-\[\#10B981\]:hover {
+  color: #60a5fa;
+}
+.colorblind .hover\:text-\[\#124734\]:hover {
+  color: #1e3a8a;
+}
+.colorblind .hover\:text-\[\#15462D\]:hover {
+  color: #1e3a8a;
+}
+.colorblind .hover\:text-\[\#1a4d31\]:hover {
+  color: #1e3a8a;
+}
+.colorblind .hover\:text-\[\#F49D37\]:hover {
+  color: #ea580c;
+}
+.colorblind .ring-\[\#124734\] {
+  --tw-ring-color: #1e3a8a;
+}
+.colorblind .shadow-\[\#10B981\] {
+  --tw-shadow-color: #60a5fa;
+}
+.colorblind .shadow-\[\#113220\] {
+  --tw-shadow-color: #172554;
+}
+.colorblind .text-\[\#059669\] {
+  color: #3b82f6;
+}
+.colorblind .text-\[\#065f46\] {
+  color: #1e40af;
+}
+.colorblind .text-\[\#0d9488\] {
+  color: #3b82f6;
+}
+.colorblind .text-\[\#10B981\] {
+  color: #60a5fa;
+}
+.colorblind .text-\[\#113220\] {
+  color: #172554;
+}
+.colorblind .text-\[\#123B27\] {
+  color: #172554;
+}
+.colorblind .text-\[\#124734\] {
+  color: #1e3a8a;
+}
+.colorblind .text-\[\#15462D\] {
+  color: #1e3a8a;
+}
+.colorblind .text-\[\#15462d\] {
+  color: #1e3a8a;
+}
+.colorblind .text-\[\#F49D37\] {
+  color: #ea580c;
+}
+.colorblind .text-\[\#F6A429\] {
+  color: #c2410c;
+}
+.colorblind .to-\[\#1d6b48\] {
+  --tw-gradient-to: #1d4ed8;
+}
+.colorblind .to-\[\#1e5d3c\] {
+  --tw-gradient-to: #1e40af;
+}
+.colorblind .to-\[\#F6A429\] {
+  --tw-gradient-to: #fb923c;
+}
+.colorblind .via-\[\#15462D\] {
+  --tw-gradient-via: #1e3a8a;
+}
+.colorblind .via-\[\#176044\] {
+  --tw-gradient-via: #1d4ed8;
+}
+.colorblind .via-\[\#1d6b48\] {
+  --tw-gradient-via: #1d4ed8;
+}
+
+/* Accent text inside the near-black summary panel stays light — the value
+   the rest of the page uses would be unreadable there. */
+.colorblind .bg-\[\#113220\] .text-\[\#F6A429\] {
+  color: #fb923c;
 }

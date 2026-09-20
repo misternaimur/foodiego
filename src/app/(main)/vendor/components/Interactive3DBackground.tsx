@@ -6,36 +6,39 @@ import { Float, Icosahedron, Octahedron, Torus, TorusKnot } from "@react-three/d
 import { usePathname, useSearchParams } from "next/navigation";
 import * as THREE from "three";
 
+/* Each backdrop ends in a CSS variable holding the base colour, so the scene
+   follows the active theme instead of pinning a light panel (the surrounding
+   gradient stops are translucent accents that read on either background). */
 const themes = {
   dashboard: {
     primary: "#10b981",
     secondary: "#f59e0b",
     tertiary: "#34d399",
-    background: "radial-gradient(circle at 20% 20%, rgba(16,185,129,0.14), transparent 34%), radial-gradient(circle at 80% 10%, rgba(245,158,11,0.12), transparent 30%), #faf8f5",
+    background: "radial-gradient(circle at 20% 20%, rgba(16,185,129,0.14), transparent 34%), radial-gradient(circle at 80% 10%, rgba(245,158,11,0.12), transparent 30%), var(--i3d-dashboard)",
   },
   profile: {
     primary: "#d97706",
     secondary: "#f59e0b",
     tertiary: "#fbbf24",
-    background: "radial-gradient(circle at 20% 20%, rgba(217,119,6,0.14), transparent 34%), radial-gradient(circle at 80% 10%, rgba(251,191,36,0.12), transparent 30%), #fffaf0",
+    background: "radial-gradient(circle at 20% 20%, rgba(217,119,6,0.14), transparent 34%), radial-gradient(circle at 80% 10%, rgba(251,191,36,0.12), transparent 30%), var(--i3d-profile)",
   },
   menu: {
     primary: "#e11d48",
     secondary: "#f97316",
     tertiary: "#fb7185",
-    background: "radial-gradient(circle at 20% 20%, rgba(225,29,72,0.12), transparent 34%), radial-gradient(circle at 80% 10%, rgba(249,115,22,0.12), transparent 30%), #fff7ed",
+    background: "radial-gradient(circle at 20% 20%, rgba(225,29,72,0.12), transparent 34%), radial-gradient(circle at 80% 10%, rgba(249,115,22,0.12), transparent 30%), var(--i3d-menu)",
   },
   orders: {
     primary: "#06b6d4",
     secondary: "#14b8a6",
     tertiary: "#22d3ee",
-    background: "radial-gradient(circle at 20% 20%, rgba(6,182,212,0.12), transparent 34%), radial-gradient(circle at 80% 10%, rgba(20,184,166,0.12), transparent 30%), #f0fdfa",
+    background: "radial-gradient(circle at 20% 20%, rgba(6,182,212,0.12), transparent 34%), radial-gradient(circle at 80% 10%, rgba(20,184,166,0.12), transparent 30%), var(--i3d-orders)",
   },
   support: {
     primary: "#8b5cf6",
     secondary: "#ec4899",
     tertiary: "#a78bfa",
-    background: "radial-gradient(circle at 20% 20%, rgba(139,92,246,0.12), transparent 34%), radial-gradient(circle at 80% 10%, rgba(236,72,153,0.1), transparent 30%), #faf5ff",
+    background: "radial-gradient(circle at 20% 20%, rgba(139,92,246,0.12), transparent 34%), radial-gradient(circle at 80% 10%, rgba(236,72,153,0.1), transparent 30%), var(--i3d-support)",
   },
 };
 

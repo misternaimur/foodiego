@@ -39,7 +39,10 @@ const defaultSteps: HowItWorksStep[] = [
 export const HowItWorksSection: React.FC = () => {
   return (
     <section className="w-full bg-transparent py-20 lg:py-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* max-w-7xl, matching every other homepage section. This was max-w-6xl,
+          which rendered 1152px against their 1280px and sat 64px in from the
+          shared left edge. */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Main Dark Card Container */}
         <div className="relative bg-[#15462D] rounded-[2.5rem] pt-14 pb-2 px-6 sm:px-12 lg:px-16 text-center text-white shadow-2xl border border-emerald-300/10">

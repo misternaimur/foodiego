@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback, useSyncExternalStore }
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { motion, AnimatePresence, useScroll, useTransform, type Transition } from "framer-motion";
+import { motion, AnimatePresence, type Transition } from "framer-motion";
 import {
   User,
   ShoppingBag,
@@ -24,6 +24,7 @@ import { useApp } from "@/context/AppContext";
 import LogoText from "./LogoText";
 import CartDrawer from "@/components/client/CartDrawer";
 import NotificationBell from "@/components/shared/NotificationBell";
+import ThemeToggle from "@/components/shared/ThemeToggle";
 
 const springSlow: Transition = { type: "spring", stiffness: 300, damping: 28 };
 const fadeDuration: Transition = { duration: 0.25, ease: "easeOut" };
@@ -61,8 +62,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const pathname = usePathname();
   const router = useRouter();
-  const { scrollY } = useScroll();
-  const navY = useTransform(scrollY, [0, 80], [0, -4]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -145,31 +144,32 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <motion.div style={{ y: navY }}>
-        <AnimatePresence>
-          {!user && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
-              className="w-full bg-[#124734] text-white/90 overflow-hidden"
-            >
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3 text-xs">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5, ...springSlow }}
+      {/* Announcement banner. Sits outside the sticky group on purpose: it should
+          scroll away with the page while the nav bar stays pinned. */}
+      <AnimatePresence>
+        {!user && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="w-full bg-[#124734] text-white/90 overflow-hidden"
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3 text-xs">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5, ...springSlow }}
+              >
+                <Link
+                  href="/auth/register/restaurant"
+                  className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#124734] hover:border-white transition-colors duration-200 cursor-pointer"
                 >
-                  <Link
-                    href="/auth/register/restaurant"
-                    className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#124734] hover:border-white transition-colors duration-200 cursor-pointer"
-                  >
-                    <UtensilsCrossed size={13} />
-                    <span>Create a restaurant account</span>
-                  </Link>
-                </motion.div>
-                <motion.div
+                  <UtensilsCrossed size={13} />
+                  <span>Create a restaurant account</span>
+                </Link>
+              </motion.div>
+              <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.6, ...springSlow }}
@@ -184,18 +184,28 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </motion.div>
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
+        )}
+      </AnimatePresence>
 
+      {/* The sticky element is this wrapper, not the header inside it. Sticky is
+          clamped to the parent's box: when the header itself was sticky here, its
+          only travel was the height of its own wrapper, so it scrolled straight
+          off the page. As a direct child of the layout, this wrapper's containing
+          block spans the page, so the bar stays pinned all the way down.
+
+          The scroll-linked y offset was dropped with it — nudging a pinned bar to
+          -4px would clip it against the top edge instead of easing it out of view. */}
+      <motion.div className="sticky top-0 z-50 w-full">
         <motion.header
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ ...springSlow, delay: 0.2 }}
-          className="sticky top-0 z-50 w-full transition-all duration-300"
+          className="w-full transition-all duration-300"
           style={{
-            background: isScrolled
-              ? "rgba(250, 247, 238, 0.85)"
-              : "rgba(250, 247, 238, 0.7)",
+            /* Colour values come from CSS variables (globals.css) so the bar
+               follows the active theme. Inline styles cannot be overridden by a
+               stylesheet, so these cannot be plain utility classes. */
+            background: isScrolled ? "var(--nav-bg-scrolled)" : "var(--nav-bg)",
             backdropFilter: isScrolled
               ? "blur(20px) saturate(1.5)"
               : "blur(12px) saturate(1.2)",
@@ -203,10 +213,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               ? "blur(20px) saturate(1.5)"
               : "blur(12px) saturate(1.2)",
             borderBottom: isScrolled
-              ? "1px solid rgba(232, 226, 213, 0.6)"
-              : "1px solid rgba(232, 226, 213, 0.3)",
+              ? "1px solid var(--nav-border-scrolled)"
+              : "1px solid var(--nav-border)",
             boxShadow: isScrolled
-              ? "0 4px 30px rgba(21, 70, 45, 0.08)"
+              ? "0 4px 30px var(--nav-shadow)"
               : "none",
           }}
         >
@@ -285,6 +295,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Right: Actions */}
             <div className="flex items-center gap-4 sm:gap-5 shrink-0">
+              {/* Light / dark switch */}
+              <ThemeToggle />
+
               {/* Cart */}
               <motion.button
                 onClick={() => setIsCartOpen(true)}

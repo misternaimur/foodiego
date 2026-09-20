@@ -18,7 +18,7 @@ export default function HeroSection() {
   const marqueeImages = [...FOOD_IMAGES, ...FOOD_IMAGES, ...FOOD_IMAGES, ...FOOD_IMAGES];
 
   return (
-    <div className="w-full px-4 sm:px-8 lg:px-12 py-6">
+    <div className="w-full py-6">
       <style>{`
         @keyframes custom-marquee {
           0% { transform: translateX(0); }
@@ -35,7 +35,13 @@ export default function HeroSection() {
         }
       `}</style>
 
-      {/* Hero Container */}
+      {/* Same container as every other homepage section: the padding sits on the
+          max-w-7xl wrapper, so the painted panel IS the content box (1216px at a
+          1600px viewport). Previously the padding was on the outer wrapper, which
+          left this panel spanning the full 1280px container while neighbouring
+          panels inset to 1216px — 32px wider on each side, which is what made the
+          hero look like it had extra width. */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <section className="relative overflow-hidden bg-[#124734] text-white rounded-[2.5rem] pt-12 md:pt-16 shadow-2xl flex flex-col justify-between">
         
         {/* Top Content */}
@@ -94,6 +100,7 @@ export default function HeroSection() {
         </div>
 
       </section>
+      </div>
     </div>
   );
 }
