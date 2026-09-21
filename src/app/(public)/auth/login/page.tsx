@@ -10,6 +10,7 @@ import { getClientAuth } from "@/lib/firebase/client";
 import { establishSession } from "@/app/(public)/actions/auth";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
 import type { FormState } from "@/lib/definitions";
+import LogoText from "@/components/Share/LogoText";
 
 async function loginAction(
   _state: FormState,
@@ -92,7 +93,7 @@ function LoginForm() {
         className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-[0_2px_40px_-12px_rgba(0,0,0,0.12)] sm:p-10"
       >
         {/* Back Button */}
-        <motion.div variants={itemVariants} className="mb-5">
+        <motion.div variants={itemVariants} className="relative mb-5 flex items-center justify-between">
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
@@ -100,6 +101,7 @@ function LoginForm() {
             <ArrowLeft size={16} />
             <span>Back</span>
           </Link>
+          <LogoText className="absolute left-1/2 -translate-x-1/2" />
         </motion.div>
 
         {/* Header */}

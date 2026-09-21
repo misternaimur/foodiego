@@ -25,6 +25,7 @@ import { establishSession } from "@/app/(public)/actions/auth";
 import { sendRegistrationOtp, verifyRegistrationOtp } from "@/app/(public)/actions/otp";
 import { mapAuthErrorMessage } from "@/lib/firebase/errors";
 import { ROLES, RegisterFormSchema, type SelectableRole } from "@/lib/definitions";
+import LogoText from "@/components/Share/LogoText";
 
 const ROLE_OPTIONS: {
   value: SelectableRole;
@@ -220,7 +221,7 @@ function RegisterFormContent() {
       variants={containerVariants}
       className="w-full max-w-lg rounded-3xl border border-gray-100 bg-white p-8 shadow-[0_10px_50px_-12px_rgba(16,185,129,0.08)] sm:p-10"
     >
-      <motion.div variants={itemVariants} className="mb-6 flex items-center justify-between">
+      <motion.div variants={itemVariants} className="relative mb-6 grid grid-cols-[1fr_auto_1fr] items-center">
         <Link
           href="/"
           className="group inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 transition-colors hover:text-emerald-600"
@@ -228,7 +229,8 @@ function RegisterFormContent() {
           <ArrowLeft size={15} className="transition-transform group-hover:-translate-x-0.5" />
           <span>Home</span>
         </Link>
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+        <LogoText className="justify-self-center" />
+        <div className="inline-flex items-center ml-5 gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
           <Sparkles size={13} />
           <span>Join Foodiego</span>
         </div>
