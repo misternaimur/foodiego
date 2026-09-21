@@ -45,9 +45,7 @@ export default async function NotFound() {
       />
 
       <main className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-20 sm:py-24">
-        {/* Decorative washes, matching the hero and other section backgrounds.
-            The 300/400 tones stay light in dark mode by design, so they read as
-            ambient glow on either theme. */}
+        {/* Decorative washes, matching the hero and other section backgrounds. */}
         <div
           className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-emerald-300/20 blur-3xl"
           aria-hidden="true"
