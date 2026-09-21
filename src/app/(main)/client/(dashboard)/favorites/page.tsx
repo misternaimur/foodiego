@@ -172,7 +172,7 @@ export default function ClientFavoritesPage() {
                       e.stopPropagation();
                       toggleFavorite(targetId);
                     }}
-                    className="shrink-0 p-2 text-rose-500 hover:scale-110 transition-transform cursor-pointer"
+                    className="shrink-0 p-2 text-rose-500 hover:scale-110 transition-transform cursor-cursor-pointer"
                   >
                     <Heart size={18} className="fill-rose-500 text-rose-500" />
                   </button>
@@ -199,25 +199,30 @@ export default function ClientFavoritesPage() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {favoriteFoods.map((food) => {
               const targetId = food._id || food.id || "";
+              const restaurant = restaurants.find(
+                (r) => (r._id || r.id) === food.restaurantId
+              );
+
+              // Construct complete FoodItem object
+              const foodItem = {
+                id: targetId,
+                name: food.name,
+                price: food.price,
+                description: food.description || "",
+                imageUrl: food.imageUrl || food.image || "/default-food.png",
+                isFavorite: true,
+                rating: restaurant?.rating || 4.5,
+                deliveryTime: restaurant?.deliveryTime || "20-30 min",
+                deliveryFee: "Free", // String instead of number
+                restaurantName: restaurant?.restaurantName || restaurant?.name || "Restaurant",
+                cuisine: restaurant?.cuisineType || restaurant?.cuisines?.[0] || "Various",
+              };
+
               return (
                 <FoodCard
                   key={targetId}
-                  food={{
-                    id: targetId,
-                    name: food.name,
-                    price: food.price,
-                    description: food.description || "",
-                    imageUrl: food.imageUrl || food.image || "/default-food.png",
-                    isFavorite: true,
-                  }}
-                  onAddToCart={(item) =>
-                    addToCart({
-                      id: item.id,
-                      name: item.name,
-                      price: item.price,
-                      image: item.imageUrl,
-                    })
-                  }
+                  food={foodItem}
+                  onAddToCart={(item) => addToCart(foodItem)} // Pass full foodItem object
                   onToggleFavorite={(id) => toggleFavorite(id)}
                 />
               );

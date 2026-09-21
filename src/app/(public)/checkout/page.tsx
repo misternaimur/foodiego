@@ -7,13 +7,13 @@ import { ArrowLeft, MapPin, CreditCard, CheckCircle2, Plus, ChevronRight } from 
 import { useApp } from '@/context/AppContext';
 
 export default function CheckoutPage() {
-  const router = useRouter(); // Fixed hook instantiation[cite: 15]
+  const router = useRouter();
   const { cart, user, clearCart } = useApp();
 
-  // Active step state: 'address' | 'payment' | 'review'[cite: 15]
+  // Active step state: 'address' | 'payment' | 'review'
   const [activeStep, setActiveStep] = useState<'address' | 'payment' | 'review'>('address');
 
-  // Address & Payment form states[cite: 15]
+  // Address & Payment form states
   const [address, setAddress] = useState({
     street: '',
     city: '',
@@ -23,16 +23,16 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>('card');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Authentication Redirect Guard[cite: 15]
+  // Authentication Redirect Guard
   useEffect(() => {
     if (!user) {
       router.push('/login?redirect=/checkout');
     }
   }, [user, router]);
 
-  // Order Calculations[cite: 15]
+  // Order Calculations with safe type casting
   const subtotal = cart.reduce(
-    (sum, item) => sum + (item.totalUnitPrice || item.price) * item.quantity,
+    (sum, item) => sum + Number(item.totalUnitPrice || item.price || 0) * item.quantity,
     0
   );
   const totalItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -40,7 +40,7 @@ export default function CheckoutPage() {
   const tax = subtotal * 0.08; 
   const total = subtotal + deliveryFee + tax;
 
-  // Handler to post order to your backend API[cite: 11]
+  // Handler to post order to backend API
   const handlePlaceOrder = async () => {
     if (cart.length === 0) {
       alert('Your cart is empty!');
@@ -51,23 +51,22 @@ export default function CheckoutPage() {
 
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-    // Build payload matching your MongoDB orderBooking backend schema[cite: 11]
     const orderPayload = {
-      customerId: user?.uid, // Links customer ID[cite: 11]
-      restaurantId: cart[0]?.id, // Links targeted restaurant[cite: 11]
+      customerId: user?.uid,
+      restaurantId: cart[0]?.id,
       deliveryAddress: address.street ? `${address.street}, ${address.city} ${address.zip}` : 'Default Address',
       paymentMethod,
       items: cart.map((item) => ({
-        menuItemId: item.id, // Validated against backend MenuItem schema[cite: 11]
+        menuItemId: item.id,
         quantity: item.quantity,
-        price: item.totalUnitPrice || item.price,
+        price: Number(item.totalUnitPrice || item.price || 0),
         specialInstructions: item.specialInstructions || '',
       })),
       totalAmount: total,
     };
 
     try {
-      const res = await fetch(`${API_URL}/api/orders`, {[cite: 11]
+      const res = await fetch(`${API_URL}/api/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload),
@@ -75,20 +74,21 @@ export default function CheckoutPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || 'Failed to place order');[cite: 11]
+        throw new Error(data.message || 'Failed to place order');
       }
 
       alert('Order placed successfully!');
       clearCart();
       router.push('/');
-    } catch (err: any) {
-      alert(`Order Failed: ${err.message}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error occurred';
+      alert(`Order Failed: ${message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Prevent render if not logged in to prevent flash of content[cite: 15]
+  // Prevent render if not logged in
   if (!user) {
     return (
       <div className="min-h-screen bg-[#FAF7EE] flex items-center justify-center">
@@ -292,17 +292,20 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="space-y-3">
-                  {cart.map((item) => (
-                    <div key={item.cartItemId || item.id} className="flex items-center justify-between text-xs py-2 border-b border-gray-100">
-                      <div>
-                        <p className="font-bold text-gray-900">{item.name}</p>
-                        <p className="text-gray-500">Qty: {item.quantity}</p>
+                  {cart.map((item) => {
+                    const itemPrice = Number(item.totalUnitPrice || item.price || 0);
+                    return (
+                      <div key={item.cartItemId || item.id} className="flex items-center justify-between text-xs py-2 border-b border-gray-100">
+                        <div>
+                          <p className="font-bold text-gray-900">{item.name}</p>
+                          <p className="text-gray-500">Qty: {item.quantity}</p>
+                        </div>
+                        <span className="font-bold text-gray-900">
+                          ${(itemPrice * item.quantity).toFixed(2)}
+                        </span>
                       </div>
-                      <span className="font-bold text-gray-900">
-                        ${((item.totalUnitPrice || item.price) * item.quantity).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <button
@@ -310,7 +313,7 @@ export default function CheckoutPage() {
                   onClick={handlePlaceOrder}
                   className="w-full bg-[#F6A429] hover:bg-[#e0931f] text-gray-900 font-extrabold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-colors text-xs uppercase tracking-wider shadow-md cursor-pointer disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Processing Order...' : `Place Order ($${total.toFixed(2)})`}
+                  {isSubmitting ? 'Processing Order...' : `Place Order ($${Number(total || 0).toFixed(2)})`}
                 </button>
               </div>
             )}
@@ -323,23 +326,23 @@ export default function CheckoutPage() {
             <div className="space-y-3 text-xs text-gray-600 font-medium pb-4 border-b border-gray-100">
               <div className="flex justify-between">
                 <span>Subtotal ({totalItemsCount} items)</span>
-                <span className="font-bold text-gray-900">${subtotal.toFixed(2)}</span>
+                <span className="font-bold text-gray-900">${Number(subtotal || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Delivery</span>
                 <span className="font-bold text-emerald-700">
-                  {deliveryFee === 0 ? 'Free' : `$${deliveryFee.toFixed(2)}`}
+                  {deliveryFee === 0 ? 'Free' : `$${Number(deliveryFee).toFixed(2)}`}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Tax</span>
-                <span className="font-bold text-gray-900">${tax.toFixed(2)}</span>
+                <span className="font-bold text-gray-900">${Number(tax || 0).toFixed(2)}</span>
               </div>
             </div>
 
             <div className="flex justify-between items-center text-sm font-black text-gray-900 pt-4">
               <span>Total</span>
-              <span className="text-base text-[#15462D]">${total.toFixed(2)}</span>
+              <span className="text-base text-[#15462D]">${Number(total || 0).toFixed(2)}</span>
             </div>
           </div>
         </div>
