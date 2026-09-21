@@ -150,7 +150,7 @@ function RestaurantsPageInner() {
         {/* items-start on grid ensures sidebar doesn't stretch to full height of parent */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
           {/* Fixed Sticky Filter Section */}
-          <aside className={`lg:block ${isMobileFilterOpen ? 'block' : 'hidden'} sticky top-5  z-10 bg-white border border-[#E8E2D5] p-6 rounded-3xl shadow-xs`}>
+          <aside className={`lg:block ${isMobileFilterOpen ? 'block' : 'hidden'} sticky top-23  z-10 bg-white border border-[#E8E2D5] p-6 rounded-3xl shadow-xs`}>
             <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
               <h3 className="text-lg font-bold text-slate-900">Filters</h3>
               {(selectedSort !== 'relevance' || minRating > 0 || selectedCuisine !== 'All') && (
