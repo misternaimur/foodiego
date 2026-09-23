@@ -142,7 +142,7 @@ id: `${kitchen.id}-${item.name}`,
   // min(1280, viewport - 96), so this section was narrower than its neighbours at
   // laptop widths and 64px wider at 1600px.
   return (
-    <section className="w-full py-8">
+    <section className="w-full py-8 lg:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

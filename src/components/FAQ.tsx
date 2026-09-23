@@ -44,7 +44,7 @@ export default function FAQSection() {
   };
 
   return (
-    <section className="w-full bg-transparent py-20 lg:py-28">
+    <section className="w-full bg-transparent py-8 lg:py-12">
       {/* max-w-7xl, matching every other homepage section. This was max-w-6xl,
           which rendered 1152px against their 1280px and sat 64px in from the
           shared left edge. */}
