@@ -64,7 +64,22 @@ export default function RiderShell({
   activePath,
 }: RiderShellProps) {
   const [mobileMenu, setMobileMenu] = useState(false);
-  const { user } = useApp();
+  const { user, logoutUser } = useApp();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  // The Logout button used to have no click handler at all. Same sign-out
+  // every other role uses: Firebase sign-out, then the server action clears
+  // the session cookie and redirects to /auth/login.
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    setMobileMenu(false);
+    try {
+      await logoutUser();
+    } finally {
+      setLoggingOut(false);
+    }
+  };
   const [rating, setRating] = useState<number | null>(null);
 
   useEffect(() => {
@@ -160,13 +175,15 @@ export default function RiderShell({
                 {/* Logout */}
                 <motion.button
                   type="button"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
                   whileHover={{ x: 2 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
+                  className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-wait disabled:opacity-60"
                 >
                   <LogOut className="h-4 w-4" />
-                  Logout
+                  {loggingOut ? "Logging out..." : "Logout"}
                 </motion.button>
               </nav>
             </div>

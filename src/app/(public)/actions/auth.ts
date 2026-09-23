@@ -100,6 +100,66 @@ export async function establishSession(
   redirect(destination);
 }
 
+/**
+ * Google sign-in, for customer accounts only.
+ *
+ * A first-time Google user gets a customer account straight away (Google has
+ * already verified the address, so the e-mail OTP step used by the password
+ * sign-up isn't needed). Restaurant, rider and admin accounts are refused and
+ * must keep signing in with e-mail + password, so their approval-gated
+ * onboarding can't be bypassed through Google.
+ */
+export async function establishGoogleSession(idToken: string, redirectTo?: string): Promise<FormState> {
+  let decoded;
+  try {
+    decoded = await getAdminAuth().verifyIdToken(idToken);
+  } catch {
+    return { message: "Your Google sign-in could not be verified. Please try again." };
+  }
+
+  const { uid, email } = decoded;
+  if (decoded.firebase?.sign_in_provider !== "google.com") {
+    return { message: "Please use the Google button to sign in with Google." };
+  }
+  if (!email || !decoded.email_verified) {
+    return { message: "Your Google account has no verified e-mail address." };
+  }
+
+  await dbConnect();
+
+  let user = await User.findOne({ uid });
+
+  if (!user) {
+    // Same address, different Firebase account: an existing e-mail/password
+    // account we must not silently take over.
+    const existingByEmail = await User.findOne({ email: email.toLowerCase() }).lean();
+    if (existingByEmail) {
+      return {
+        message: "An account with this email already exists. Please sign in with your email and password.",
+      };
+    }
+
+    user = await User.create({
+      uid,
+      name: decoded.name || email.split("@")[0] || "Member",
+      email,
+      role: "customer",
+    });
+  }
+
+  if (user.role !== "customer") {
+    return {
+      message: "Google sign-in is only for customer accounts. Restaurant, rider and admin accounts must sign in with email and password.",
+    };
+  }
+  if (user.accountStatus === "suspended") {
+    return { message: "This account has been suspended. Please contact support." };
+  }
+
+  await createSession(idToken);
+  redirect(getSafeRedirectPath(redirectTo, "customer"));
+}
+
 export async function logout() {
   await deleteSession();
   redirect("/auth/login");
