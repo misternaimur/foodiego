@@ -18,7 +18,7 @@ export default async function Home() {
 
   return ( <AppLoader>
     <main className="flex-1 bg-[#FAF7EE]" suppressHydrationWarning>
-      <Navbar user={session ? { name: session.name, role: session.role } : null} />
+      <Navbar user={session ? { name: session.name, role: session.role, avatarUrl: session.avatarUrl } : null} />
       <Hero />
       <WhatAreYouCraving />
       <PickedForYouSection />

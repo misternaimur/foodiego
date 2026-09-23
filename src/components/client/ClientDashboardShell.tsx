@@ -21,7 +21,7 @@ import { useApp } from "@/context/AppContext";
 import ThemeToggle from "@/components/shared/ThemeToggle";
 
 interface ClientDashboardShellProps {
-  user: { name: string; email: string };
+  user: { name: string; email: string; avatarUrl?: string };
   children: React.ReactNode;
 }
 
@@ -45,6 +45,8 @@ export default function ClientDashboardShell({
   const displayName = authUser?.name || user.name;
   const displayEmail = authUser?.email || user.email;
   const initials = displayName ? displayName.charAt(0).toUpperCase() : "U";
+  // The photo uploaded on Profile Settings wins over the Google account picture.
+  const avatarUrl = user.avatarUrl || authUser?.avatarUrl;
 
   const SidebarContent = (
     <div className="flex h-full flex-col">
@@ -52,10 +54,10 @@ export default function ClientDashboardShell({
       <div className="border-b border-gray-100 px-5 py-6">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-emerald-100 text-sm font-bold text-[#15462D]">
-            {authUser?.avatarUrl ? (
+            {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={authUser.avatarUrl}
+                src={avatarUrl}
                 alt={displayName}
                 className="h-full w-full object-cover"
               />

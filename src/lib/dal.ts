@@ -26,6 +26,7 @@ export const getOptionalSession = cache(async () => {
     role: user.role,
     name: user.name,
     email: user.email,
+    avatarUrl: user.avatarUrl || undefined,
   };
 });
 

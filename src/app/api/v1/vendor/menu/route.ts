@@ -5,6 +5,7 @@ import { dbConnect } from "@/lib/dbConnect";
 import { User } from "@/models/User";
 import { Restaurant } from "@/models/Restaurant";
 import { MenuItem } from "@/models/MenuItem";
+import { Category } from "@/models/Category";
 
 export interface MenuItemAddon {
   name: string;
@@ -282,17 +283,50 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Restaurant profile not found" }, { status: 404 });
   }
 
-  const filter: Record<string, unknown> = { vendorId: restaurant._id };
-  if (category) filter.category = category;
-  if (search) filter.name = { $regex: search, $options: "i" };
+  // UPDATE (real-profile fix): items this app creates are linked by
+  // `vendorId`, but the seeded catalog (foodiego-backend's seed script)
+  // links them by `restaurantId`, stores the picture as `imageUrl` and the
+  // category as an ObjectId into the "category" collection. The vendor used
+  // to see none of their seeded items at all; both shapes are read now and
+  // normalised to what the dashboard expects.
+  const categoryDocs = await Category.find({ restaurantId: restaurant._id }).select("name").lean();
+  const categoryNameById = new Map(categoryDocs.map((c) => [String(c._id), c.name]));
 
-  const items = await MenuItem.find(filter)
+  const filter: Record<string, unknown> = { $or: [{ vendorId: restaurant._id }, { restaurantId: restaurant._id }] };
+  if (category) {
+    const categoryIds = categoryDocs.filter((c) => c.name === category).map((c) => c._id);
+    filter.category = { $in: [category, ...categoryIds] };
+  }
+  if (search) filter.name = { $regex: search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
+
+  const rawItems = await MenuItem.find(filter)
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
     .lean();
 
   const total = await MenuItem.countDocuments(filter);
+
+  const items = rawItems.map((item) => {
+    const raw = item as typeof item & { imageUrl?: string; isAvailable?: boolean };
+    const rawCategory = raw.category as unknown;
+    const categoryName =
+      typeof rawCategory === "string"
+        ? categoryNameById.get(rawCategory) || rawCategory
+        : rawCategory
+          ? categoryNameById.get(String(rawCategory)) || "Menu"
+          : "Menu";
+    return {
+      ...raw,
+      category: categoryName,
+      image: raw.image || raw.imageUrl || "",
+      description: raw.description || "",
+      addons: raw.addons || [],
+      isActive: raw.isActive !== false && raw.isAvailable !== false,
+      ordersCount: raw.ordersCount || 0,
+      rating: raw.rating || 0,
+    };
+  });
 
   return NextResponse.json({
     items,

@@ -15,6 +15,7 @@ export interface UserDocument {
   email: string;
   role: Role;   // User er role (e.g., customer, vendor, rider, admin)
   accountStatus: AccountStatus; // Admin-controlled: suspended accounts are blocked from signing in
+  avatarUrl?: string; // Profile photo uploaded from the customer profile page (image-host https URL)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +28,7 @@ const UserSchema = new Schema<UserDocument>(
     email: { type: String, required: true, trim: true, lowercase: true, unique: true },
     role: { type: String, enum: ALL_ROLES, required: true }, // Role obosshoi ALL_ROLES array er modhye ekta hote hobe
     accountStatus: { type: String, enum: ACCOUNT_STATUSES, default: "active" },
+    avatarUrl: { type: String, trim: true },
   },
   { timestamps: true } // Auto-generates createdAt and updatedAt fields
 );
