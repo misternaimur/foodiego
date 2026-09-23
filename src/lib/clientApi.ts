@@ -19,6 +19,7 @@ export interface ProfileData {
   name: string;
   email: string;
   phone: string;
+  avatarUrl: string;
 }
 
 export const profileApi = {
@@ -27,6 +28,12 @@ export const profileApi = {
     request<{ success: boolean; profile: ProfileData }>("/api/v1/client/profile", {
       method: "PATCH",
       body: JSON.stringify(data),
+    }),
+  /** Saves an already-uploaded photo URL as the profile picture. */
+  updatePhoto: (avatarUrl: string) =>
+    request<{ success: boolean; profile: ProfileData }>("/api/v1/client/profile", {
+      method: "PATCH",
+      body: JSON.stringify({ avatarUrl }),
     }),
 };
 

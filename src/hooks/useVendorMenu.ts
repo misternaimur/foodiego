@@ -59,15 +59,17 @@ export const useMenuItems = (params?: {
   category?: string;
   search?: string;
   page?: number;
+  limit?: number;
 }) => {
   const searchParams = new URLSearchParams();
   if (params?.category) searchParams.set("category", params.category);
   if (params?.search) searchParams.set("search", params.search);
   if (params?.page) searchParams.set("page", String(params.page));
+  if (params?.limit) searchParams.set("limit", String(params.limit));
   const qs = searchParams.toString();
 
   return useQuery<PaginatedMenuResponse>({
-    queryKey: ["vendor-menu", params?.category, params?.search, params?.page],
+    queryKey: ["vendor-menu", params?.category, params?.search, params?.page, params?.limit],
     queryFn: () => fetcher(`/api/v1/vendor/menu${qs ? `?${qs}` : ""}`),
     staleTime: 1000 * 60 * 2,
     refetchOnWindowFocus: false,

@@ -48,7 +48,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Restaurant profile not found" }, { status: 404 });
   }
 
-  const item = await MenuItem.findOne({ _id: id, vendorId: restaurant._id });
+  const item = await MenuItem.findOne({ _id: id, $or: [{ vendorId: restaurant._id }, { restaurantId: restaurant._id }] });
   if (!item) {
     return NextResponse.json({ error: "Menu item not found" }, { status: 404 });
   }

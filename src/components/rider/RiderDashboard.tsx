@@ -562,23 +562,21 @@ function StatusToggleCard({
 }) {
   return (
     <div className="w-full">
-      <motion.div
-        animate={{
-          backgroundColor: isOnline ? "#F0FDF4" : "#FFFFFF",
-          borderColor: isOnline ? "#BBF7D0" : "#E2E8F0",
-        }}
-        transition={{ duration: 0.3 }}
-        className="flex flex-col gap-4 rounded-2xl border p-4 shadow-sm transition-shadow duration-200 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+      {/* Colours are classes (not framer-motion inline styles) so the dark
+          theme in globals.css can retarget them - inline styles always win,
+          which left this card white in dark mode. */}
+      <div
+        className={`flex flex-col gap-4 rounded-2xl border p-4 shadow-sm transition-colors duration-300 sm:flex-row sm:items-center sm:justify-between sm:p-5 ${
+          isOnline ? "border-green-200 bg-[#F0FDF4]" : "border-slate-200 bg-white"
+        }`}
       >
         <div className="flex items-center gap-4">
           <motion.div
-            animate={{
-              backgroundColor: isOnline ? "#124734" : "#F1F5F9",
-              color: isOnline ? "#FFFFFF" : "#64748B",
-              scale: isOnline ? [1, 1.15, 1] : 1,
-            }}
+            animate={{ scale: isOnline ? [1, 1.15, 1] : 1 }}
             transition={{ duration: 0.3 }}
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-inner"
+            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-inner transition-colors duration-300 ${
+              isOnline ? "bg-[#124734] text-white" : "bg-slate-100 text-slate-500"
+            }`}
           >
             <Bike className="h-6 w-6" />
           </motion.div>
@@ -588,11 +586,10 @@ function StatusToggleCard({
               <span className="text-base font-bold tracking-tight text-slate-800 sm:text-lg">
                 {isOnline ? "You're online" : "You're offline"}
               </span>
-              <motion.span
-                animate={{
-                  backgroundColor: isOnline ? "#22C55E" : "#94A3B8",
-                }}
-                className="inline-block h-2.5 w-2.5 rounded-full"
+              <span
+                className={`inline-block h-2.5 w-2.5 rounded-full transition-colors duration-300 ${
+                  isOnline ? "bg-green-500" : "bg-slate-400"
+                }`}
               />
             </div>
             <p className="text-xs font-medium text-slate-500 sm:text-sm">
@@ -610,12 +607,10 @@ function StatusToggleCard({
           aria-pressed={isOnline}
           className="relative rounded-full p-1 outline-none transition-all focus-visible:ring-2 focus-visible:ring-[#124734]/30"
         >
-          <motion.div
-            animate={{
-              backgroundColor: isOnline ? "#124734" : "#CBD5E1",
-            }}
-            transition={{ duration: 0.25 }}
-            className="relative flex h-8 w-14 items-center rounded-full p-1 shadow-inner sm:h-9 sm:w-16"
+          <div
+            className={`relative flex h-8 w-14 items-center rounded-full p-1 shadow-inner transition-colors duration-250 sm:h-9 sm:w-16 ${
+              isOnline ? "bg-[#124734]" : "bg-slate-300"
+            }`}
           >
             <motion.span
               layout
@@ -634,9 +629,9 @@ function StatusToggleCard({
                 }`}
               />
             </motion.span>
-          </motion.div>
+          </div>
         </button>
-      </motion.div>
+      </div>
     </div>
   );
 }

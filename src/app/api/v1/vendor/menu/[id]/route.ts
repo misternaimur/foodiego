@@ -60,7 +60,7 @@ export async function PATCH(
   // the filter means one vendor can never edit another vendor's item even
   // by guessing its id.
   const updated = await MenuItem.findOneAndUpdate(
-    { _id: id, vendorId: restaurant._id },
+    { _id: id, $or: [{ vendorId: restaurant._id }, { restaurantId: restaurant._id }] },
     {
       name,
       category,

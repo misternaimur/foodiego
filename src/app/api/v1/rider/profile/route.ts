@@ -4,6 +4,7 @@ import { getOptionalSession } from "@/lib/dal";
 import { getOrCreateRiderProfile } from "@/lib/profile";
 import { dbConnect } from "@/lib/dbConnect";
 import { Rider } from "@/models/Rider";
+import { isStorableImageUrl } from "@/lib/imageUrl";
 
 // UPDATE (rider-dashboard real-data fix): /rider/settings used to be a
 // static page with no save behaviour, and the dashboard's Online/Offline
@@ -33,6 +34,7 @@ export async function GET() {
     vehicleNumber: rider.vehicleNumber || "",
     licenseNumber: rider.licenseNumber,
     isAvailable: rider.isAvailable,
+    photoUrl: rider.photoUrl || "",
   });
 }
 
@@ -49,7 +51,12 @@ export async function PATCH(req: NextRequest) {
     city: string;
     vehicleNumber: string;
     isAvailable: boolean;
+    photoUrl: string;
   }>;
+
+  if (body.photoUrl !== undefined && !isStorableImageUrl(body.photoUrl)) {
+    return NextResponse.json({ error: "photoUrl must be an uploaded image URL" }, { status: 400 });
+  }
 
   await dbConnect();
   const rider = await getOrCreateRiderProfile(session);
@@ -64,11 +71,13 @@ export async function PATCH(req: NextRequest) {
   if (body.city !== undefined) update.city = body.city;
   if (body.vehicleNumber !== undefined) update.vehicleNumber = body.vehicleNumber;
   if (body.isAvailable !== undefined) update.isAvailable = body.isAvailable;
+  if (body.photoUrl !== undefined) update.photoUrl = body.photoUrl;
 
   const updated = await Rider.findByIdAndUpdate(rider._id, update, { new: true }).lean();
 
   return NextResponse.json({
     success: true,
     isAvailable: updated?.isAvailable ?? rider.isAvailable,
+    photoUrl: updated?.photoUrl || "",
   });
 }

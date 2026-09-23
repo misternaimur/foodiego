@@ -20,6 +20,7 @@ import {
 
 import { useEffect, useState } from "react";
 import { useApp } from "@/context/AppContext";
+import ProfilePhotoUploader from "@/components/shared/ProfilePhotoUploader";
 
 // ============================================================
 // UPDATE (rider-dashboard real-data fix): this page used to be entirely
@@ -42,11 +43,26 @@ interface RiderProfile {
   vehicleNumber: string;
   licenseNumber: string;
   isAvailable: boolean;
+  photoUrl: string;
 }
 
 export default function RiderSettingsPage() {
-  const { user } = useApp();
+  const { user, logoutUser } = useApp();
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  // Same sign-out as the rest of the rider sidebar (see RiderShell.tsx) —
+  // this page keeps its own sidebar copy, whose Logout had no handler.
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    setMobileMenu(false);
+    try {
+      await logoutUser();
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   const [profile, setProfile] = useState<RiderProfile | null>(null);
   const [form, setForm] = useState({ fullName: "", phone: "", address: "", city: "", vehicleNumber: "" });
@@ -73,6 +89,21 @@ export default function RiderSettingsPage() {
       });
     })();
   }, []);
+
+  // Saves a freshly uploaded photo straight away (no separate "Save" click),
+  // the same way the vendor profile saves its logo/cover.
+  async function savePhoto(url: string) {
+    const res = await fetch("/api/v1/rider/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ photoUrl: url }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body?.error || "Couldn't save your photo.");
+    }
+    setProfile((p) => (p ? { ...p, photoUrl: url } : p));
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -125,8 +156,13 @@ export default function RiderSettingsPage() {
               <div className="flex items-center gap-3">
 
                 {/* Avatar */}
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100">
-                  <User className="h-6 w-6 text-green-500" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-green-100">
+                  {profile?.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- user-uploaded URL from any image host
+                    <img src={profile.photoUrl} alt={profile.fullName} className="h-full w-full object-cover" />
+                  ) : (
+                    <User className="h-6 w-6 text-green-500" />
+                  )}
                 </div>
 
                 {/* Profile Info */}
@@ -213,10 +249,12 @@ export default function RiderSettingsPage() {
               {/* Logout */}
               <button
                 type="button"
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-wait disabled:opacity-60"
               >
                 <LogOut className="h-4 w-4" />
-                Logout
+                {loggingOut ? "Logging out..." : "Logout"}
               </button>
 
             </nav>
@@ -300,6 +338,14 @@ export default function RiderSettingsPage() {
 
                 </div>
 
+              </div>
+
+              <div className="border-b border-slate-100 px-6 py-5">
+                <ProfilePhotoUploader
+                  imageUrl={profile?.photoUrl}
+                  name={profile?.fullName || user?.name || "Rider"}
+                  onUploaded={savePhoto}
+                />
               </div>
 
               <div className="grid gap-6 p-6 md:grid-cols-2">

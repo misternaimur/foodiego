@@ -38,7 +38,7 @@ const defaultSteps: HowItWorksStep[] = [
 
 export const HowItWorksSection: React.FC = () => {
   return (
-    <section className="w-full bg-transparent py-20 lg:py-20">
+    <section className="w-full bg-transparent pt-8 pb-24 sm:pb-28 lg:pt-12 lg:pb-36">
       {/* max-w-7xl, matching every other homepage section. This was max-w-6xl,
           which rendered 1152px against their 1280px and sat 64px in from the
           shared left edge. */}
@@ -163,7 +163,9 @@ export const HowItWorksSection: React.FC = () => {
             </div>
           </div>
 
-          {/* 3D Angled Mobile Mockup */}
+          {/* 3D Angled Mobile Mockup — hangs 80/96/112px below the card (-mb-*),
+              so the section's bottom padding is that overhang plus the same
+              32/48px gap every other home section uses. */}
           <div className="relative z-20 flex justify-center -mb-20 sm:-mb-24 lg:-mb-28 px-4">
             <div className="relative w-full max-w-4xl transform rotate-x-12 hover:rotate-1 transition-transform duration-500 drop-shadow-[0_25px_35px_rgba(0,0,0,0.7)]">
               <Image
