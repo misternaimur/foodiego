@@ -41,12 +41,14 @@
 
   /* Dark palette. Green-tinted neutrals so the brand's cream/green identity
      survives the switch rather than turning into a generic grey theme. */
-  --d-page: #0f1713;
-  --d-page-soft: #131c17;
-  --d-surface: #161f1a;
-  --d-surface-2: #1c2822;
-  --d-surface-3: #22302a;
-  --d-border: #2a362e;
+  /* Surfaces step up in clear increments so cards lift off the page instead of
+     blending into it; the page itself is a notch deeper than before. */
+  --d-page: #0c130f;
+  --d-page-soft: #111a15;
+  --d-surface: #17211b;
+  --d-surface-2: #1e2b24;
+  --d-surface-3: #25342c;
+  --d-border: #2e3c33;
   --d-text: #eff3f0;
   --d-brand: #1e6b4a;
 }
@@ -67,10 +69,10 @@
   /* --- Neutral ramps: surfaces below, text above ------------------------- */
   --color-gray-50: #131c17;
   --color-gray-100: #18231d;
-  --color-gray-200: #263229;
-  --color-gray-300: #33413a;
-  --color-gray-400: #7c8a83;
-  --color-gray-500: #9ba8a1;
+  --color-gray-200: #2b3830;
+  --color-gray-300: #3b4a42;
+  --color-gray-400: #8e9c94;
+  --color-gray-500: #a9b5ae;
   --color-gray-600: #b3c0b9;
   --color-gray-700: #c3cdc7;
   --color-gray-800: #dce3de;
@@ -79,10 +81,10 @@
 
   --color-slate-50: #131c17;
   --color-slate-100: #18231d;
-  --color-slate-200: #263229;
-  --color-slate-300: #33413a;
-  --color-slate-400: #7c8a83;
-  --color-slate-500: #9ba8a1;
+  --color-slate-200: #2b3830;
+  --color-slate-300: #3b4a42;
+  --color-slate-400: #8e9c94;
+  --color-slate-500: #a9b5ae;
   --color-slate-600: #b3c0b9;
   --color-slate-700: #c3cdc7;
   --color-slate-800: #dce3de;
@@ -480,7 +482,7 @@ body {
 .dark .bg-\[\#1a4d31\] { background-color: #22764f; }
 .dark .bg-\[\#1a5c3a\] { background-color: #24805a; }
 .dark .bg-\[\#1d6b48\] { background-color: #22764f; }
-.dark .bg-\[\#1f2223\] { background-color: #0c1310; }
+.dark .bg-\[\#1f2223\] { background-color: #111a15; }
 .dark .bg-\[\#2b2e2f\] { background-color: #1a211d; }
 .dark .bg-\[\#9CA3AF\] { background-color: #22302a; }
 .dark .bg-\[\#D1FAE5\] { background-color: #12241b; }
@@ -1271,4 +1273,208 @@ body {
    the rest of the page uses would be unreadable there. */
 .colorblind .bg-\[\#113220\] .text-\[\#F6A429\] {
   color: #fb923c;
+}
+
+/* ============================================================================
+   Dark mode: interactive-state overrides
+   ----------------------------------------------------------------------------
+   The `.dark .<class>` rules above only match a utility's resting form. The
+   hover/focus/group-hover forms compile to different selectors, so they kept
+   their light values — most visibly `focus:bg-white`, which turned every
+   focused input white while its text had already been lightened for dark
+   mode, making typed text unreadable. Brand-green hovers now brighten (instead
+   of darkening into the page), and green/red focus borders and rings use the
+   same bright accent as the rest of the dark UI.
+   ========================================================================== */
+.dark .disabled\:hover\:bg-\[\#124734\]:disabled:hover { background-color: #24805a; }
+.dark .focus-visible\:ring-\[\#124734\]\/30:focus-visible { --tw-ring-color: color-mix(in oklab, #34d399 30%, transparent); }
+.dark .focus\:bg-white:focus { background-color: var(--d-surface-2); }
+.dark .focus\:border-\[\#065f46\]:focus { border-color: #34d399; }
+.dark .focus\:border-\[\#0d9488\]:focus { border-color: #34d399; }
+.dark .focus\:border-\[\#10B981\]:focus { border-color: #34d399; }
+.dark .focus\:border-\[\#124734\]:focus { border-color: #34d399; }
+.dark .focus\:border-\[\#124734\]\/20:focus { border-color: color-mix(in oklab, #34d399 20%, transparent); }
+.dark .focus\:border-\[\#124734\]\/30:focus { border-color: color-mix(in oklab, #34d399 30%, transparent); }
+.dark .focus\:border-\[\#15462D\]:focus { border-color: #34d399; }
+.dark .focus\:border-\[\#15462D\]\/30:focus { border-color: color-mix(in oklab, #34d399 30%, transparent); }
+.dark .focus\:border-\[\#c83214\]:focus { border-color: #f98a6e; }
+.dark .focus\:ring-\[\#065f46\]:focus { --tw-ring-color: #34d399; }
+.dark .focus\:ring-\[\#0d9488\]:focus { --tw-ring-color: #34d399; }
+.dark .focus\:ring-\[\#10B981\]\/20:focus { --tw-ring-color: color-mix(in oklab, #34d399 20%, transparent); }
+.dark .focus\:ring-\[\#124734\]\/10:focus { --tw-ring-color: color-mix(in oklab, #34d399 10%, transparent); }
+.dark .focus\:ring-\[\#124734\]\/15:focus { --tw-ring-color: color-mix(in oklab, #34d399 15%, transparent); }
+.dark .focus\:ring-\[\#124734\]\/20:focus { --tw-ring-color: color-mix(in oklab, #34d399 20%, transparent); }
+.dark .focus\:ring-\[\#15462D\]:focus { --tw-ring-color: #34d399; }
+.dark .focus\:ring-\[\#15462D\]\/10:focus { --tw-ring-color: color-mix(in oklab, #34d399 10%, transparent); }
+.dark .focus\:ring-\[\#c83214\]\/30:focus { --tw-ring-color: color-mix(in oklab, #f98a6e 30%, transparent); }
+.dark .group:hover .group-hover\:bg-\[\#15462D\] { background-color: #24805a; }
+.dark .group:hover .group-hover\:text-\[\#15462D\] { color: #a7f3d0; }
+.dark .hover\:bg-\[\#044e38\]:hover { background-color: #24805a; }
+.dark .hover\:bg-\[\#047857\]:hover { background-color: #10a371; }
+.dark .hover\:bg-\[\#059669\]:hover { background-color: #10a371; }
+.dark .hover\:bg-\[\#0b7c72\]:hover { background-color: #12a191; }
+.dark .hover\:bg-\[\#0d3527\]:hover { background-color: #24805a; }
+.dark .hover\:bg-\[\#0e3320\]:hover { background-color: #24805a; }
+.dark .hover\:bg-\[\#103b26\]:hover { background-color: #24805a; }
+.dark .hover\:bg-\[\#124734\]:hover { background-color: #24805a; }
+.dark .hover\:bg-\[\#15462D\]:hover { background-color: #24805a; }
+.dark .hover\:bg-\[\#176044\]:hover { background-color: #24805a; }
+.dark .hover\:bg-\[\#1a4d31\]:hover { background-color: #24805a; }
+.dark .hover\:bg-\[\#1a5c3a\]:hover { background-color: #24805a; }
+.dark .hover\:bg-\[\#1d6b48\]:hover { background-color: #24805a; }
+.dark .hover\:bg-\[\#2b2e2f\]:hover { background-color: #1a211d; }
+.dark .hover\:bg-\[\#ECE7D9\]:hover { background-color: var(--d-surface-3); }
+.dark .hover\:bg-\[\#ECE7D9\]\/60:hover { background-color: color-mix(in oklab, var(--d-surface-3) 60%, transparent); }
+.dark .hover\:bg-\[\#FAF7EE\]:hover { background-color: var(--d-surface-3); }
+.dark .hover\:bg-\[\#a6280f\]:hover { background-color: #d9472b; }
+.dark .hover\:bg-\[\#a82a11\]:hover { background-color: #d9472b; }
+.dark .hover\:bg-\[\#e0931f\]:hover { background-color: #f7b84d; }
+.dark .hover\:bg-white:hover { background-color: var(--d-surface-2); }
+.dark .hover\:border-\[\#10B981\]:hover { border-color: #34d399; }
+.dark .hover\:border-\[\#124734\]:hover { border-color: #34d399; }
+.dark .hover\:border-\[\#124734\]\/30:hover { border-color: color-mix(in oklab, #34d399 30%, transparent); }
+.dark .hover\:border-\[\#15462D\]\/30:hover { border-color: color-mix(in oklab, #34d399 30%, transparent); }
+.dark .hover\:shadow-\[\#124734\]\/30:hover { --tw-shadow-color: color-mix(in oklab, #34d399 30%, transparent); }
+.dark .hover\:text-\[\#059669\]:hover { color: #6ee7b7; }
+.dark .hover\:text-\[\#103A27\]:hover { color: #a7f3d0; }
+.dark .hover\:text-\[\#10B981\]:hover { color: #6ee7b7; }
+.dark .hover\:text-\[\#124734\]:hover { color: #a7f3d0; }
+.dark .hover\:text-\[\#15462D\]:hover { color: #a7f3d0; }
+.dark .hover\:text-\[\#1a4d31\]:hover { color: #a7f3d0; }
+.dark .hover\:text-\[\#F49D37\]:hover { color: #fbbf5c; }
+
+/* ============================================================================
+   Dark mode: hairlines, faint text and form controls
+   ----------------------------------------------------------------------------
+   `gray-100`/`slate-100` are surfaces in the dark ramp, so the ~125 cards and
+   tables that use them as a *border* lost their edges entirely. `-300` text
+   (empty-state icons, "—" placeholders) sat at ~1.6:1 against a card; it stays
+   deliberately quiet but is now legible.
+   ========================================================================== */
+.dark .border-gray-50,
+.dark .border-slate-50,
+.dark .border-gray-100,
+.dark .border-slate-100 {
+  border-color: var(--d-border);
+}
+.dark .divide-gray-100 > :not(:last-child),
+.dark .divide-slate-100 > :not(:last-child) {
+  border-color: var(--d-border);
+}
+.dark .text-gray-300,
+.dark .text-slate-300 {
+  color: #66766d;
+}
+.dark .placeholder-\[\#9CA3AF\]::placeholder {
+  color: #8e9c94;
+}
+
+/* Defaults only — in the base layer so any utility on the element still wins.
+   Covers form controls that never set a text colour, and Chrome's autofill,
+   which otherwise paints a pale fill behind light dark-mode text. */
+@layer base {
+  .dark :where(input, textarea, select) {
+    color: var(--d-text);
+  }
+  .dark :where(input, textarea)::placeholder {
+    color: #8e9c94;
+  }
+}
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark textarea:-webkit-autofill,
+.dark select:-webkit-autofill {
+  -webkit-text-fill-color: var(--d-text);
+  caret-color: var(--d-text);
+  box-shadow: 0 0 0 1000px var(--d-surface-2) inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+/* Recharts draws grid lines and some bars with presentation attributes
+   (stroke="#E2E8F0", fill="#1e293b"); a stylesheet rule beats those. */
+.dark .recharts-cartesian-grid line {
+  stroke: #26332b;
+}
+.dark .recharts-bar-rectangle path[fill="#1e293b"],
+.dark .recharts-legend-item path[fill="#1e293b"] {
+  fill: #6ee7b7;
+}
+
+/* ============================================================================
+   Auth screens (login + every role's registration)
+   ----------------------------------------------------------------------------
+   In dark mode the auth card and the page were almost the same colour, inputs
+   had barely-visible edges and placeholders, and focusing an input flipped it
+   to white. The shell gets a soft brand glow, the card becomes a lifted glass
+   panel, and fields get a clear resting edge plus an emerald focus glow.
+   Light mode is untouched.
+   ========================================================================== */
+.dark .fg-auth-shell {
+  background-color: #090f0c;
+  background-image:
+    radial-gradient(900px 520px at 50% -8%, rgba(16, 185, 129, 0.2), transparent 62%),
+    radial-gradient(640px 440px at 100% 100%, rgba(246, 164, 41, 0.09), transparent 60%),
+    radial-gradient(560px 400px at 0% 88%, rgba(20, 184, 166, 0.09), transparent 60%);
+  background-attachment: fixed;
+}
+.dark .fg-auth-card {
+  background-color: rgba(21, 31, 25, 0.86);
+  border-color: rgba(110, 231, 183, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 30px 80px -24px rgba(0, 0, 0, 0.75),
+    0 0 120px -40px rgba(16, 185, 129, 0.35);
+  backdrop-filter: blur(14px);
+}
+.dark .fg-auth-card h1 {
+  color: #f6faf7;
+}
+.dark .fg-auth-card label {
+  color: #d3ddd7;
+}
+.dark .fg-auth-card :is(input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="file"]), select, textarea) {
+  background-color: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.11);
+  color: #f3f7f4;
+  caret-color: #34d399;
+}
+.dark .fg-auth-card :is(input, textarea)::placeholder {
+  color: #7f8e86;
+}
+.dark .fg-auth-card :is(input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="file"]), select, textarea):hover {
+  border-color: rgba(110, 231, 183, 0.3);
+}
+.dark .fg-auth-card :is(input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="file"]), select, textarea):focus {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: #34d399;
+  box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.16);
+}
+.dark .fg-auth-card select option {
+  background-color: var(--d-surface-2);
+  color: var(--d-text);
+}
+/* Field icons sit inside the input; lift them to match the brighter edge. */
+.dark .fg-auth-card .relative > svg {
+  color: #93a39a;
+}
+.dark .fg-auth-card .relative:focus-within > svg {
+  color: #34d399;
+}
+/* Each auth page's own <main> is bg-white; let the shell's glow show through. */
+.dark .fg-auth-main {
+  background-color: transparent;
+}
+
+/* Panels that are dark in BOTH themes (the admin sidebar, charcoal CTAs and
+   hero strips) use gray/slate 300-400 as *light* text on dark. The dark ramp
+   turns those tokens into dark greys, which left e.g. every admin sidebar link
+   nearly invisible. Inside these panels the light values are restored. */
+.dark :is(.bg-\[\#1f2223\], .bg-slate-900, .bg-gray-900, .bg-slate-950, .from-gray-900, .from-slate-900, .from-slate-950)
+  :is(.text-gray-300, .text-slate-300) {
+  color: #d3dcd6;
+}
+.dark :is(.bg-\[\#1f2223\], .bg-slate-900, .bg-gray-900, .bg-slate-950, .from-gray-900, .from-slate-900, .from-slate-950)
+  :is(.text-gray-400, .text-slate-400) {
+  color: #aab6af;
 }
