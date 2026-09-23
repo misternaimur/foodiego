@@ -45,8 +45,22 @@ interface RiderProfile {
 }
 
 export default function RiderSettingsPage() {
-  const { user } = useApp();
+  const { user, logoutUser } = useApp();
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  // Same sign-out as the rest of the rider sidebar (see RiderShell.tsx) —
+  // this page keeps its own sidebar copy, whose Logout had no handler.
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    setMobileMenu(false);
+    try {
+      await logoutUser();
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   const [profile, setProfile] = useState<RiderProfile | null>(null);
   const [form, setForm] = useState({ fullName: "", phone: "", address: "", city: "", vehicleNumber: "" });
@@ -213,10 +227,12 @@ export default function RiderSettingsPage() {
               {/* Logout */}
               <button
                 type="button"
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-green-100 hover:text-green-500"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium text-slate-600 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-wait disabled:opacity-60"
               >
                 <LogOut className="h-4 w-4" />
-                Logout
+                {loggingOut ? "Logging out..." : "Logout"}
               </button>
 
             </nav>
