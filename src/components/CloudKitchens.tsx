@@ -137,9 +137,13 @@ id: `${kitchen.id}-${item.name}`,
     router.push("/cart");
   };
 
+  // Padding belongs on the max-w-7xl container, matching the other homepage
+  // sections. With it on the outer <section> instead, the container computed to
+  // min(1280, viewport - 96), so this section was narrower than its neighbours at
+  // laptop widths and 64px wider at 1600px.
   return (
-    <section className="w-full px-4 sm:px-8 lg:px-12 py-8">
-      <div className="max-w-7xl mx-auto">
+    <section className="w-full py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

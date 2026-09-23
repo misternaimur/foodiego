@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import NotificationBell from "@/components/shared/NotificationBell";
+import ThemeToggle from "@/components/shared/ThemeToggle";
 
 // UPDATE (rider-dashboard real-data fix): the sidebar used to hardcode
 // "Afrin" and a fixed "4.9 Rating" on every rider sub-page (orders,
@@ -188,9 +189,12 @@ export default function RiderShell({
           {/* ================= MAIN ================= */}
           <main className="min-w-0 flex-1">
             {/* Top bar: mobile menu button + notifications */}
-            <div className="flex items-center justify-between px-5 pt-5 lg:justify-end lg:px-8">
+            <div className="flex items-center justify-between gap-2 px-5 pt-5 lg:justify-end lg:px-8">
               <MobileMenuButton />
-              <NotificationBell buttonClassName="relative rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900" />
+              <div className="flex items-center gap-2">
+                <ThemeToggle className="relative rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 cursor-pointer" />
+                <NotificationBell buttonClassName="relative rounded-lg border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900" />
+              </div>
             </div>
 
             {/* Content with fade-in */}

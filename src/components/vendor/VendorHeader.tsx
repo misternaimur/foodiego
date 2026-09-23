@@ -21,6 +21,7 @@ import { useVendorProfile, useUpdateVendorProfile } from "@/hooks/useVendorProfi
 import { springTransition } from "@/app/(main)/vendor/components/motion";
 import { useVendorMobileNav } from "./VendorMobileNavContext";
 import NotificationBell from "@/components/shared/NotificationBell";
+import ThemeToggle from "@/components/shared/ThemeToggle";
 
 interface VendorHeaderProps {
   userName?: string;
@@ -151,6 +152,8 @@ export default function VendorHeader({ userName, userEmail }: VendorHeaderProps)
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <NotificationBell />
+
+        <ThemeToggle className="rounded-full p-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 cursor-pointer" />
 
         <motion.button
           type="button"

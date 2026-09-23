@@ -51,15 +51,16 @@ function categoryNameOf(rawCategory: unknown, categoryNameById: Map<string, stri
 }
 
 export async function GET() {
-  await dbConnect();
+  try {
+    await dbConnect();
 
-  const [restaurants, menuItems, categories] = await Promise.all([
-    Restaurant.find({ status: "approved" }).lean(),
-    // isActive defaults to true for older seeded docs that never set it —
-    // only exclude items explicitly marked unavailable/inactive.
-    MenuItem.find({ isActive: { $ne: false }, isAvailable: { $ne: false } }).lean(),
-    Category.find().lean(),
-  ]);
+    const [restaurants, menuItems, categories] = await Promise.all([
+      Restaurant.find({ status: "approved" }).lean(),
+      // isActive defaults to true for older seeded docs that never set it —
+      // only exclude items explicitly marked unavailable/inactive.
+      MenuItem.find({ isActive: { $ne: false }, isAvailable: { $ne: false } }).lean(),
+      Category.find().lean(),
+    ]);
 
   const categoryNameById = new Map(categories.map((c) => [String(c._id), c.name]));
 
@@ -130,4 +131,11 @@ export async function GET() {
   });
 
   return NextResponse.json({ data });
+  } catch (err) {
+    console.error("Failed to fetch catalog restaurants:", err);
+    return NextResponse.json(
+      { error: "Failed to fetch restaurants" },
+      { status: 500 },
+    );
+  }
 }

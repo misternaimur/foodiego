@@ -153,10 +153,13 @@ export default function AIRecommendation() {
     ? recommendations[selectedPreference]
     : [];
 
+  // Padding belongs on the max-w-7xl container, matching the other homepage
+  // sections. With it on the outer <section> instead, the container computed to
+  // min(1280, viewport - 96), so this section was narrower than its neighbours at
+  // laptop widths and 64px wider at 1600px.
   return (
-    <section className="w-full px-4 sm:px-8 lg:px-12 py-16 lg:py-20">
-      <div className="max-w-7xl mx-auto">
-
+    <section className="w-full py-16 lg:py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-10 lg:mb-12">
           <p className="text-xs sm:text-sm font-bold text-green-700 tracking-[0.2em] uppercase mb-3">

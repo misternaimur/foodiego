@@ -74,6 +74,12 @@ const CATEGORY_SUGGESTIONS: Record<string, string[]> = {
   payment: ["Apply promo code", "Refund status", "Payment methods", "Wallet balance"],
 };
 
+const ACTION_PILLS = [
+  { label: "Recommend Food", icon: Utensils, message: "Recommend a top burger" },
+  { label: "Healthy Choices", icon: Heart, message: "Healthy choices" },
+  { label: "Track Delivery", icon: Truck, message: "Where is my order?" },
+];
+
 function formatTime(date: Date): string {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
@@ -421,7 +427,7 @@ export default function AIAssistantWidget({ onNavigate }: AIAssistantWidgetProps
           whileTap={{ scale: 0.92 }}
           whileDrag={{ scale: 1.15, cursor: "grabbing" }}
           aria-label="Open AI Assistant"
-          className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-[22px] bg-[#124734] text-white flex items-center justify-center shadow-xl border border-emerald-700/40 cursor-grab active:cursor-grabbing touch-none select-none transition-shadow duration-300 hover:shadow-2xl hover:shadow-[#124734]/30 ${
+          className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-[50%] bg-[#124734] text-white flex items-center justify-center shadow-xl border border-emerald-700/40 cursor-grab active:cursor-grabbing touch-none select-none transition-shadow duration-300 hover:shadow-2xl hover:shadow-[#124734]/30 ${
             hasUnread ? "animate-pulse" : ""
           }`}
         >
@@ -503,20 +509,19 @@ export default function AIAssistantWidget({ onNavigate }: AIAssistantWidgetProps
 
           {/* Action Pills */}
           <div className="bg-[#FAF7EE] p-3 flex gap-2 overflow-x-auto border-b border-[#E8E2D5]/60 shrink-0">
-            {[
-              { label: "Recommend Food", icon: <Utensils size={12} />, action: () => handleSend("Recommend a top burger") },
-              { label: "Healthy Choices", icon: <Heart size={12} />, action: () => handleSend("Healthy choices") },
-              { label: "Track Delivery", icon: <Truck size={12} />, action: () => handleSend("Where is my order?") },
-            ].map((pill) => (
+            {ACTION_PILLS.map((pill) => {
+              const Icon = pill.icon;
+              return (
               <button
                 key={pill.label}
-                onClick={pill.action}
+                onClick={() => handleSend(pill.message)}
                 className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#124734] bg-white border border-[#E8E2D5] px-3 py-1.5 rounded-full hover:border-[#124734] hover:bg-[#124734] hover:text-white transition-all duration-200 cursor-pointer shrink-0"
               >
-                {pill.icon}
+                <Icon size={12} />
                 {pill.label}
               </button>
-            ))}
+              );
+            })}
           </div>
 
           {/* Messages */}

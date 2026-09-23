@@ -32,6 +32,7 @@ import {
   RiderRegisterFormSchema,
   type RiderFormState,
 } from "@/lib/definitions";
+import LogoText from "@/components/Share/LogoText";
 
 const MAX_PHOTO_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -210,10 +211,11 @@ function RiderRegisterFormContent() {
           <ArrowLeft size={15} className="transition-transform group-hover:-translate-x-0.5" />
           <span>Home</span>
         </Link>
-        <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
+        <LogoText className="" />
+        {/* <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
           <Sparkles size={13} />
           <span>Rider Partner Application</span>
-        </div>
+        </div> */}
       </motion.div>
 
       <motion.div variants={itemVariants} className="mb-8">

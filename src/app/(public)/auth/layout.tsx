@@ -4,6 +4,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-      <>{children}</>
+    <div className="flex min-h-screen flex-col bg-white">{children}</div>
   );
 }
