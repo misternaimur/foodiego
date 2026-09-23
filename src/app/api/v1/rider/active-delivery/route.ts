@@ -7,6 +7,8 @@ import { OrderBooking } from "@/models/OrderBooking";
 export interface ActiveDelivery {
   _id: string;
   restaurantName: string;
+  /** False when the order never linked to a real restaurant account, so there's no restaurant to chat with. */
+  hasRestaurant: boolean;
   deliveryAddress: string;
   deliveryNote?: string;
   totalAmount: number;
@@ -44,6 +46,7 @@ export async function GET() {
   const delivery: ActiveDelivery = {
     _id: String(order._id),
     restaurantName: order.restaurantName || "Restaurant",
+    hasRestaurant: Boolean(order.restaurantId),
     deliveryAddress: order.deliveryAddress,
     deliveryNote: order.deliveryNote || undefined,
     totalAmount: order.totalAmount,

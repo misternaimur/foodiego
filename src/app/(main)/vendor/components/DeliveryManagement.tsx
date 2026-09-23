@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { MessageCircle } from "lucide-react";
 import { useActiveDeliveries, type Delivery, type Rider } from "@/hooks/useDeliveryManagement";
@@ -58,13 +59,14 @@ function StatusPill({ delivery }: { delivery: Delivery }) {
   );
 }
 
-function DispatchRow({ delivery }: { delivery: Delivery }) {
+function DispatchRow({ delivery, defaultChatOpen = false }: { delivery: Delivery; defaultChatOpen?: boolean }) {
   const isDelayed = delivery.status === "Delayed";
   // UPDATE (restaurant-rider chat fix): the vendor previously had no way
   // to message the rider handling an order — this expands the same
   // OrderChatPanel used elsewhere, on the "restaurant_rider" channel the
   // backend already supported but nothing on the frontend used.
-  const [chatOpen, setChatOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(defaultChatOpen);
+  const shortId = delivery.id.slice(-6).toUpperCase();
 
   return (
     <motion.div
@@ -77,9 +79,9 @@ function DispatchRow({ delivery }: { delivery: Delivery }) {
       <div className="grid grid-cols-[3.5rem_minmax(0,1fr)] grid-rows-[auto_auto_auto] gap-x-4 gap-y-4 lg:grid-cols-[3.5rem_minmax(0,1fr)_9.5rem_10.5rem_5rem_5rem] lg:grid-rows-1 lg:gap-4 lg:items-center">
         <div className="flex h-14 items-center justify-center rounded-xl border text-sm font-bold">
           {isDelayed ? (
-            <span className="bg-red-50 text-red-700 border-red-200">#{delivery.id}</span>
+            <span className="bg-red-50 text-red-700 border-red-200">#{shortId}</span>
           ) : (
-            <span className="bg-blue-50 text-blue-700 border-blue-200">#{delivery.id}</span>
+            <span className="bg-blue-50 text-blue-700 border-blue-200">#{shortId}</span>
           )}
         </div>
 
@@ -113,7 +115,10 @@ function DispatchRow({ delivery }: { delivery: Delivery }) {
             <button
               type="button"
               onClick={() => setChatOpen((v) => !v)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition hover:bg-slate-50"
+              aria-expanded={chatOpen}
+              className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${
+                chatOpen ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 text-slate-600 hover:bg-slate-50"
+              }`}
               aria-label="Chat with rider"
             >
               <MessageCircle className="h-4 w-4" />
@@ -163,16 +168,17 @@ function NearbyRidersList({ riders }: { riders: Rider[] }) {
 export default function DeliveryManagement() {
   const [activeTab, setActiveTab] = useState<DeliveryTab>("active");
   const { data, isLoading, isError } = useActiveDeliveries();
+  // A chat notification links here as ?tab=delivery&chat=<orderId>; that row opens with its chat expanded.
+  const chatOrderId = useSearchParams().get("chat");
 
   const allDeliveries = data?.deliveries || [];
   const activeDeliveries = allDeliveries.filter((delivery) =>
     ["Picked Up", "Assigning", "Delayed", "In Transit"].includes(delivery.status),
   );
-  // UPDATE (rider-GPS fix): used to pick 3 hardcoded fake ids (842, 843,
-  // 839) out of the list, which matched nothing once the ids became real
-  // Mongo ObjectId strings. It now just shows the most recent active
-  // dispatches.
-  const featuredDeliveries = activeDeliveries.slice(0, 5);
+  // UPDATE (order-chat fix): this used to show only the 5 most recent
+  // dispatches, so any older in-flight order - and its rider chat - was
+  // unreachable. Every active dispatch is listed now.
+  const featuredDeliveries = activeDeliveries;
   const deliveredDeliveries = allDeliveries.filter((delivery) => delivery.status === "Delivered");
   const riders = data?.riders || [];
 
@@ -216,7 +222,7 @@ export default function DeliveryManagement() {
           <div className="col-span-12 rounded-3xl border border-slate-200/80 bg-slate-50/50 p-6 lg:col-span-8">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="text-lg font-bold text-slate-900">Active Dispatches</h2>
-              <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">🟢 {allDeliveries.length} En Route</span>
+              <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">🟢 {activeDeliveries.length} En Route</span>
             </div>
 
             {isLoading ? (
@@ -228,7 +234,11 @@ export default function DeliveryManagement() {
             ) : featuredDeliveries.length > 0 ? (
               <div className="space-y-4">
                 {featuredDeliveries.map((delivery) => (
-                  <DispatchRow key={delivery.orderId} delivery={delivery} />
+                  <DispatchRow
+                    key={`${delivery.orderId}:${delivery.orderId === chatOrderId}`}
+                    delivery={delivery}
+                    defaultChatOpen={delivery.orderId === chatOrderId}
+                  />
                 ))}
               </div>
             ) : (
@@ -259,7 +269,7 @@ export default function DeliveryManagement() {
             deliveredDeliveries.map((delivery) => (
               <div key={delivery.orderId} className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white p-4">
                 <div>
-                  <p className="text-sm font-bold text-slate-900">#{delivery.id}</p>
+                  <p className="text-sm font-bold text-slate-900">#{delivery.id.slice(-6).toUpperCase()}</p>
                   <p className="mt-0.5 text-sm text-slate-500">{delivery.customerName}</p>
                 </div>
                 <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Delivered</span>
