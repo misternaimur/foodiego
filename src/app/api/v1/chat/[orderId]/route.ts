@@ -1,25 +1,25 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getOptionalSession } from "@/lib/dal";
-import { backendFetchAsUser, BackendError } from "@/lib/backend";
+import { MAX_CHAT_MESSAGE_LENGTH, notifyChatPeer, resolveChatAccess } from "@/lib/chat";
+import { ChatMessage as ChatMessageModel, type ChatMessageDocument } from "@/models/ChatMessage";
 
-type Channel = "customer_rider" | "restaurant_rider";
+// ============================================================
+// ORDER CHAT API
+// ------------------------------------------------------------
+// GET  /api/v1/chat/:orderId?channel=<channel>[&since=<ISO date>]
+// POST /api/v1/chat/:orderId?channel=<channel>   body: { message }
+//
+// channel is "customer_rider" or "restaurant_rider". Every request passes
+// resolveChatAccess (src/lib/chat.ts), so only the order's customer, its
+// assigned rider, or its restaurant owner can use the matching thread.
+// The client polls GET with ?since=<createdAt of the newest message it
+// has>; $gte (not $gt) so a message in the same millisecond is never
+// skipped - the client drops the repeated boundary message by _id.
+// ============================================================
 
-// UPDATE (restaurant-rider chat fix): this route used to hardcode
-// CHANNEL = "customer_rider", so a restaurant could never open a chat with
-// its delivery rider even though the backend already fully supports a
-// "restaurant_rider" channel (see foodiego-backend/routes/chatRoutes.js
-// and utils/chatParticipants.js, which already authorizes a restaurant
-// owner on that channel). The channel is now read from a `?channel=`
-// query param (defaulting to "customer_rider" so existing customer/rider
-// chat callers are unaffected), and "restaurant" is allowed as a caller
-// role. The backend's own participant check still enforces that only the
-// customer, the assigned rider, or the order's restaurant owner can use
-// either channel.
-function resolveChannel(req: NextRequest): Channel {
-  const raw = req.nextUrl.searchParams.get("channel");
-  return raw === "restaurant_rider" ? "restaurant_rider" : "customer_rider";
-}
+// How much history a fresh (non-?since) load returns.
+const HISTORY_LIMIT = 200;
 
 export interface ChatMessage {
   _id: string;
@@ -31,54 +31,91 @@ export interface ChatMessage {
   createdAt: string;
 }
 
+function serialize(doc: Pick<ChatMessageDocument, "_id" | "orderId" | "channel" | "senderId" | "senderRole" | "message" | "createdAt">): ChatMessage {
+  return {
+    _id: String(doc._id),
+    orderId: String(doc.orderId),
+    channel: doc.channel,
+    senderId: String(doc.senderId),
+    senderRole: doc.senderRole,
+    message: doc.message,
+    createdAt: new Date(doc.createdAt).toISOString(),
+  };
+}
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
   const session = await getOptionalSession();
-  if (!session || (session.role !== "customer" && session.role !== "rider" && session.role !== "restaurant")) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) {
+    return NextResponse.json({ error: "Please sign in to use chat." }, { status: 401 });
   }
 
   const { orderId } = await params;
-  const channel = resolveChannel(req);
-  const since = req.nextUrl.searchParams.get("since");
-  const qs = since ? `?since=${encodeURIComponent(since)}` : "";
-
-  try {
-    const messages = await backendFetchAsUser<ChatMessage[]>(
-      session,
-      `/api/chat/${orderId}/${channel}${qs}`
-    );
-    return NextResponse.json({ messages, selfRole: session.role });
-  } catch (error) {
-    console.error("Failed to load chat messages:", error);
-    const status = error instanceof BackendError ? error.status : 500;
-    const message = error instanceof BackendError ? error.message : "Failed to load messages";
-    return NextResponse.json({ error: message }, { status });
+  const access = await resolveChatAccess(session, orderId, req.nextUrl.searchParams.get("channel"));
+  if (!access.ok) {
+    return NextResponse.json({ error: access.message }, { status: access.status });
   }
+
+  const query: Record<string, unknown> = { orderId: access.orderId, channel: access.channel };
+
+  const sinceParam = req.nextUrl.searchParams.get("since");
+  let docs;
+  if (sinceParam) {
+    const since = new Date(sinceParam);
+    if (Number.isNaN(since.getTime())) {
+      return NextResponse.json({ error: "since must be a valid date" }, { status: 400 });
+    }
+    query.createdAt = { $gte: since };
+    docs = await ChatMessageModel.find(query).sort({ createdAt: 1 }).limit(HISTORY_LIMIT).lean();
+  } else {
+    // Newest HISTORY_LIMIT messages, returned oldest-first so the UI can append.
+    docs = (await ChatMessageModel.find(query).sort({ createdAt: -1 }).limit(HISTORY_LIMIT).lean()).reverse();
+  }
+
+  return NextResponse.json({
+    messages: docs.map(serialize),
+    selfRole: access.selfRole,
+    peer: { name: access.peer.name, role: access.peer.role },
+    canSend: access.canSend,
+  });
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
   const session = await getOptionalSession();
-  if (!session || (session.role !== "customer" && session.role !== "rider" && session.role !== "restaurant")) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) {
+    return NextResponse.json({ error: "Please sign in to use chat." }, { status: 401 });
   }
 
   const { orderId } = await params;
-  const channel = resolveChannel(req);
-  const { message } = (await req.json()) as { message?: string };
-  if (!message?.trim()) {
-    return NextResponse.json({ error: "message is required" }, { status: 400 });
+  const access = await resolveChatAccess(session, orderId, req.nextUrl.searchParams.get("channel"));
+  if (!access.ok) {
+    return NextResponse.json({ error: access.message }, { status: access.status });
+  }
+  if (!access.canSend) {
+    return NextResponse.json({ error: "This order is finished, so its chat is closed." }, { status: 409 });
   }
 
-  try {
-    const saved = await backendFetchAsUser<ChatMessage>(session, `/api/chat/${orderId}/${channel}`, {
-      method: "POST",
-      body: { message: message.trim() },
-    });
-    return NextResponse.json({ message: saved }, { status: 201 });
-  } catch (error) {
-    console.error("Failed to send chat message:", error);
-    const status = error instanceof BackendError ? error.status : 500;
-    const errorMessage = error instanceof BackendError ? error.message : "Failed to send message";
-    return NextResponse.json({ error: errorMessage }, { status });
+  const body = (await req.json().catch(() => ({}))) as { message?: unknown };
+  const text = typeof body.message === "string" ? body.message.trim() : "";
+  if (!text) {
+    return NextResponse.json({ error: "message is required" }, { status: 400 });
   }
+  if (text.length > MAX_CHAT_MESSAGE_LENGTH) {
+    return NextResponse.json(
+      { error: `Message must be ${MAX_CHAT_MESSAGE_LENGTH} characters or fewer.` },
+      { status: 400 }
+    );
+  }
+
+  // The sender always comes from the session, never from the request body.
+  const saved = await ChatMessageModel.create({
+    orderId: access.orderId,
+    channel: access.channel,
+    senderId: session.id,
+    senderRole: access.selfRole,
+    message: text,
+  });
+
+  await notifyChatPeer(access, text);
+
+  return NextResponse.json({ message: serialize(saved) }, { status: 201 });
 }

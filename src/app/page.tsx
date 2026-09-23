@@ -13,7 +13,6 @@ import { getOptionalSession } from "@/lib/dal";
 import AppLoader from "@/components/AppLoader";
 
 
-
 export default async function Home() {
   const session = await getOptionalSession();
 

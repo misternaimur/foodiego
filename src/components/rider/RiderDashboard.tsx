@@ -25,6 +25,7 @@ import { markPickedUp, markDelivered } from "@/app/(main)/actions/rider";
 interface ActiveDelivery {
   _id: string;
   restaurantName: string;
+  hasRestaurant: boolean;
   deliveryAddress: string;
   deliveryNote?: string;
   totalAmount: number;
@@ -462,7 +463,13 @@ export default function RiderDashboard() {
             className="grid grid-cols-1 gap-4 lg:grid-cols-2"
           >
             <OrderChatPanel orderId={activeDelivery._id} peerLabel="the customer" channel="customer_rider" />
-            <OrderChatPanel orderId={activeDelivery._id} peerLabel="the restaurant" channel="restaurant_rider" />
+            {activeDelivery.hasRestaurant ? (
+              <OrderChatPanel orderId={activeDelivery._id} peerLabel={activeDelivery.restaurantName} channel="restaurant_rider" />
+            ) : (
+              <div className="flex items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-xs text-slate-500">
+                {activeDelivery.restaurantName} isn&apos;t linked to a restaurant account, so restaurant chat isn&apos;t available for this order.
+              </div>
+            )}
           </motion.section>
         )}
 

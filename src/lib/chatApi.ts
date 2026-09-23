@@ -10,30 +10,45 @@ export interface ChatMessage {
   createdAt: string;
 }
 
+export type ChatRole = ChatMessage["senderRole"];
+
+export interface ChatThread {
+  messages: ChatMessage[];
+  selfRole: ChatRole;
+  peer: { name: string; role: ChatRole };
+  canSend: boolean;
+}
+
+/** Carries the HTTP status so the chat panel can tell "no access" apart from a flaky network. */
+export class ChatRequestError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ChatRequestError";
+    this.status = status;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     credentials: "include",
+    cache: "no-store",
     headers: init?.body ? { "Content-Type": "application/json" } : undefined,
     ...init,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data?.error || "Request failed");
+    throw new ChatRequestError(data?.error || "Request failed", res.status);
   }
   return data as T;
 }
 
-// UPDATE (restaurant-rider chat fix): both helpers now take an optional
-// `channel` ("customer_rider" | "restaurant_rider", default
-// "customer_rider") so the same client API serves the restaurant<->rider
-// chat panel, not just the customer<->rider one.
 export const chatApi = {
   list: (orderId: string, since?: string, channel: ChatMessage["channel"] = "customer_rider") => {
     const params = new URLSearchParams({ channel });
     if (since) params.set("since", since);
-    return request<{ messages: ChatMessage[]; selfRole: "customer" | "rider" | "restaurant" }>(
-      `/api/v1/chat/${orderId}?${params.toString()}`
-    );
+    return request<ChatThread>(`/api/v1/chat/${orderId}?${params.toString()}`);
   },
   send: (orderId: string, message: string, channel: ChatMessage["channel"] = "customer_rider") =>
     request<{ message: ChatMessage }>(`/api/v1/chat/${orderId}?channel=${channel}`, {
