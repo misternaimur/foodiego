@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, Package, Phone, LoaderCircle } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ordersApi, orderRestaurantName, type Order } from "@/lib/clientApi";
 import OrderChatPanel from "@/components/chat/OrderChatPanel";
 import LiveTrackingMap from "@/components/client/LiveTrackingMap";
@@ -30,16 +31,38 @@ export default function ClientTrackOrderPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [tracking, setTracking] = useState<OrderTracking | null>(null);
+  // A chat notification links here as ?order=<id>, so that order is shown
+  // even when the customer has more than one order in flight.
+  const requestedOrderId = useSearchParams().get("order");
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
+  // UPDATE (order-chat fix): the order list used to load once. A rider is
+  // usually assigned *after* the customer opens this page, so the rider
+  // card and chat never appeared without a manual refresh. Re-polling keeps
+  // status, rider and chat availability current.
   useEffect(() => {
-    ordersApi
-      .list()
-      .then((data) => setOrders(data.orders))
-      .catch(() => setOrders([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const data = await ordersApi.list();
+        if (!cancelled) setOrders(data.orders);
+      } catch {
+        // Keep the last known list; next poll retries.
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    const interval = setInterval(load, 15000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
 
-  const activeOrderId = orders.find((o) => o.status !== "delivered" && o.status !== "cancelled")?._id;
+  const activeOrders = orders.filter((o) => o.status !== "delivered" && o.status !== "cancelled");
+  const activeOrder = activeOrders.find((o) => o._id === (selectedOrderId ?? requestedOrderId)) ?? activeOrders[0];
+  const activeOrderId = activeOrder?._id;
 
   // UPDATE (live-tracking fix): polls the real rider-GPS-backed tracking
   // endpoint (see src/app/api/v1/client/orders/[orderId]/tracking/route.ts)
@@ -62,6 +85,7 @@ export default function ClientTrackOrderPage() {
     return () => {
       cancelled = true;
       clearInterval(interval);
+      setTracking(null);
     };
   }, [activeOrderId]);
 
@@ -72,8 +96,6 @@ export default function ClientTrackOrderPage() {
       </div>
     );
   }
-
-  const activeOrder = orders.find((o) => o.status !== "delivered" && o.status !== "cancelled");
 
   if (!activeOrder) {
     return (
@@ -92,6 +114,12 @@ export default function ClientTrackOrderPage() {
   }
 
   const currentIndex = STEP_ORDER.indexOf(activeOrder.status);
+  const assignedRider: { fullName: string; phone?: string } | null =
+    activeOrder.riderId && typeof activeOrder.riderId === "object"
+      ? activeOrder.riderId
+      : tracking?.rider
+        ? { fullName: tracking.rider.fullName, phone: tracking.rider.phone }
+        : null;
   const itemsSummary = activeOrder.items.map((i) => `${i.name} x${i.quantity}`).join(", ");
   const currentStepLabel =
     activeOrder.status === "out_for_delivery"
@@ -102,11 +130,27 @@ export default function ClientTrackOrderPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">Track Live Order</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          #{activeOrder._id.slice(-6).toUpperCase()} &middot; {orderRestaurantName(activeOrder)}
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl">Track Live Order</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            #{activeOrder._id.slice(-6).toUpperCase()} &middot; {orderRestaurantName(activeOrder)}
+          </p>
+        </div>
+        {activeOrders.length > 1 && (
+          <select
+            value={activeOrder._id}
+            onChange={(e) => setSelectedOrderId(e.target.value)}
+            className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700"
+            aria-label="Choose which order to track"
+          >
+            {activeOrders.map((o) => (
+              <option key={o._id} value={o._id}>
+                #{o._id.slice(-6).toUpperCase()} · {orderRestaurantName(o)}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs sm:p-8">
@@ -169,22 +213,22 @@ export default function ClientTrackOrderPage() {
           })}
         </div>
 
-        {/* Rider info */}
-        {activeOrder.riderId && typeof activeOrder.riderId === "object" ? (
+        {/* Rider info — from the populated order, or the live tracking poll if that saw the assignment first */}
+        {assignedRider ? (
           <>
             <div className="mt-8 flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 p-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 font-bold text-[#15462D]">
-                  {activeOrder.riderId.fullName?.charAt(0).toUpperCase() || "R"}
+                  {assignedRider.fullName?.charAt(0).toUpperCase() || "R"}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900">{activeOrder.riderId.fullName}</p>
+                  <p className="text-sm font-bold text-gray-900">{assignedRider.fullName}</p>
                   <p className="text-xs text-gray-500">Your delivery rider</p>
                 </div>
               </div>
-              {activeOrder.riderId.phone && (
+              {assignedRider.phone && (
                 <a
-                  href={`tel:${activeOrder.riderId.phone}`}
+                  href={`tel:${assignedRider.phone}`}
                   className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3.5 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50"
                 >
                   <Phone size={13} /> Call
@@ -193,7 +237,7 @@ export default function ClientTrackOrderPage() {
             </div>
 
             <div className="mt-4">
-              <OrderChatPanel orderId={activeOrder._id} peerLabel="your rider" />
+              <OrderChatPanel orderId={activeOrder._id} peerLabel="your rider" channel="customer_rider" />
             </div>
           </>
         ) : (

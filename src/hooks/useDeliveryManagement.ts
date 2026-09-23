@@ -69,7 +69,10 @@ export const useActiveDeliveries = () => {
   return useQuery<ActiveDeliveriesResponse>({
     queryKey: ["active-deliveries"],
     queryFn: () => fetcher("/api/v1/vendor/deliveries/active"),
-    staleTime: 1000 * 60 * 2,
+    // A rider claiming an order (which is what makes its rider chat
+    // available) happens on the rider's device, so poll to pick it up.
+    staleTime: 10_000,
+    refetchInterval: 15_000,
     refetchOnWindowFocus: false,
   });
 };
