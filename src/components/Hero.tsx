@@ -56,6 +56,26 @@ const SLIDES = [
     title: 'Vegan Power Bowl',
     img: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=600&auto=format&fit=crop',
   },
+  {
+    id: 9,
+    title: 'Berry Cream Cheesecake',
+    img: '/assets/images/food/foodiesfeed.com_creamy-lemon-cheesecake-with-fresh-berries-delight.jpg',
+  },
+  {
+    id: 10,
+    title: 'Colorful Sushi Platter',
+    img: '/assets/images/food/foodiesfeed.com_assorted-sushi-platter-with-shrimp-and-salmon.jpg',
+  },
+  {
+    id: 11,
+    title: 'Street Biryani',
+    img: '/assets/images/food/foodiesfeed.com_delicious-street-biryani-with-fresh-lime.jpg',
+  },
+  {
+    id: 12,
+    title: 'Blueberry Crepes',
+    img: '/assets/images/food/foodiesfeed.com_cozy-blueberry-crepes-with-milk-and-tea.jpg',
+  },
 ];
 
 export default function Hero() {
@@ -81,7 +101,15 @@ export default function Hero() {
   }, [isHovered]);
 
   const activeSlide = SLIDES[activeIndex];
-  const cardSpacing = viewportWidth < 640 ? 150 : viewportWidth < 1024 ? 168 : 220;
+  // Card spacing + 3D depth scale down on small screens so the whole
+  // carousel stays inside the viewport instead of pushing siblings off.
+  const isNarrow = viewportWidth < 640;
+  const isTablet = viewportWidth < 1024;
+  const cardSpacing = isNarrow ? 78 : isTablet ? 118 : 168;
+  const cardDepth = isNarrow ? 45 : isTablet ? 75 : 130;
+  const rotateStep = isNarrow ? -10 : isTablet ? -14 : -18;
+  const cardHeight = isNarrow ? 'h-44' : isTablet ? 'h-56' : 'h-82.5';
+  const cardWidth = isNarrow ? 'w-30' : isTablet ? 'w-40' : 'w-62.5';
 
   const backgroundTiles = [
     { id: 'tile-1', className: 'left-[8%] top-[18%] h-14 w-14 md:h-16 md:w-16', delay: 0 },
@@ -108,18 +136,18 @@ export default function Hero() {
   const handlePrev = () =>
     setActiveIndex((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
 
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number } }) => {
+  const handleDragEnd = (_event: any, info: { offset: { x: number } }) => {
     if (info.offset.x < -60) handleNext();
     if (info.offset.x > 60) handlePrev();
   };
 
   return (
     <section
-      className="relative flex min-h-170 w-full flex-col justify-between overflow-hidden bg-[#082e22] px-3 py-8 text-white sm:min-h-180 sm:px-8 sm:py-14"
+      className="relative flex min-h-[78vh] w-full flex-col justify-between overflow-hidden bg-[#082e22] px-3 py-8 text-white sm:min-h-[82vh] sm:px-8 sm:py-14"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-150 w-150 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/10 blur-[120px]" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/10 blur-[120px] sm:h-80 sm:w-80 md:h-150 md:w-150" />
 
       <motion.div
         whileHover={{ scale: 1.04, y: -1 }}
@@ -244,15 +272,15 @@ export default function Hero() {
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto flex h-67.5 w-full max-w-[1600px] items-center justify-center sm:h-90 lg:h-105 lg:w-[150%]" style={{ perspective: '1200px' }}>
+      <div className="relative z-10 mx-auto flex w-full max-w-[100%] items-center justify-center sm:h-90 lg:h-105" style={{ perspective: '1200px' }}>
         {SLIDES.map((slide, index) => {
           const rawOffset = (index - activeIndex + SLIDES.length) % SLIDES.length;
           const offset = rawOffset > SLIDES.length / 2 ? rawOffset - SLIDES.length : rawOffset;
           const absOffset = Math.abs(offset);
 
-          const rotateY = offset * -18;
+          const rotateY = offset * rotateStep;
           const translateX = offset * cardSpacing;
-          const translateZ = -absOffset * 130;
+          const translateZ = -absOffset * cardDepth;
           const scale = 1 - absOffset * 0.1;
           const opacity = Math.max(1 - absOffset * 0.3, 0.2);
 
@@ -273,7 +301,7 @@ export default function Hero() {
                 opacity,
               }}
               transition={{ type: 'spring', stiffness: 280, damping: 22, mass: 0.8 }}
-              className={`absolute top-0 h-50 w-38 cursor-pointer overflow-hidden rounded-4xl border-2 bg-slate-900 sm:h-67.5 sm:w-51.25 sm:rounded-[2.2rem] lg:h-82.5 lg:w-62.5 ${
+              className={`absolute top-0 cursor-pointer overflow-hidden rounded-4xl border-2 bg-slate-900 ${cardHeight} ${cardWidth} sm:rounded-[2.2rem] ${
                 offset === 0
                   ? 'z-30 border-emerald-400 shadow-[0_0_50px_rgba(16,185,129,0.55)]'
                   : 'z-10 border-white/10 shadow-2xl'

@@ -104,8 +104,27 @@ async function callGemini(
   throw new Error("All Gemini models failed");
 }
 
-function getLocalReply(message: string): string {
+function getLocalReply(
+  message: string,
+  chatHistory: { sender: string; text: string }[],
+): string {
   const normalizedMessage = message.toLowerCase();
+
+  const lastAssistant = [...chatHistory]
+    .reverse()
+    .find((m) => m.sender !== "user")?.text
+    ?.trim();
+
+  const isFollowUp =
+    /(what did you (just )?say|tell me more|and that|about that|regarding that|go on|previous|earlier|again|that one|more on|continue|elaborate|clarify|as before)/i.test(
+      normalizedMessage,
+    );
+
+  // Follow-up: answer in the context of the most recent assistant message so
+  // the reply stays tied to the current conversation instead of resetting.
+  if (isFollowUp && lastAssistant) {
+    return `${lastAssistant} — building on that, happy to go deeper on any of those points. What would you like to explore further?`;
+  }
 
   if (/(order|track|cancel|reorder|history)/.test(normalizedMessage)) {
     return "You can view your orders from your account dashboard. Open an order to check its status, delivery details, or available actions.";
@@ -131,8 +150,27 @@ export async function POST(req: NextRequest) {
     const groqKey = process.env.GROQ_API_KEY;
     const geminiKey = process.env.GEMINI_API_KEY;
 
-    const body = await req.json();
-    const { message, chatHistory = [] } = body;
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON body." },
+        { status: 400 },
+      );
+    }
+
+    if (body == null || typeof body !== "object") {
+      return NextResponse.json(
+        { error: "A message is required." },
+        { status: 400 },
+      );
+    }
+
+    const { message, chatHistory: rawHistory } = body as {
+      message?: unknown;
+      chatHistory?: { sender: string; text: string }[];
+    };
 
     if (typeof message !== "string" || !message.trim()) {
       return NextResponse.json(
@@ -140,6 +178,8 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
+
+    const chatHistory: { sender: string; text: string }[] = rawHistory ?? [];
 
     if (groqKey) {
       try {
@@ -165,7 +205,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ reply: getLocalReply(message), source: "local" });
+    return NextResponse.json({ reply: getLocalReply(message, chatHistory), source: "local" });
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";
     console.error("AI Backend Error:", errMsg);

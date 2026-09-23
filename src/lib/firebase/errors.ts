@@ -15,5 +15,8 @@ export function mapAuthErrorMessage(error: unknown): string {
   if (error instanceof FirebaseError) {
     return MESSAGES[error.code] ?? "Something went wrong. Please try again.";
   }
+  if (error instanceof Error && error.message === "Missing Firebase client configuration") {
+    return "Firebase sign-up is not configured. Add the NEXT_PUBLIC_FIREBASE_* values to .env.local and restart the app.";
+  }
   return "Something went wrong. Please try again.";
 }
