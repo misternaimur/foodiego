@@ -10,14 +10,14 @@ import FAQSection from "@/components/FAQ";
 import Footer from "@/components/Share/Footer";
 import AIAssistantWidget from "@/components/AIAssistantWidget";
 import { getOptionalSession } from "@/lib/dal";
-
+import AppLoader from "@/components/AppLoader";
 
 
 
 export default async function Home() {
   const session = await getOptionalSession();
 
-  return (
+  return ( <AppLoader>
     <main className="flex-1 bg-[#FAF7EE]" suppressHydrationWarning>
       <Navbar user={session ? { name: session.name, role: session.role } : null} />
       <Hero />
@@ -31,5 +31,6 @@ export default async function Home() {
       <Footer />
       <AIAssistantWidget />
     </main>
+  </AppLoader>
   );
 }
