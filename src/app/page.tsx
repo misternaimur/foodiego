@@ -20,9 +20,9 @@ export default async function Home() {
     <main className="flex-1 bg-[#FAF7EE]" suppressHydrationWarning>
       <Navbar user={session ? { name: session.name, role: session.role } : null} />
       <Hero />
-      <CloudKitchens />
       <WhatAreYouCraving />
       <PickedForYouSection />
+      <CloudKitchens />
       <SpecialOffers />
       <AIRecommendation />
       <HowItWorksSection />

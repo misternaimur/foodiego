@@ -69,6 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [hoveredHref, setHoveredHref] = useState<string | null>(null);
 
   const isMounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -200,7 +201,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ ...springSlow, delay: 0.2 }}
-          className="w-full transition-all duration-300"
+          className="relative w-full transition-all duration-300"
           style={{
             /* Colour values come from CSS variables (globals.css) so the bar
                follows the active theme. Inline styles cannot be overridden by a
@@ -220,7 +221,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               : "none",
           }}
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+          {/* Brand accent hairline along the bottom edge */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-[#10B981]/45 to-transparent" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-4">
             {/* Left: Logo & Nav */}
             <div className="flex items-center gap-6 lg:gap-8">
               <motion.div
@@ -230,9 +233,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <LogoText />
               </motion.div>
 
-              <nav className="hidden lg:flex items-center gap-5 xl:gap-6">
+              {/* UPDATE (nav-selection redesign): the active marker used to be an
+                  underline anchored to the bottom of the link's py-6 padding box -
+                  ~24px below the text, at the very bottom edge of the bar. It's
+                  now a sliding pill inside a glass capsule: the active pill and a
+                  hover pill both use shared layoutIds so they glide between
+                  links on a spring, the active one sweeps a shine across itself
+                  on arrival. */}
+              <nav
+                className="hidden lg:flex items-center gap-1 rounded-full border border-[#124734]/10 bg-white/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_1px_2px_rgba(18,71,52,0.06)] backdrop-blur-md"
+                onMouseLeave={() => setHoveredHref(null)}
+              >
                 {navItems.map((item, i) => {
-                  const isActive = pathname === item.href;
+                  const isActive =
+                    item.href === "/" ? pathname === "/" : pathname === item.href || !!pathname?.startsWith(`${item.href}/`);
+                  const isHovered = hoveredHref === item.href && !isActive;
                   return (
                     <motion.div
                       key={item.href}
@@ -242,21 +257,36 @@ export const Navbar: React.FC<NavbarProps> = ({
                     >
                       <Link
                         href={item.href}
-                        className="relative py-6 text-sm font-semibold text-[#124734] transition-colors duration-200"
+                        onMouseEnter={() => setHoveredHref(item.href)}
+                        onFocus={() => setHoveredHref(item.href)}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`group relative block whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-300 ${
+                          isActive ? "text-white" : "text-[#124734]"
+                        }`}
                       >
-                        {item.label}
-                        <AnimatePresence>
-                          {isActive && (
+                        {isHovered && (
+                          <motion.span
+                            layoutId="navHoverPill"
+                            className="absolute inset-0 rounded-full bg-[#124734]/8"
+                            transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                          />
+                        )}
+                        {isActive && (
+                          <motion.span
+                            layoutId="navActivePill"
+                            className="absolute inset-0 overflow-hidden rounded-full bg-linear-to-r from-[#124734] to-[#1d6b48] shadow-[0_8px_22px_-8px_rgba(18,71,52,0.75)]"
+                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                          >
                             <motion.span
-                              layoutId="navUnderline"
-                              className="absolute -bottom-0.5 left-0 right-0 h-[2.5px] bg-[#F6A429] rounded-full"
-                              initial={{ scaleX: 0 }}
-                              animate={{ scaleX: 1 }}
-                              exit={{ scaleX: 0 }}
-                              transition={{ ...springSlow }}
+                              key={pathname}
+                              className="absolute inset-y-0 -left-1/2 w-1/2 -skew-x-12 bg-linear-to-r from-transparent via-white/35 to-transparent"
+                              initial={{ x: "0%" }}
+                              animate={{ x: "400%" }}
+                              transition={{ duration: 0.9, ease: "easeOut", delay: 0.15 }}
                             />
-                          )}
-                        </AnimatePresence>
+                          </motion.span>
+                        )}
+                        <span className="relative z-10">{item.label}</span>
                       </Link>
                     </motion.div>
                   );
