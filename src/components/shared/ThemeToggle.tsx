@@ -9,6 +9,9 @@ import {
   type Theme,
 } from "@/lib/theme";
 
+// Height of the three-option menu plus its 8px offset, with a little slack.
+const MENU_SPACE_PX = 170;
+
 export interface ThemeToggleProps {
   /** Overrides the default pill styling, to match whichever header mounts it. */
   className?: string;
@@ -25,6 +28,7 @@ export interface ThemeToggleProps {
 export default function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) {
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
   const [activeTheme, setActiveTheme] = useState<Theme>("light");
   const dropdownRef = useRef<HTMLDivElement>(null);
   // React 19 requires an explicit initial value. ReturnType<typeof setTimeout>
@@ -53,11 +57,25 @@ export default function ThemeToggle({ className, showLabel = false }: ThemeToggl
     setOpen(false);
   };
 
+  // The menu normally drops down below the trigger. When the trigger sits near
+  // the bottom of the screen (e.g. the customer dashboard sidebar's footer) a
+  // drop-down ran off-screen and only its first option was visible, so it
+  // opens upward whenever there isn't room below but there is room above.
+  const openMenu = () => {
+    const rect = dropdownRef.current?.getBoundingClientRect();
+    if (rect) {
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      setOpenUpward(spaceBelow < MENU_SPACE_PX && spaceAbove > spaceBelow);
+    }
+    setOpen(true);
+  };
+
   const handleMouseEnter = () => {
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
     }
-    setOpen(true);
+    openMenu();
   };
 
   const handleMouseLeave = () => {
@@ -94,7 +112,7 @@ export default function ThemeToggle({ className, showLabel = false }: ThemeToggl
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setOpen(!open)}
+        onClick={() => (open ? setOpen(false) : openMenu())}
         className={className || defaultClassName}
         aria-label={`Current theme: ${getCurrentLabel()}. Click or hover to change.`}
         aria-haspopup="menu"
@@ -110,7 +128,9 @@ export default function ThemeToggle({ className, showLabel = false }: ThemeToggl
           backgrounded tab) would leave it mounted but stuck at opacity 0. */}
       {open && mounted && (
         <div
-          className="animate-fade-slide-in absolute right-0 top-full mt-2 w-56 rounded-xl bg-white shadow-xl border border-gray-200/80 overflow-hidden z-50"
+          className={`animate-fade-slide-in absolute right-0 w-56 rounded-xl bg-white shadow-xl border border-gray-200/80 overflow-hidden z-50 ${
+            openUpward ? "bottom-full mb-2" : "top-full mt-2"
+          }`}
           role="menu"
           aria-label="Theme"
         >

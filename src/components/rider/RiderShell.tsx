@@ -81,6 +81,7 @@ export default function RiderShell({
     }
   };
   const [rating, setRating] = useState<number | null>(null);
+  const [rider, setRider] = useState<{ fullName: string; photoUrl: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,6 +90,13 @@ export default function RiderShell({
       if (!res.ok || cancelled) return;
       const data = (await res.json()) as { performance: { rating: number } };
       if (!cancelled) setRating(data.performance.rating);
+    })();
+    // Real name + photo from the Rider document (set on the Settings page).
+    (async () => {
+      const res = await fetch("/api/v1/rider/profile");
+      if (!res.ok || cancelled) return;
+      const data = (await res.json()) as { fullName: string; photoUrl?: string };
+      if (!cancelled) setRider({ fullName: data.fullName, photoUrl: data.photoUrl || "" });
     })();
     return () => {
       cancelled = true;
@@ -118,11 +126,16 @@ export default function RiderShell({
               {/* ================= RIDER PROFILE ================= */}
               <div className="border-b border-slate-100 px-5 py-6">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100">
-                    <User className="h-6 w-6 text-green-500" />
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-green-100">
+                    {rider?.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- user-uploaded URL from any image host
+                      <img src={rider.photoUrl} alt={rider.fullName} className="h-full w-full object-cover" />
+                    ) : (
+                      <User className="h-6 w-6 text-green-500" />
+                    )}
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-800">{user?.name || "Rider"}</p>
+                    <p className="font-semibold text-slate-800">{rider?.fullName || user?.name || "Rider"}</p>
                     <p className="text-xs font-medium text-green-500">
                       Rider
                     </p>

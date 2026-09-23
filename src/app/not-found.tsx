@@ -41,7 +41,7 @@ export default async function NotFound() {
   return (
     <>
       <Navbar
-        user={session ? { name: session.name, role: session.role } : null}
+        user={session ? { name: session.name, role: session.role, avatarUrl: session.avatarUrl } : null}
       />
 
       <main className="relative flex flex-1 items-center justify-center overflow-hidden px-4 py-20 sm:py-24">

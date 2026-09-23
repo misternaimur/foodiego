@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { User, Mail, Phone, Save, CheckCircle2, LoaderCircle } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { profileApi } from "@/lib/clientApi";
+import ProfilePhotoUploader from "@/components/shared/ProfilePhotoUploader";
 
 export default function ClientProfilePage() {
   const { user } = useApp();
+  const router = useRouter();
   const [fullName, setFullName] = useState(user?.name || "");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [phone, setPhone] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -19,6 +23,7 @@ export default function ClientProfilePage() {
       .then((data) => {
         setFullName(data.name);
         setPhone(data.phone || "");
+        setAvatarUrl(data.avatarUrl || "");
       })
       .catch(() => {});
   }, []);
@@ -38,7 +43,12 @@ export default function ClientProfilePage() {
     }
   };
 
-  const initials = fullName ? fullName.charAt(0).toUpperCase() : "U";
+  const savePhoto = async (url: string) => {
+    await profileApi.updatePhoto(url);
+    setAvatarUrl(url);
+    // Re-render the server layout so the sidebar and navbar pick up the new photo.
+    router.refresh();
+  };
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -48,19 +58,16 @@ export default function ClientProfilePage() {
       </div>
 
       <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs sm:p-8">
-        <div className="mb-6 flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-emerald-100 text-xl font-bold text-[#15462D]">
-            {user?.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatarUrl} alt={fullName} className="h-full w-full object-cover" />
-            ) : (
-              initials
-            )}
-          </div>
+        <div className="mb-6 space-y-3">
           <div>
             <p className="text-sm font-bold text-gray-900">{fullName || "Your Name"}</p>
             <p className="text-xs text-gray-500">{user?.email}</p>
           </div>
+          <ProfilePhotoUploader
+            imageUrl={avatarUrl || user?.avatarUrl}
+            name={fullName || "You"}
+            onUploaded={savePhoto}
+          />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

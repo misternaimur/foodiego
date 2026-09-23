@@ -6,7 +6,7 @@ export default async function ClientDashboardLayout({ children }: { children: Re
   const session = await verifyRole("customer");
 
   return (
-    <ClientDashboardShell user={{ name: session.name, email: session.email }}>
+    <ClientDashboardShell user={{ name: session.name, email: session.email, avatarUrl: session.avatarUrl }}>
       {children}
     </ClientDashboardShell>
   );

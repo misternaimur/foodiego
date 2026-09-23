@@ -22,7 +22,7 @@ export default async function PublicLayout({
   return (
     <>
       <Navbar
-        user={session ? { name: session.name, role: session.role } : null}
+        user={session ? { name: session.name, role: session.role, avatarUrl: session.avatarUrl } : null}
       />
       {children}
       <Footer />

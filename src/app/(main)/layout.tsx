@@ -21,7 +21,7 @@ export default async function MainLayout({
 
   return (
     <>
-      <Navbar user={session ? { name: session.name, role: session.role } : null} />
+      <Navbar user={session ? { name: session.name, role: session.role, avatarUrl: session.avatarUrl } : null} />
 
       {children}
       <Footer />

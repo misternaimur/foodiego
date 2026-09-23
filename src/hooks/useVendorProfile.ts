@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { RestaurantProfile } from "@/app/api/v1/vendor/profile/route";
 
-export type { RestaurantProfile, OperatingHours } from "@/app/api/v1/vendor/profile/route";
+export type { RestaurantProfile, OperatingHours, RestaurantStats } from "@/app/api/v1/vendor/profile/route";
 
 const fetcher = async (input: string) => {
   const res = await fetch(input, { credentials: "include" });
@@ -33,7 +33,10 @@ export const useUpdateVendorProfile = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to update profile");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error || "Failed to update profile");
+      }
       return res.json();
     },
     onMutate: async (updates: Partial<RestaurantProfile>) => {
