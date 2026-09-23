@@ -219,7 +219,7 @@ function RegisterFormContent() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="w-full max-w-lg rounded-3xl border border-gray-100 bg-white p-8 shadow-[0_10px_50px_-12px_rgba(16,185,129,0.08)] sm:p-10"
+      className="fg-auth-card w-full max-w-lg rounded-3xl border border-gray-100 bg-white p-8 shadow-[0_10px_50px_-12px_rgba(16,185,129,0.08)] sm:p-10"
     >
       <motion.div variants={itemVariants} className="relative mb-6 grid grid-cols-[1fr_auto_1fr] items-center">
         <Link
@@ -470,7 +470,7 @@ function RegisterFormContent() {
 
 export default function RegisterPage() {
   return (
-    <main className="flex-1 bg-white flex items-center justify-center px-4 py-12 sm:py-16">
+    <main className="fg-auth-main flex-1 bg-white flex items-center justify-center px-4 py-12 sm:py-16">
       <Suspense
         fallback={
           <div className="flex items-center justify-center py-20 text-gray-400">

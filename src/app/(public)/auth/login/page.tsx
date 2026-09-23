@@ -85,12 +85,12 @@ function LoginForm() {
   const redirectTo = searchParams.get("redirect") ?? "";
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-white px-4 py-12 sm:py-16">
+    <div className="fg-auth-main flex flex-1 items-center justify-center bg-white px-4 py-12 sm:py-16">
       <motion.div
         initial="hidden"
         animate="visible"
         variants={containerVariants}
-        className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-[0_2px_40px_-12px_rgba(0,0,0,0.12)] sm:p-10"
+        className="fg-auth-card w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-[0_2px_40px_-12px_rgba(0,0,0,0.12)] sm:p-10"
       >
         {/* Back Button */}
         <motion.div variants={itemVariants} className="relative mb-5 flex items-center justify-between">
@@ -311,7 +311,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="fg-auth-shell flex min-h-screen items-center justify-center bg-white">
           <LoaderCircle
             className="animate-spin text-[#c83214]"
             size={24}

@@ -273,13 +273,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               transition={{ delay: 0.5, ...springSlow }}
             >
               <div className="relative w-full">
-                <motion.div
-                  className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
-                  animate={{ color: isSearchFocused ? "#124734" : "#9CA3AF" }}
-                  transition={{ duration: 0.2 }}
+                <div
+                  className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-200 ${
+                    isSearchFocused ? "text-[#124734]" : "text-[#9CA3AF]"
+                  }`}
                 >
                   <Search size={16} strokeWidth={2.2} />
-                </motion.div>
+                </div>
                 <input
                   ref={searchInputRef}
                   type="text"
