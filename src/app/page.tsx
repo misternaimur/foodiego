@@ -11,6 +11,7 @@ import Footer from "@/components/Share/Footer";
 import AIAssistantWidget from "@/components/AIAssistantWidget";
 import { getOptionalSession } from "@/lib/dal";
 import AppLoader from "@/components/AppLoader";
+import PartnerRegistrationSection from "@/components/PartnerRegistrationSection";
 
 
 export default async function Home() {
@@ -27,6 +28,7 @@ export default async function Home() {
       <AIRecommendation />
       <HowItWorksSection />
       <FAQSection />
+      <PartnerRegistrationSection></PartnerRegistrationSection>
       <Footer />
       <AIAssistantWidget />
     </main>
