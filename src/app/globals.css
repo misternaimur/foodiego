@@ -418,6 +418,10 @@
   font-style: normal;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -425,6 +429,116 @@ body {
   /* Only the page canvas animates; transitioning every element would fight the
      framer-motion colour animations used across the app. */
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.landing-shell {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+}
+
+.landing-content {
+  position: relative;
+  z-index: 2;
+}
+
+.landing-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 100;
+  height: 3px;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, #f49d37 0%, #10b981 52%, #0f766e 100%);
+  box-shadow: 0 0 18px rgb(16 185 129 / 0.55);
+  pointer-events: none;
+}
+
+.landing-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.55;
+  background-image: radial-gradient(circle at 8% 18%, rgb(244 157 55 / 0.11), transparent 23rem),
+    radial-gradient(circle at 92% 54%, rgb(16 185 129 / 0.1), transparent 28rem),
+    linear-gradient(rgb(15 118 110 / 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(15 118 110 / 0.025) 1px, transparent 1px);
+  background-size: auto, auto, 42px 42px, 42px 42px;
+  mask-image: linear-gradient(to bottom, black 0%, black 76%, transparent 100%);
+}
+
+.landing-reveal {
+  position: relative;
+  z-index: 1;
+  transform-origin: 50% 20%;
+}
+
+.landing-reveal::after {
+  position: absolute;
+  top: 0;
+  left: 8%;
+  width: 84%;
+  height: 1px;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgb(16 185 129 / 0.3), transparent);
+  opacity: 0;
+  transform: scaleX(0.5);
+  transition: opacity 0.8s ease, transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.landing-reveal.is-visible::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.landing-reveal-hero {
+  z-index: 2;
+}
+
+.hero-grid {
+  opacity: 0.3;
+  background-image: linear-gradient(rgb(110 231 183 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(110 231 183 / 0.06) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(ellipse at center, black 0%, transparent 72%);
+  animation: heroGridDrift 18s linear infinite;
+}
+
+.hero-orbit {
+  box-shadow: 0 0 80px rgb(16 185 129 / 0.08), inset 0 0 80px rgb(16 185 129 / 0.04);
+  animation: heroOrbit 12s ease-in-out infinite;
+}
+
+.hero-orbit-two {
+  animation-delay: -5s;
+  animation-duration: 16s;
+}
+
+.hero-scanline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgb(167 243 208 / 0.5), transparent);
+  opacity: 0.5;
+  animation: heroScanline 6s ease-in-out infinite;
+}
+
+.hero-touch-ripple {
+  box-shadow: 0 0 24px rgb(52 211 153 / 0.3), inset 0 0 18px rgb(52 211 153 / 0.12);
+}
+
+@keyframes heroGridDrift {
+  from { background-position: 0 0; }
+  to { background-position: 54px 54px; }
+}
+
+@keyframes heroOrbit {
+  0%, 100% { transform: translate(-50%, -50%) rotate(-7deg) scale(1); }
+  50% { transform: translate(-50%, -50%) rotate(7deg) scale(1.035); }
+}
+
+@keyframes heroScanline {
+  0%, 100% { transform: translateY(0); opacity: 0; }
+  25%, 75% { opacity: 0.55; }
+  50% { transform: translateY(340px); opacity: 0.25; }
 }
 
 @keyframes fadeSlideIn {
@@ -436,6 +550,25 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes offerMarquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.offer-marquee-viewport {
+  display: block;
+  overflow: hidden;
+}
+
+.offer-marquee-track {
+  display: inline-block;
+  animation: offerMarquee 12s linear infinite;
+}
+
+.offer-marquee-track-reverse {
+  animation-direction: reverse;
 }
 
 .preserve-3d {
@@ -924,7 +1057,33 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .landing-progress {
+    display: none;
+  }
+
+  .landing-atmosphere {
+    opacity: 0.3;
+  }
+
+  .hero-grid,
+  .hero-orbit,
+  .hero-scanline {
+    animation: none;
+  }
+
+  .hero-touch-ripple {
+    display: none;
+  }
+
   .animate-fade-slide-in {
+    animation: none;
+  }
+
+  .offer-marquee-track {
     animation: none;
   }
 }

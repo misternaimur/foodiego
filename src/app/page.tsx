@@ -11,6 +11,7 @@ import Footer from "@/components/Share/Footer";
 import AIAssistantWidget from "@/components/AIAssistantWidget";
 import { getOptionalSession } from "@/lib/dal";
 import AppLoader from "@/components/AppLoader";
+import LandingReveal, { LandingPageShell } from "@/components/Share/LandingReveal";
 
 
 export default async function Home() {
