@@ -54,6 +54,8 @@ const defaultNavItems: NavItem[] = [
   { label: "Offers", href: "/offers" },
 ];
 
+const announcementOfferText = "LIVE OFFER: 50% OFF YOUR FIRST ORDER • FREE DELIVERY THIS WEEK • ";
+
 export const Navbar: React.FC<NavbarProps> = ({
   navItems = defaultNavItems,
   user: propUser = null,
@@ -156,21 +158,28 @@ export const Navbar: React.FC<NavbarProps> = ({
             transition={{ duration: 0.4, ease: "easeInOut" }}
             className="w-full bg-[#124734] text-white/90 overflow-hidden"
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-3 text-xs">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.5, ...springSlow }}
-              >
-                <Link
-                  href="/auth/register/restaurant"
-                  className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#124734] hover:border-white transition-colors duration-200 cursor-pointer"
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 grid grid-cols-1 items-center justify-items-center gap-2 text-xs lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-3">
+              <div className="offer-marquee-viewport hidden w-full max-w-[28rem] text-[#FFD58A] lg:block lg:justify-self-start" aria-live="polite">
+                <span className="offer-marquee-track font-bold uppercase tracking-[0.12em] whitespace-nowrap">
+                  {`${announcementOfferText}${announcementOfferText}`}
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-self-center">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5, ...springSlow }}
                 >
-                  <UtensilsCrossed size={13} />
-                  <span>Create a restaurant account</span>
-                </Link>
-              </motion.div>
-              <motion.div
+                  <Link
+                    href="/auth/register/restaurant"
+                    className="inline-flex items-center gap-1.5 font-bold border border-white/40 rounded-full px-3.5 py-1.5 hover:bg-white hover:text-[#124734] hover:border-white transition-colors duration-200 cursor-pointer"
+                  >
+                    <UtensilsCrossed size={13} />
+                    <span>Create a restaurant account</span>
+                  </Link>
+                </motion.div>
+                <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.6, ...springSlow }}
@@ -184,7 +193,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </Link>
                 </motion.div>
               </div>
-            </motion.div>
+
+              <div className="offer-marquee-viewport hidden w-full max-w-[28rem] text-[#FFD58A] lg:block lg:justify-self-end" aria-live="polite">
+                <span className="offer-marquee-track offer-marquee-track-reverse font-bold uppercase tracking-[0.12em] whitespace-nowrap">
+                  {`${announcementOfferText}${announcementOfferText}`}
+                </span>
+              </div>
+
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

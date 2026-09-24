@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion';
 import {
   ShoppingBag,
   Compass,
@@ -92,6 +92,16 @@ export default function Hero() {
   const [activeIndex, setActiveIndex] = useState(2);
   const [isCarouselHovered, setIsCarouselHovered] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(0);
+  const [touchPulse, setTouchPulse] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+  const smoothPointerX = useSpring(pointerX, { stiffness: 90, damping: 22 });
+  const smoothPointerY = useSpring(pointerY, { stiffness: 90, damping: 22 });
+  const glowX = useTransform(smoothPointerX, [-1, 1], ['18%', '82%']);
+  const glowY = useTransform(smoothPointerY, [-1, 1], ['24%', '76%']);
+  const depthX = useTransform(smoothPointerX, [-1, 1], [-14, 14]);
+  const depthY = useTransform(smoothPointerY, [-1, 1], [-8, 8]);
 
   useEffect(() => {
     const updateViewportWidth = () => setViewportWidth(window.innerWidth);
@@ -126,11 +136,42 @@ export default function Hero() {
     if (info.offset.x > 60) handlePrev();
   };
 
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    if (prefersReducedMotion) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    pointerX.set(((event.clientX - bounds.left) / bounds.width) * 2 - 1);
+    pointerY.set(((event.clientY - bounds.top) / bounds.height) * 2 - 1);
+  };
+
+  const resetPointer = () => {
+    pointerX.set(0);
+    pointerY.set(0);
+  };
+
   return (
     <section
       className="relative flex w-full flex-col overflow-hidden bg-[#082e22] px-3 py-6 text-white sm:px-8 sm:py-10"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetPointer}
+      onPointerDown={() => setTouchPulse((pulse) => pulse + 1)}
     >
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-150 w-150 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/10 blur-[120px]" />
+      <div className="hero-grid pointer-events-none absolute inset-0" />
+      <motion.div className="hero-orbit hero-orbit-one pointer-events-none absolute left-1/2 top-[48%] h-130 w-130 -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/10" style={{ x: depthX, y: depthY }} />
+      <motion.div className="hero-orbit hero-orbit-two pointer-events-none absolute left-1/2 top-[48%] h-180 w-180 -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-300/8" style={{ x: useTransform(smoothPointerX, [-1, 1], [10, -10]), y: useTransform(smoothPointerY, [-1, 1], [6, -6]) }} />
+      <motion.div
+        className="pointer-events-none absolute left-1/2 top-1/2 h-150 w-150 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500/10 blur-[120px]"
+        style={{ left: glowX, top: glowY }}
+        animate={{ scale: [1, 1.08, 1], opacity: [0.45, 0.7, 0.45] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        key={touchPulse}
+        className="hero-touch-ripple pointer-events-none absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-emerald-200/40"
+        initial={{ opacity: 0.55, scale: 0.25 }}
+        animate={{ opacity: 0, scale: 8 }}
+        transition={{ duration: 1.1, ease: 'easeOut' }}
+      />
+      <div className="hero-scanline pointer-events-none absolute inset-x-0 top-0" />
 {/* 
       <motion.div
         whileHover={{ scale: 1.04, y: -1 }}
@@ -143,8 +184,16 @@ export default function Hero() {
         {/* <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-200">Live</span> */}
       {/* </motion.div> */}
 
-      <div className="relative z-20 mx-auto mb-6 max-w-2xl text-center">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-slate-900/60 px-4 py-1.5 shadow-lg backdrop-blur-md">
+      <motion.div
+        className="relative z-20 mx-auto mb-6 max-w-2xl text-center"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: { opacity: 0, y: 22 },
+          visible: { opacity: 1, y: 0, transition: { delayChildren: 0.12, staggerChildren: 0.1 } },
+        }}
+      >
+        <motion.div variants={{ hidden: { opacity: 0, scale: 0.85 }, visible: { opacity: 1, scale: 1 } }} className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-slate-900/60 px-4 py-1.5 shadow-lg backdrop-blur-md">
           <div className="flex -space-x-1.5">
             <div className="h-4 w-4 rounded-full border border-[#0f172a] bg-emerald-400" />
             <div className="h-4 w-4 rounded-full border border-[#0f172a] bg-teal-400" />
@@ -153,17 +202,17 @@ export default function Hero() {
           <span className="text-xs font-medium text-[#e2e8f0]">
             Loved By <strong className="text-white">2.4m Users</strong> with 4.8 Rating ★
           </span>
-        </div>
+        </motion.div>
 
-        <h1 className="mb-3 bg-linear-to-r from-[#ffffff] via-[#f1f5f9] to-[#a7f3d0] bg-clip-text px-2 text-3xl font-black leading-tight tracking-tight text-transparent sm:px-0 sm:text-5xl">
+        <motion.h1 variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0 } }} className="mb-3 bg-linear-to-r from-[#ffffff] via-[#f1f5f9] to-[#a7f3d0] bg-clip-text px-2 text-3xl font-black leading-tight tracking-tight text-transparent sm:px-0 sm:text-5xl">
           Fresh, Delicious &amp; Delivered To Your Door!
-        </h1>
+        </motion.h1>
 
-        <p className="mx-auto max-w-lg text-xs font-normal text-[#cbd5e1] sm:text-sm">
+        <motion.p variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="mx-auto max-w-lg text-xs font-normal text-[#cbd5e1] sm:text-sm">
           Explore a wide selection of fresh groceries, gourmet ingredients, and ready-to-eat meals with fast delivery.
-        </p>
+        </motion.p>
 
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4">
+        <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="mt-5 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4">
           <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Link
               href="/foods"
@@ -180,16 +229,19 @@ export default function Hero() {
               <Compass className="h-4 w-4 text-[#34d399]" /> Explore Menu
             </Link>
           </motion.div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* The deck is wider than the viewport on lg (w-[150%]) so side cards can
           fan out; `mx-auto` can't centre an element wider than its parent, which
           shifted the whole deck (and the arrows inside it) to the right. It's
           centred with left-1/2 + -translate-x-1/2 instead, and the arrows now
           live in this full-width wrapper rather than inside the deck. */}
-      <div
+      <motion.div
         className="relative z-10 w-full"
+        initial={{ opacity: 0, y: 28 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         onMouseEnter={() => setIsCarouselHovered(true)}
         onMouseLeave={() => setIsCarouselHovered(false)}
       >
@@ -246,6 +298,13 @@ export default function Hero() {
                 unoptimized
               />
               <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-transparent" />
+              {offset === 0 && (
+                <motion.div
+                  className="hero-card-glint pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 skew-x-[-18deg] bg-linear-to-r from-transparent via-white/25 to-transparent"
+                  animate={{ x: ['0%', '420%'] }}
+                  transition={{ duration: 3.8, repeat: Infinity, repeatDelay: 1.8, ease: 'easeInOut' }}
+                />
+              )}
               <div className="absolute inset-x-0 bottom-0 p-4">
                 <span className="text-[10px] font-bold text-white drop-shadow-md sm:text-sm">
                   {slide.title}
@@ -270,7 +329,7 @@ export default function Hero() {
           onClick={handleNext}
           className="right-2 top-25 -translate-y-1/2 sm:right-6 sm:top-[135px] lg:right-[max(1rem,calc(50%-44rem))] lg:top-[165px]"
         />
-      </div>
+      </motion.div>
 
       <div className="relative z-30 mt-5 flex items-center justify-center gap-2">
         {SLIDES.map((slide, index) => (
